@@ -67,7 +67,8 @@ class TestCompetitionModels(BaseTestCase):
             arrows_per_round=6,
             target_size_cm=122,
             max_team_size=4,
-            status='setup'
+            status='setup',
+            created_by=self.admin.id
         )
         
         db.session.add(competition)
@@ -91,7 +92,8 @@ class TestCompetitionModels(BaseTestCase):
             arrows_per_round=3,
             target_size_cm=80,
             max_team_size=3,
-            status='setup'
+            status='setup',
+            created_by=self.admin.id
         )
         
         # Test computed properties
@@ -104,7 +106,8 @@ class TestCompetitionModels(BaseTestCase):
             event_id=self.event.id,
             number_of_rounds=6,
             arrows_per_round=6,
-            status='setup'
+            status='setup',
+            created_by=self.admin.id
         )
         db.session.add(competition)
         db.session.commit()
@@ -141,7 +144,8 @@ class TestCompetitionModels(BaseTestCase):
             event_id=self.event.id,
             number_of_rounds=6,
             arrows_per_round=6,
-            status='setup'
+            status='setup',
+            created_by=self.admin.id
         )
         db.session.add(competition)
         db.session.commit()
@@ -156,16 +160,16 @@ class TestCompetitionModels(BaseTestCase):
         
         team = CompetitionTeam(
             group_id=group.id,
-            name='Team Alpha',
-            target_assignment='Target 1'
+            team_number=1,
+            target_number=1
         )
         db.session.add(team)
         db.session.commit()
         
         # Verify team
         self.assertEqual(team.group_id, group.id)
-        self.assertEqual(team.name, 'Team Alpha')
-        self.assertEqual(team.target_assignment, 'Target 1')
+        self.assertEqual(team.team_number, 1)
+        self.assertEqual(team.target_number, 1)
         self.assertEqual(len(group.teams), 1)
     
     def test_competition_registration(self):
@@ -174,7 +178,8 @@ class TestCompetitionModels(BaseTestCase):
             event_id=self.event.id,
             number_of_rounds=6,
             arrows_per_round=6,
-            status='registration_open'
+            status='registration_open',
+            created_by=self.admin.id
         )
         db.session.add(competition)
         db.session.commit()
@@ -198,7 +203,7 @@ class TestCompetitionModels(BaseTestCase):
         self.assertEqual(registration.competition_id, competition.id)
         self.assertEqual(registration.member_id, self.member1.id)
         self.assertEqual(registration.group_id, group.id)
-        self.assertIsNotNone(registration.registered_at)
+        self.assertIsNotNone(registration.registration_date)
         
         # Test relationships
         self.assertEqual(len(competition.registrations), 1)
@@ -210,7 +215,8 @@ class TestCompetitionModels(BaseTestCase):
             event_id=self.event.id,
             number_of_rounds=6,
             arrows_per_round=6,
-            status='in_progress'
+            status='in_progress',
+            created_by=self.admin.id
         )
         db.session.add(competition)
         db.session.commit()
@@ -237,7 +243,8 @@ class TestCompetitionModels(BaseTestCase):
                 registration_id=registration.id,
                 round_number=1,
                 arrow_number=arrow_num,
-                score=score
+                points=score,
+                recorded_by=self.admin.id
             )
             db.session.add(arrow_score)
         
@@ -250,8 +257,8 @@ class TestCompetitionModels(BaseTestCase):
         ).order_by(ArrowScore.arrow_number).all()
         
         self.assertEqual(len(saved_scores), 6)
-        self.assertEqual([s.score for s in saved_scores], [10, 9, 8, 10, 7, 9])
-        self.assertEqual(sum(s.score for s in saved_scores), 53)  # Total for round 1
+        self.assertEqual([s.points for s in saved_scores], [10, 9, 8, 10, 7, 9])
+        self.assertEqual(sum(s.points for s in saved_scores), 53)  # Total for round 1
     
     def test_competition_workflow(self):
         """Test complete competition workflow"""
@@ -260,7 +267,8 @@ class TestCompetitionModels(BaseTestCase):
             event_id=self.event.id,
             number_of_rounds=2,
             arrows_per_round=3,
-            status='setup'
+            status='setup',
+            created_by=self.admin.id
         )
         db.session.add(competition)
         db.session.commit()
@@ -294,8 +302,8 @@ class TestCompetitionModels(BaseTestCase):
         # 5. Create team
         team = CompetitionTeam(
             group_id=group.id,
-            name='Test Team',
-            target_assignment='Target 1'
+            team_number=1,
+            target_number=1
         )
         db.session.add(team)
         db.session.commit()
@@ -311,15 +319,18 @@ class TestCompetitionModels(BaseTestCase):
         
         # 8. Record scores
         for reg in [reg1, reg2]:
+            arrow_count = 1
             for round_num in range(1, 3):  # 2 rounds
-                for arrow_num in range(1, 4):  # 3 arrows per round
+                for arrow_in_round in range(1, 4):  # 3 arrows per round
                     score = ArrowScore(
                         registration_id=reg.id,
                         round_number=round_num,
-                        arrow_number=arrow_num,
-                        score=8  # Everyone shoots 8
+                        arrow_number=arrow_count,  # Sequential arrow number across all rounds
+                        points=8,  # Everyone shoots 8
+                        recorded_by=self.admin.id
                     )
                     db.session.add(score)
+                    arrow_count += 1
         
         db.session.commit()
         
@@ -327,11 +338,11 @@ class TestCompetitionModels(BaseTestCase):
         self.assertEqual(competition.status, 'in_progress')
         self.assertEqual(len(competition.registrations), 2)
         self.assertEqual(len(group.teams), 1)
-        self.assertEqual(len(team.members), 2)
+        self.assertEqual(len(team.registrations), 2)
         
         # Check total scores
         total_scores = db.session.query(
-            db.func.sum(ArrowScore.score)
+            db.func.sum(ArrowScore.points)
         ).filter_by(registration_id=reg1.id).scalar()
         self.assertEqual(total_scores, 48)  # 2 rounds * 3 arrows * 8 points
 

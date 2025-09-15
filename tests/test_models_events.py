@@ -276,7 +276,8 @@ class TestEventsModels(BaseTestCase):
         db.session.commit()
         
         # Initially no attendances
-        self.assertEqual(event.attendance_count(), 0)
+        # Test attendance count
+        self.assertEqual(event.attendance_count, 0)
         
         # Add some attendances
         for i in range(3):
@@ -300,7 +301,7 @@ class TestEventsModels(BaseTestCase):
         db.session.commit()
         
         # Should now have 3 attendances
-        self.assertEqual(event.attendance_count(), 3)
+        self.assertEqual(event.attendance_count, 3)
 
 if __name__ == '__main__':
     unittest.main()

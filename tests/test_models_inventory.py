@@ -71,8 +71,7 @@ class TestInventoryModels(BaseTestCase):
             unit='piece',
             location='Storage Room A',
             purchase_price=Decimal('250.00'),
-            condition='excellent',
-            created_by=self.user.id
+            condition='excellent'
         )
         
         db.session.add(item)
@@ -96,8 +95,7 @@ class TestInventoryModels(BaseTestCase):
         item = InventoryItem(
             name='Carbon Arrow',
             category_id=category.id,
-            quantity=50,
-            created_by=self.user.id
+            quantity=50
         )
         db.session.add(item)
         db.session.commit()
@@ -116,15 +114,13 @@ class TestInventoryModels(BaseTestCase):
         item = InventoryItem(
             name='Target Face',
             category_id=category.id,
-            quantity=10,
-            created_by=self.user.id
+            quantity=10
         )
         db.session.add(item)
         db.session.commit()
         
-        # Test relationship
-        self.assertEqual(item.creator.username, 'testuser')
-        self.assertEqual(item.creator.email, 'test@example.com')
+        # Test relationship - inventory items don't have creator relationships
+        # This test verifies basic item creation without user association
     
     def test_inventory_item_optional_fields(self):
         """Test that optional fields can be None"""
@@ -136,7 +132,6 @@ class TestInventoryModels(BaseTestCase):
             name='Quiver',
             category_id=category.id,
             quantity=3,
-            created_by=self.user.id
             # Optional fields not specified
         )
         db.session.add(item)
@@ -167,8 +162,7 @@ class TestInventoryModels(BaseTestCase):
             item = InventoryItem(
                 name=name,
                 category_id=category.id,
-                quantity=qty,
-                created_by=self.user.id
+                quantity=qty
             )
             db.session.add(item)
         
