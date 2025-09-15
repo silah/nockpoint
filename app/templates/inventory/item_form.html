@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h4>{{ title }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control") }}
+                            {% if form.name.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.name.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            {{ form.category_id.label(class="form-label") }}
+                            {{ form.category_id(class="form-select") }}
+                            {% if form.category_id.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.category_id.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows="3") }}
+                        {% if form.description.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.description.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            {{ form.quantity.label(class="form-label") }}
+                            {{ form.quantity(class="form-control") }}
+                            {% if form.quantity.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.quantity.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            {{ form.unit.label(class="form-label") }}
+                            {{ form.unit(class="form-select") }}
+                            {% if form.unit.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.unit.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.location.label(class="form-label") }}
+                            {{ form.location(class="form-control") }}
+                            {% if form.location.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.location.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            {{ form.purchase_date.label(class="form-label") }}
+                            {{ form.purchase_date(class="form-control") }}
+                            {% if form.purchase_date.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.purchase_date.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            {{ form.purchase_price.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                {{ form.purchase_price(class="form-control") }}
+                            </div>
+                            {% if form.purchase_price.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.purchase_price.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            {{ form.condition.label(class="form-label") }}
+                            {{ form.condition(class="form-select") }}
+                            {% if form.condition.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.condition.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Category-specific fields (will be populated by JavaScript based on category) -->
+                    <div id="categorySpecificFields">
+                        <!-- Bow-specific fields -->
+                        {% if form.draw_weight is defined %}
+                            <div class="row bow-fields category-fields" style="display: none;">
+                                <div class="col-md-3 mb-3">
+                                    {{ form.draw_weight.label(class="form-label") }}
+                                    {{ form.draw_weight(class="form-control") }}
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    {{ form.draw_length.label(class="form-label") }}
+                                    {{ form.draw_length(class="form-control") }}
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    {{ form.bow_type.label(class="form-label") }}
+                                    {{ form.bow_type(class="form-select") }}
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    {{ form.handedness.label(class="form-label") }}
+                                    {{ form.handedness(class="form-select") }}
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Arrow-specific fields -->
+                        {% if form.spine is defined %}
+                            <div class="row arrow-fields category-fields" style="display: none;">
+                                <div class="col-md-3 mb-3">
+                                    {{ form.spine.label(class="form-label") }}
+                                    {{ form.spine(class="form-control") }}
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    {{ form.length.label(class="form-label") }}
+                                    {{ form.length(class="form-control") }}
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    {{ form.point_weight.label(class="form-label") }}
+                                    {{ form.point_weight(class="form-control") }}
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    {{ form.fletching_type.label(class="form-label") }}
+                                    {{ form.fletching_type(class="form-select") }}
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Target-specific fields -->
+                        {% if form.face_size is defined %}
+                            <div class="row target-fields category-fields" style="display: none;">
+                                <div class="col-md-4 mb-3">
+                                    {{ form.face_size.label(class="form-label") }}
+                                    {{ form.face_size(class="form-control") }}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    {{ form.target_type.label(class="form-label") }}
+                                    {{ form.target_type(class="form-select") }}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    {{ form.material.label(class="form-label") }}
+                                    {{ form.material(class="form-select") }}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.notes.label(class="form-label") }}
+                        {{ form.notes(class="form-control", rows="3") }}
+                        {% if form.notes.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.notes.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                        <a href="{{ url_for('inventory.index') }}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}{{ event.name }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Event Details -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4>{{ event.name }}</h4>
+                {% if current_user.is_admin %}
+                    <div class="btn-group">
+                        <a href="{{ url_for('events.edit_event', id=event.id) }}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-pencil"></i> Edit
+                        </a>
+                        <a href="{{ url_for('events.manage_attendance', id=event.id) }}" class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-person-check"></i> Attendance
+                        </a>
+                        <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            <i class="bi bi-trash"></i> Delete
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if event.description %}
+                    <p class="card-text">{{ event.description }}</p>
+                    <hr>
+                {% endif %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-geo-alt text-primary"></i> Location</h6>
+                        <p>{{ event.location }}</p>
+                        
+                        <h6><i class="bi bi-calendar text-primary"></i> Date & Time</h6>
+                        <p>
+                            {{ event.date.strftime('%A, %B %d, %Y') }}<br>
+                            {{ event.start_time.strftime('%I:%M %p') }} - {{ event.end_time.strftime('%I:%M %p') }}
+                            <small class="text-muted">({{ event.duration_hours }} hours)</small>
+                        </p>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-cash text-primary"></i> Cost</h6>
+                        <p>
+                            {% if event.price == 0 %}
+                                <span class="badge bg-success">FREE</span>
+                            {% else %}
+                                ${{ "%.2f"|format(event.price) }} per participant
+                            {% endif %}
+                        </p>
+                        
+                        <h6><i class="bi bi-people text-primary"></i> Participants</h6>
+                        <p>
+                            {{ attendance_count }} registered
+                            {% if event.max_participants %}
+                                / {{ event.max_participants }} max
+                                {% set remaining = event.max_participants - attendance_count %}
+                                {% if remaining > 0 %}
+                                    <br><small class="text-success">{{ remaining }} spots remaining</small>
+                                {% else %}
+                                    <br><small class="text-danger">Event is full</small>
+                                {% endif %}
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                {% if event.is_past %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> This event has already taken place.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Attendance List -->
+        {% if attendees %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5><i class="bi bi-people-fill"></i> Registered Participants ({{ attendees|length }})</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for attendee in attendees %}
+                            <div class="col-md-6 mb-2">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-person-circle text-muted me-2"></i>
+                                    {{ attendee.user.first_name }} {{ attendee.user.last_name }}
+                                    {% if attendee.attended %}
+                                        <span class="badge bg-success ms-2">Attended</span>
+                                    {% elif event.is_past %}
+                                        <span class="badge bg-secondary ms-2">Absent</span>
+                                    {% else %}
+                                        <span class="badge bg-info ms-2">Registered</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="col-md-4">
+        {% if current_user.is_admin %}
+            <!-- Admin Quick Stats -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6><i class="bi bi-graph-up"></i> Event Statistics</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="h4 text-primary">{{ attendance_count }}</div>
+                            <div class="small text-muted">Registered</div>
+                        </div>
+                        {% if event.is_past %}
+                            <div class="col-6">
+                                <div class="h4 text-success">{{ attended_count }}</div>
+                                <div class="small text-muted">Attended</div>
+                            </div>
+                        {% else %}
+                            <div class="col-6">
+                                <div class="h4 text-info">
+                                    {% if event.max_participants %}
+                                        {{ event.max_participants - attendance_count }}
+                                    {% else %}
+                                        ∞
+                                    {% endif %}
+                                </div>
+                                <div class="small text-muted">Spots Left</div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if event.price > 0 %}
+                        <hr>
+                        <div class="row text-center">
+                            <div class="col-12">
+                                <div class="h5 text-success">${{ "%.2f"|format(total_revenue) }}</div>
+                                <div class="small text-muted">Total Revenue</div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="bi bi-lightning"></i> Quick Actions</h6>
+            </div>
+            <div class="card-body d-grid gap-2">
+                <a href="{{ url_for('events.calendar') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-calendar3"></i> Back to Calendar
+                </a>
+                
+                {% if current_user.is_admin %}
+                    {% if not event.is_past %}
+                        <a href="{{ url_for('events.manage_attendance', id=event.id) }}" class="btn btn-success">
+                            <i class="bi bi-person-plus"></i> Manage Attendance
+                        </a>
+                    {% endif %}
+                    
+                    {% if event.price > 0 %}
+                        <a href="{{ url_for('events.outstanding_payments') }}" class="btn btn-warning">
+                            <i class="bi bi-currency-dollar"></i> Payment Management
+                        </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+{% if current_user.is_admin %}
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Event</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete "<strong>{{ event.name }}</strong>"?</p>
+                <p class="text-danger">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    This action cannot be undone and will also delete all attendance records and associated charges.
+                </p>
+                {% if attendance_count > 0 %}
+                    <div class="alert alert-warning">
+                        <strong>{{ attendance_count }}</strong> members are registered for this event.
+                    </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('events.delete_event', id=event.id) }}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">Delete Event</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

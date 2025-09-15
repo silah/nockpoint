@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Categories - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-folder me-2"></i>Inventory Categories</h2>
+    {% if current_user.is_admin() %}
+        <a href="{{ url_for('inventory.new_category') }}" class="btn btn-success">
+            <i class="bi bi-plus-circle me-2"></i>Add New Category
+        </a>
+    {% endif %}
+</div>
+
+<div class="row">
+    {% for category in categories %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-folder-fill me-2 text-primary"></i>
+                        {{ category.name }}
+                    </h5>
+                    {% if category.description %}
+                        <p class="card-text">{{ category.description }}</p>
+                    {% endif %}
+                    <p class="card-text">
+                        <small class="text-muted">
+                            {{ category.items|length }} item{% if category.items|length != 1 %}s{% endif %}
+                        </small>
+                    </p>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('inventory.index', category=category.id) }}" 
+                           class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-list-ul me-1"></i>View Items
+                        </a>
+                        {% if current_user.is_admin() %}
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('inventory.edit_category', id=category.id) }}" 
+                                   class="btn btn-outline-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{{ url_for('inventory.new_item', category=category.id) }}" 
+                                   class="btn btn-outline-success">
+                                    <i class="bi bi-plus"></i>
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{% if not categories %}
+    <div class="text-center py-5">
+        <i class="bi bi-folder display-1 text-muted mb-3"></i>
+        <h4 class="text-muted">No categories found</h4>
+        {% if current_user.is_admin() %}
+            <p class="text-muted mb-3">Create your first category to organize inventory items.</p>
+            <a href="{{ url_for('inventory.new_category') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>Add First Category
+            </a>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}

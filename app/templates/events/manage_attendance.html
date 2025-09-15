@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Attendance - {{ event.name }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h4>Manage Attendance</h4>
+                    <h6 class="text-muted mb-0">{{ event.name }} - {{ event.date.strftime('%B %d, %Y') }}</h6>
+                </div>
+                <a href="{{ url_for('events.view_event', id=event.id) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Event
+                </a>
+            </div>
+            <div class="card-body">
+                <!-- Event Summary -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="text-center p-3 bg-light rounded">
+                            <div class="h4 text-primary">{{ all_attendees|length }}</div>
+                            <div class="small text-muted">Total Registered</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center p-3 bg-light rounded">
+                            <div class="h4 text-success">{{ attended_count }}</div>
+                            <div class="small text-muted">Attended</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center p-3 bg-light rounded">
+                            <div class="h4 text-warning">{{ all_attendees|length - attended_count }}</div>
+                            <div class="small text-muted">Not Yet Marked</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center p-3 bg-light rounded">
+                            <div class="h4 text-info">${{ "%.2f"|format(total_collected) }}</div>
+                            <div class="small text-muted">Revenue</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-success me-2" onclick="markAllAttended()">
+                            <i class="bi bi-check-all"></i> Mark All as Attended
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="clearAllAttendance()">
+                            <i class="bi bi-x-circle"></i> Clear All Attendance
+                        </button>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <!-- Add New Attendee -->
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAttendeeModal">
+                            <i class="bi bi-person-plus"></i> Add Walk-in
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Attendance List -->
+                {% if all_attendees %}
+                    <form method="POST" id="attendanceForm">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Member</th>
+                                        <th>Email</th>
+                                        <th>Registration Time</th>
+                                        <th>Attendance</th>
+                                        <th>Payment Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for attendee in all_attendees %}
+                                        <tr id="attendee-{{ attendee.id }}" class="{% if attendee.attended %}table-success{% endif %}">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="bi bi-person-circle text-muted me-2"></i>
+                                                    <div>
+                                                        <div class="fw-semibold">{{ attendee.user.first_name }} {{ attendee.user.last_name }}</div>
+                                                        {% if attendee.user.is_admin %}
+                                                            <small class="badge bg-primary">Admin</small>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>{{ attendee.user.email }}</td>
+                                            <td>
+                                                <small class="text-muted">
+                                                    {{ attendee.created_at.strftime('%m/%d/%y %I:%M %p') }}
+                                                </small>
+                                            </td>
+                                            <td>
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input attendance-checkbox" 
+                                                           type="checkbox" 
+                                                           name="attendee_{{ attendee.id }}"
+                                                           id="attendee_{{ attendee.id }}_check"
+                                                           value="1"
+                                                           {% if attendee.attended %}checked{% endif %}
+                                                           onchange="updateAttendanceStatus({{ attendee.id }}, this.checked)">
+                                                    <label class="form-check-label" for="attendee_{{ attendee.id }}_check">
+                                                        <span class="attended-label {% if not attendee.attended %}d-none{% endif %}">Attended</span>
+                                                        <span class="not-attended-label {% if attendee.attended %}d-none{% endif %}">Not Attended</span>
+                                                    </label>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if event.price == 0 %}
+                                                    <span class="badge bg-success">Free Event</span>
+                                                {% else %}
+                                                    {% set charge = attendee.charge %}
+                                                    {% if charge %}
+                                                        {% if charge.paid %}
+                                                            <span class="badge bg-success">
+                                                                <i class="bi bi-check-circle"></i> Paid (${{ "%.2f"|format(charge.amount) }})
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="badge bg-warning">
+                                                                <i class="bi bi-clock"></i> Outstanding (${{ "%.2f"|format(charge.amount) }})
+                                                            </span>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">No Charge Created</span>
+                                                    {% endif %}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    {% if event.price > 0 and attendee.charge and not attendee.charge.paid %}
+                                                        <button type="button" class="btn btn-outline-success btn-sm" 
+                                                                onclick="markAsPaid({{ attendee.charge.id }})">
+                                                            <i class="bi bi-cash"></i> Mark Paid
+                                                        </button>
+                                                    {% endif %}
+                                                    <button type="button" class="btn btn-outline-danger btn-sm"
+                                                            onclick="removeAttendee({{ attendee.id }})">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="text-muted">
+                                <i class="bi bi-info-circle"></i> Attendance updates are saved automatically
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="location.reload()">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh
+                            </button>
+                        </div>
+                    </form>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-people display-1 text-muted"></i>
+                        <h5 class="mt-3 text-muted">No Registrations Yet</h5>
+                        <p class="text-muted">No members have registered for this event.</p>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAttendeeModal">
+                            <i class="bi bi-person-plus"></i> Add First Attendee
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Attendee Modal -->
+<div class="modal fade" id="addAttendeeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Walk-in Attendee</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{{ url_for('events.add_attendee', event_id=event.id) }}" id="addAttendeeForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label for="user_id" class="form-label">Select Member</label>
+                        <select class="form-select" id="user_id" name="user_id" required>
+                            <option value="">Choose a member...</option>
+                            {% for user in available_users %}
+                                <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }} ({{ user.email }})</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Only members not already registered are shown</div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="mark_attended" name="mark_attended" value="1">
+                        <label class="form-check-label" for="mark_attended">
+                            Mark as attended immediately
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" form="addAttendeeForm" class="btn btn-primary">Add Attendee</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for attendance management -->
+<script>
+function updateAttendanceStatus(attendeeId, attended) {
+    const row = document.getElementById(`attendee-${attendeeId}`);
+    const attendedLabel = row.querySelector('.attended-label');
+    const notAttendedLabel = row.querySelector('.not-attended-label');
+    
+    if (attended) {
+        row.classList.add('table-success');
+        attendedLabel.classList.remove('d-none');
+        notAttendedLabel.classList.add('d-none');
+    } else {
+        row.classList.remove('table-success');
+        attendedLabel.classList.add('d-none');
+        notAttendedLabel.classList.remove('d-none');
+    }
+    
+    // Send AJAX request to update attendance
+    fetch(`{{ url_for('events.update_attendance', id=event.id) }}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+        },
+        body: JSON.stringify({
+            attendee_id: attendeeId,
+            attended: attended
+        })
+    }).then(response => {
+        if (!response.ok) {
+            // Revert the checkbox if request failed
+            const checkbox = document.getElementById(`attendee_${attendeeId}_check`);
+            checkbox.checked = !attended;
+            updateAttendanceStatus(attendeeId, !attended);
+            alert('Failed to update attendance. Please try again.');
+        }
+    });
+}
+
+function markAllAttended() {
+    if (confirm('Mark all registered members as attended?')) {
+        const checkboxes = document.querySelectorAll('.attendance-checkbox');
+        checkboxes.forEach(checkbox => {
+            if (!checkbox.checked) {
+                checkbox.checked = true;
+                const attendeeId = checkbox.name.replace('attendee_', '');
+                updateAttendanceStatus(parseInt(attendeeId), true);
+            }
+        });
+    }
+}
+
+function clearAllAttendance() {
+    if (confirm('Clear attendance for all members? This will mark everyone as not attended.')) {
+        const checkboxes = document.querySelectorAll('.attendance-checkbox');
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                checkbox.checked = false;
+                const attendeeId = checkbox.name.replace('attendee_', '');
+                updateAttendanceStatus(parseInt(attendeeId), false);
+            }
+        });
+    }
+}
+
+function markAsPaid(chargeId) {
+    if (confirm('Mark this charge as paid?')) {
+        fetch(`{{ url_for('events.mark_paid') }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+            },
+            body: JSON.stringify({
+                charge_id: chargeId
+            })
+        }).then(response => response.json()).then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.error || 'Failed to update payment status');
+            }
+        });
+    }
+}
+
+function removeAttendee(attendeeId) {
+    if (confirm('Remove this attendee from the event? This will also delete any associated charges.')) {
+        fetch(`{{ url_for('events.remove_attendee', id=event.id) }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+            },
+            body: JSON.stringify({
+                attendee_id: attendeeId
+            })
+        }).then(response => response.json()).then(data => {
+            if (data.success) {
+                document.getElementById(`attendee-${attendeeId}`).remove();
+            } else {
+                alert(data.error || 'Failed to remove attendee');
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

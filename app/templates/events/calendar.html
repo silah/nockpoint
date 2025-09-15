@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Shooting Calendar - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-calendar-event me-2"></i>Shooting Calendar</h2>
+    {% if current_user.is_admin() %}
+        <a href="{{ url_for('events.new_event') }}" class="btn btn-success">
+            <i class="bi bi-plus-circle me-2"></i>Schedule New Event
+        </a>
+    {% endif %}
+</div>
+
+<!-- Upcoming Events -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-calendar-plus me-2"></i>Upcoming Events</h5>
+            </div>
+            <div class="card-body">
+                {% if upcoming_events %}
+                    {% for event in upcoming_events %}
+                        <div class="card mb-3 border-start border-primary border-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h6 class="card-title mb-1">
+                                            <a href="{{ url_for('events.view_event', id=event.id) }}" class="text-decoration-none">
+                                                {{ event.name }}
+                                            </a>
+                                        </h6>
+                                        <p class="card-text text-muted mb-2">
+                                            <i class="bi bi-geo-alt me-1"></i>{{ event.location }}
+                                        </p>
+                                        {% if event.description %}
+                                            <p class="card-text small">{{ event.description[:100] }}{% if event.description|length > 100 %}...{% endif %}</p>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <div class="mb-2">
+                                            <strong>{{ event.date.strftime('%A, %B %d') }}</strong><br>
+                                            <span class="text-muted">{{ event.start_time.strftime('%H:%M') }} - {{ event.end_time.strftime('%H:%M') }}</span>
+                                        </div>
+                                        {% if event.price > 0 %}
+                                            <div class="mb-2">
+                                                <span class="badge bg-info">${{ "%.2f"|format(event.price) }}</span>
+                                            </div>
+                                        {% endif %}
+                                        <div class="small text-muted">
+                                            {{ event.attendance_count }} attending
+                                            {% if event.max_participants %}
+                                                / {{ event.max_participants }} max
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-calendar-x display-4 text-muted mb-3"></i>
+                        <h5 class="text-muted">No upcoming events</h5>
+                        {% if current_user.is_admin() %}
+                            <p class="text-muted">Schedule your first shooting event to get started.</p>
+                            <a href="{{ url_for('events.new_event') }}" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-2"></i>Schedule Event
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Quick Actions -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="bi bi-lightning-charge me-2"></i>Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('events.my_charges') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-receipt me-2"></i>My Charges
+                    </a>
+                    {% if current_user.is_admin() %}
+                        <a href="{{ url_for('events.new_event') }}" class="btn btn-outline-success">
+                            <i class="bi bi-plus-circle me-2"></i>New Event
+                        </a>
+                        <a href="{{ url_for('events.outstanding_payments') }}" class="btn btn-outline-warning">
+                            <i class="bi bi-credit-card me-2"></i>Outstanding Payments
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        {% if past_events %}
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Events</h6>
+                </div>
+                <div class="card-body">
+                    {% for event in past_events[:5] %}
+                        <div class="mb-2 pb-2 {% if not loop.last %}border-bottom{% endif %}">
+                            <div class="small">
+                                <strong>{{ event.name }}</strong><br>
+                                <span class="text-muted">{{ event.date.strftime('%b %d') }} - {{ event.attendance_count }} attended</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero-section bg-primary text-white py-5 mb-5 rounded">
+    <div class="container text-center">
+        <h1 class="display-4 mb-4">
+            <i class="bi bi-bullseye me-3"></i>
+            Welcome to Nockpoint
+        </h1>
+        <p class="lead mb-4">Archery Club Management System</p>
+        <p class="mb-4">Manage your club's inventory, competitions, members, and shooting schedules all in one place.</p>
+        
+        {% if not current_user.is_authenticated %}
+            <div class="d-flex gap-3 justify-content-center">
+                <a href="{{ url_for('auth.login') }}" class="btn btn-light btn-lg">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                </a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-outline-light btn-lg">
+                    <i class="bi bi-person-plus me-2"></i>Register
+                </a>
+            </div>
+        {% else %}
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-light btn-lg">
+                <i class="bi bi-speedometer2 me-2"></i>Go to Dashboard
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-box-seam display-4 text-primary mb-3"></i>
+                <h5 class="card-title">Inventory Management</h5>
+                <p class="card-text">Keep track of bows, arrows, targets, and all your archery equipment with detailed categorization and attributes.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-trophy display-4 text-success mb-3"></i>
+                <h5 class="card-title">Competition Management</h5>
+                <p class="card-text">Organize tournaments, track results, manage categories, and maintain competition schedules.</p>
+                <small class="text-muted">Coming Soon</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-people display-4 text-info mb-3"></i>
+                <h5 class="card-title">Member Management</h5>
+                <p class="card-text">Manage club memberships, track member information, and organize user roles and permissions.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if current_user.is_authenticated %}
+<div class="row mt-4">
+    <div class="col-12">
+        <h3>Quick Actions</h3>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ url_for('inventory.index') }}" class="btn btn-outline-primary">
+                <i class="bi bi-list-ul me-2"></i>View Inventory
+            </a>
+            <a href="{{ url_for('members.index') }}" class="btn btn-outline-info">
+                <i class="bi bi-people me-2"></i>View Members
+            </a>
+            {% if current_user.is_admin() %}
+                <a href="{{ url_for('inventory.new_item') }}" class="btn btn-outline-success">
+                    <i class="bi bi-plus-circle me-2"></i>Add New Item
+                </a>
+                <a href="{{ url_for('inventory.new_category') }}" class="btn btn-outline-info">
+                    <i class="bi bi-folder-plus me-2"></i>Add Category
+                </a>
+                <a href="{{ url_for('members.new_member') }}" class="btn btn-outline-warning">
+                    <i class="bi bi-person-plus me-2"></i>Add Member
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}{{ member.first_name }} {{ member.last_name }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-person-circle me-2"></i>
+                        {{ member.first_name }} {{ member.last_name }}
+                        {% if member.id == current_user.id %}
+                            <small class="text-muted">(Your Profile)</small>
+                        {% endif %}
+                    </h4>
+                    <div>
+                        {% if member.role == 'admin' %}
+                            <span class="badge bg-warning text-dark fs-6">Administrator</span>
+                        {% else %}
+                            <span class="badge bg-primary fs-6">Member</span>
+                        {% endif %}
+                        {% if member.is_active %}
+                            <span class="badge bg-success fs-6">Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary fs-6">Inactive</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6>Personal Information</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Full Name:</strong></td>
+                                <td>{{ member.first_name }} {{ member.last_name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Username:</strong></td>
+                                <td>{{ member.username }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Email:</strong></td>
+                                <td>{{ member.email }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Role:</strong></td>
+                                <td>{{ member.role.title() }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6>Membership Information</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Status:</strong></td>
+                                <td>
+                                    {% if member.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Joined:</strong></td>
+                                <td>{{ member.created_at.strftime('%B %d, %Y') }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Member Since:</strong></td>
+                                <td>{{ (member.created_at.date() - member.created_at.date()).days }} days</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Future: Activity/Statistics Section -->
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Activity Summary</h6>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Activity tracking and member statistics will be available in future updates.
+                            This will include competition participation, shooting scores, and attendance records.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Actions -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0">Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if current_user.is_admin() or current_user.id == member.id %}
+                        <a href="{{ url_for('members.edit_member', id=member.id) }}" class="btn btn-warning">
+                            <i class="bi bi-pencil me-2"></i>Edit Profile
+                        </a>
+                    {% endif %}
+                    
+                    {% if current_user.is_admin() and member.id != current_user.id %}
+                        <form method="POST" action="{{ url_for('members.toggle_member_status', id=member.id) }}" style="display: inline;">
+                            {% if member.is_active %}
+                                <button type="submit" class="btn btn-outline-warning w-100" 
+                                        onclick="return confirm('Deactivate this member?')">
+                                    <i class="bi bi-pause me-2"></i>Deactivate Member
+                                </button>
+                            {% else %}
+                                <button type="submit" class="btn btn-outline-success w-100">
+                                    <i class="bi bi-play me-2"></i>Activate Member
+                                </button>
+                            {% endif %}
+                        </form>
+                        
+                        <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                            <i class="bi bi-trash me-2"></i>Delete Member
+                        </button>
+                    {% endif %}
+                    
+                    <hr>
+                    <a href="{{ url_for('members.index') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Members
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Info -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Quick Info</h6>
+            </div>
+            <div class="card-body">
+                <div class="small">
+                    <p class="mb-2">
+                        <strong>ID:</strong> #{{ member.id }}
+                    </p>
+                    <p class="mb-2">
+                        <strong>Last Login:</strong> Not tracked yet
+                    </p>
+                    <p class="mb-0">
+                        <strong>Permissions:</strong>
+                        {% if member.role == 'admin' %}
+                            Full access to all club management features
+                        {% else %}
+                            View club information and personal profile
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+{% if current_user.is_admin() and member.id != current_user.id %}
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong>{{ member.username }}</strong>?</p>
+                <p class="text-danger">This action cannot be undone and will remove all associated data.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('members.delete_member', id=member.id) }}" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if current_user.is_admin() and member.id != current_user.id %}
+<script>
+function confirmDelete() {
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endif %}
+{% endblock %}

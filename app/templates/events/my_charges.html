@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}My Charges - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="bi bi-receipt text-primary"></i> My Charges</h4>
+                <small class="text-muted">View your shooting event charges and payment history</small>
+            </div>
+            <div class="card-body">
+                <!-- Summary -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="text-center p-3 bg-light rounded">
+                            <div class="h4 text-warning">${{ "%.2f"|format(total_outstanding) }}</div>
+                            <div class="small text-muted">Outstanding Balance</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3 bg-light rounded">
+                            <div class="h4 text-success">${{ "%.2f"|format(total_paid) }}</div>
+                            <div class="small text-muted">Total Paid</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center p-3 bg-light rounded">
+                            <div class="h4 text-info">{{ my_charges|length }}</div>
+                            <div class="small text-muted">Total Charges</div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if total_outstanding > 0 %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Outstanding Balance:</strong> You have ${{ "%.2f"|format(total_outstanding) }} in unpaid charges. 
+                        Please contact an administrator to arrange payment.
+                    </div>
+                {% endif %}
+
+                <!-- Charges List -->
+                {% if my_charges %}
+                    <!-- Filter Buttons -->
+                    <div class="mb-3">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-outline-primary active" onclick="showAll()">
+                                All Charges
+                            </button>
+                            <button type="button" class="btn btn-outline-warning" onclick="showOutstanding()">
+                                Outstanding ({{ outstanding_charges|length }})
+                            </button>
+                            <button type="button" class="btn btn-outline-success" onclick="showPaid()">
+                                Paid ({{ paid_charges|length }})
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Event</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for charge in my_charges %}
+                                    <tr class="charge-row {% if charge.paid %}paid-charge{% else %}outstanding-charge{% endif %}">
+                                        <td>
+                                            <div>
+                                                <div class="fw-semibold">{{ charge.event.name }}</div>
+                                                <small class="text-muted">{{ charge.event.location }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-semibold">{{ charge.event.date.strftime('%B %d, %Y') }}</div>
+                                            <small class="text-muted">{{ charge.event.start_time.strftime('%I:%M %p') }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="fw-semibold text-{% if charge.paid %}success{% else %}warning{% endif %}">
+                                                ${{ "%.2f"|format(charge.amount) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if charge.paid %}
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check-circle"></i> Paid
+                                                </span>
+                                                {% if charge.paid_at %}
+                                                    <br><small class="text-muted">{{ charge.paid_at.strftime('%m/%d/%y') }}</small>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-warning">
+                                                    <i class="bi bi-clock"></i> Outstanding
+                                                </span>
+                                                {% set days_outstanding = (moment().date() - charge.created_at.date()).days %}
+                                                <br><small class="text-muted">{{ days_outstanding }} days old</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('events.view_event', id=charge.event.id) }}" 
+                                               class="btn btn-outline-info btn-sm">
+                                                <i class="bi bi-eye"></i> View Event
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Payment Information -->
+                    {% if total_outstanding > 0 %}
+                        <div class="card mt-4 bg-light">
+                            <div class="card-body">
+                                <h6><i class="bi bi-info-circle text-primary"></i> Payment Information</h6>
+                                <p class="mb-2">To pay your outstanding charges, please contact a club administrator:</p>
+                                <ul class="list-unstyled mb-0">
+                                    <li><i class="bi bi-envelope"></i> Email: admin@nockpointarchery.com</li>
+                                    <li><i class="bi bi-telephone"></i> Phone: (555) 123-4567</li>
+                                    <li><i class="bi bi-geo-alt"></i> Visit us during club hours</li>
+                                </ul>
+                                <p class="text-muted small mt-2">
+                                    Payments can be made by cash, check, or electronic transfer.
+                                </p>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <!-- No Charges -->
+                    <div class="text-center py-5">
+                        <i class="bi bi-receipt display-1 text-muted"></i>
+                        <h5 class="mt-3 text-muted">No Charges Yet</h5>
+                        <p class="text-muted">You don't have any shooting event charges.</p>
+                        <a href="{{ url_for('events.calendar') }}" class="btn btn-primary">
+                            <i class="bi bi-calendar3"></i> View Upcoming Events
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for filtering -->
+<script>
+function showAll() {
+    document.querySelectorAll('.charge-row').forEach(row => row.style.display = '');
+    updateActiveButton(0);
+}
+
+function showOutstanding() {
+    document.querySelectorAll('.charge-row').forEach(row => {
+        row.style.display = row.classList.contains('outstanding-charge') ? '' : 'none';
+    });
+    updateActiveButton(1);
+}
+
+function showPaid() {
+    document.querySelectorAll('.charge-row').forEach(row => {
+        row.style.display = row.classList.contains('paid-charge') ? '' : 'none';
+    });
+    updateActiveButton(2);
+}
+
+function updateActiveButton(index) {
+    const buttons = document.querySelectorAll('.btn-group .btn');
+    buttons.forEach((btn, i) => {
+        btn.classList.toggle('active', i === index);
+    });
+}
+</script>
+{% endblock %}

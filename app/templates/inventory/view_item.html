@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}{{ item.name }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">{{ item.name }}</h4>
+                    <span class="badge bg-secondary">{{ item.category.name }}</span>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if item.description %}
+                    <p class="mb-4">{{ item.description }}</p>
+                {% endif %}
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6>Basic Information</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Quantity:</strong></td>
+                                <td>{{ item.quantity }} {{ item.unit }}{% if item.quantity != 1 %}s{% endif %}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Location:</strong></td>
+                                <td>{{ item.location or 'Not specified' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Condition:</strong></td>
+                                <td>
+                                    {% set condition_class = {
+                                        'excellent': 'success',
+                                        'good': 'success', 
+                                        'fair': 'warning',
+                                        'poor': 'danger',
+                                        'damaged': 'danger'
+                                    } %}
+                                    <span class="badge bg-{{ condition_class.get(item.condition, 'secondary') }}">
+                                        {{ item.condition.title() }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6>Purchase Information</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Purchase Date:</strong></td>
+                                <td>{{ item.purchase_date.strftime('%Y-%m-%d') if item.purchase_date else 'Not specified' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Purchase Price:</strong></td>
+                                <td>${{ "%.2f"|format(item.purchase_price) if item.purchase_price else 'Not specified' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Added:</strong></td>
+                                <td>{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Category-specific attributes -->
+                {% if item.attributes %}
+                    <div class="mb-4">
+                        <h6>{{ item.category.name }} Specifications</h6>
+                        <div class="row">
+                            {% for key, value in item.attributes.items() %}
+                                <div class="col-md-4 mb-2">
+                                    <strong>{{ key.replace('_', ' ').title() }}:</strong> {{ value }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+                
+                {% if item.notes %}
+                    <div class="mb-4">
+                        <h6>Notes</h6>
+                        <p class="bg-light p-3 rounded">{{ item.notes }}</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Actions -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0">Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if current_user.is_admin() %}
+                        <a href="{{ url_for('inventory.edit_item', id=item.id) }}" class="btn btn-warning">
+                            <i class="bi bi-pencil me-2"></i>Edit Item
+                        </a>
+                        <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                            <i class="bi bi-trash me-2"></i>Delete Item
+                        </button>
+                        <hr>
+                    {% endif %}
+                    <a href="{{ url_for('inventory.index') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left me-2"></i>Back to Inventory
+                    </a>
+                    <a href="{{ url_for('inventory.index', category=item.category_id) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-folder me-2"></i>View {{ item.category.name }}
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Quick Info</h6>
+            </div>
+            <div class="card-body">
+                <div class="small">
+                    <p class="mb-2"><strong>Category:</strong> {{ item.category.name }}</p>
+                    <p class="mb-2"><strong>Last Updated:</strong> {{ item.updated_at.strftime('%Y-%m-%d') if item.updated_at else item.created_at.strftime('%Y-%m-%d') }}</p>
+                    {% if item.purchase_price and item.quantity > 0 %}
+                        <p class="mb-0"><strong>Unit Value:</strong> ${{ "%.2f"|format(item.purchase_price / item.quantity) }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+{% if current_user.is_admin() %}
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong>{{ item.name }}</strong>?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('inventory.delete_item', id=item.id) }}" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if current_user.is_admin() %}
+<script>
+function confirmDelete() {
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endif %}
+{% endblock %}
