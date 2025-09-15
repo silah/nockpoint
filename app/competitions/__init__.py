@@ -5,7 +5,7 @@ from app.models import (ShootingEvent, Competition, CompetitionGroup, Competitio
                        CompetitionRegistration, ArrowScore, User)
 from app.forms import (CompetitionForm, CompetitionGroupForm, CompetitionRegistrationForm, 
                       ArrowScoreForm, BulkArrowScoreForm, TeamAssignmentForm)
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from sqlalchemy import desc, func
 import math
 import random
@@ -26,14 +26,18 @@ def admin_required(f):
 @login_required
 def index():
     """List all competitions"""
-    # Get upcoming competitions
+    # Get upcoming competitions (within next 60 days)
+    today = date.today()
+    future_date = today + timedelta(days=60)
+    
     upcoming_competitions = db.session.query(Competition).join(ShootingEvent).filter(
-        ShootingEvent.date >= date.today()
+        ShootingEvent.date >= today,
+        ShootingEvent.date <= future_date
     ).order_by(ShootingEvent.date, ShootingEvent.start_time).all()
     
     # Get past competitions
     past_competitions = db.session.query(Competition).join(ShootingEvent).filter(
-        ShootingEvent.date < date.today()
+        ShootingEvent.date < today
     ).order_by(desc(ShootingEvent.date)).limit(10).all()
     
     # Get upcoming events without competitions (for admin dropdown)
@@ -41,7 +45,8 @@ def index():
     if current_user.is_admin():
         existing_competition_events = [c.event_id for c in upcoming_competitions]
         upcoming_events = ShootingEvent.query.filter(
-            ShootingEvent.date >= date.today(),
+            ShootingEvent.date >= today,
+            ShootingEvent.date <= future_date,
             ~ShootingEvent.id.in_(existing_competition_events)
         ).order_by(ShootingEvent.date, ShootingEvent.start_time).all()
     

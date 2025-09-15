@@ -88,7 +88,7 @@
                             <div class="col-md-6 mb-2">
                                 <div class="d-flex align-items-center">
                                     <i class="bi bi-person-circle text-muted me-2"></i>
-                                    {{ attendee.user.first_name }} {{ attendee.user.last_name }}
+                                    {{ attendee.member.first_name }} {{ attendee.member.last_name }}
                                     {% if attendee.attended %}
                                         <span class="badge bg-success ms-2">Attended</span>
                                     {% elif event.is_past %}
