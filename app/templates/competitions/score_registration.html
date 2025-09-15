@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+
+{% block title %}Score Registration - {{ competition.name }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4>Score Entry</h4>
+                        <h6 class="text-muted mb-0">{{ competition.name }} - Round {{ current_round }}</h6>
+                    </div>
+                    <a href="{{ url_for('competitions.scoring', id=competition.id) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Scoring
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Participant Info -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ registration.member.first_name }} {{ registration.member.last_name }}</h5>
+                                <div class="mb-2">
+                                    <strong>Group:</strong> {{ registration.group.name }}
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Current Total:</strong> 
+                                    <span class="badge bg-primary fs-6">{{ registration.total_score }}</span>
+                                </div>
+                                <div>
+                                    <strong>Progress:</strong> 
+                                    {{ registration.completed_rounds }} of {{ competition.number_of_rounds }} rounds complete
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <h5 class="card-title">Round {{ current_round }} Scoring</h5>
+                                <div class="mb-2">
+                                    <strong>Arrows:</strong> {{ competition.arrows_per_round }}
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Max Score:</strong> {{ competition.arrows_per_round * 10 }} points
+                                </div>
+                                <div>
+                                    <small>Enter scores 0-10 for each arrow. Check 'X' for 10-point shots with X-ring hits.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Previous Rounds Summary -->
+                {% if registration.completed_rounds > 0 %}
+                    <div class="mb-4">
+                        <h6>Previous Rounds</h6>
+                        <div class="row">
+                            {% for round_num in range(1, registration.completed_rounds + 1) %}
+                                {% set round_scores = registration.get_round_scores() %}
+                                {% set round_score = round_scores[round_num - 1] if round_scores else 0 %}
+                                <div class="col-md-2">
+                                    <div class="text-center p-2 bg-light rounded">
+                                        <div class="small text-muted">Round {{ round_num }}</div>
+                                        <div class="fw-bold">{{ round_score }}</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Score Entry Form -->
+                <form method="POST" id="scoringForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <h6 class="mb-3">Enter Scores for Round {{ current_round }}</h6>
+                            
+                            <!-- Arrow Scoring Grid -->
+                            <div class="row g-3">
+                                {% for i in range(competition.arrows_per_round) %}
+                                    {% set arrow_num = i + 1 %}
+                                    
+                                    <div class="col-md-4 col-lg-3">
+                                        <div class="card h-100">
+                                            <div class="card-header text-center bg-primary text-white py-2">
+                                                <strong>Arrow {{ arrow_num }}</strong>
+                                            </div>
+                                            <div class="card-body text-center">
+                                                <!-- Score Input -->
+                                                <div class="mb-3">
+                                                    <label class="form-label visually-hidden" for="arrow_{{ arrow_num }}">Arrow {{ arrow_num }}</label>
+                                                    <input class="form-control form-control-lg text-center" 
+                                                           type="number" 
+                                                           name="arrow_{{ arrow_num }}" 
+                                                           id="arrow_{{ arrow_num }}" 
+                                                           placeholder="0-10" 
+                                                           min="0" 
+                                                           max="10" 
+                                                           required>
+                                                </div>
+                                                
+                                                <!-- X Ring Checkbox -->
+                                                <div class="form-check">
+                                                    <input class="form-check-input" 
+                                                           type="checkbox" 
+                                                           name="is_x_{{ arrow_num }}" 
+                                                           id="is_x_{{ arrow_num }}">
+                                                    <label class="form-check-label" for="is_x_{{ arrow_num }}">
+                                                        X{{ arrow_num }}
+                                                    </label>
+                                                    <br><small class="form-text text-muted">X-ring hit</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Round Total Preview -->
+                    <div class="mb-4">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <strong>Round Total:</strong>
+                                        <span id="roundTotal" class="badge bg-success fs-6 ms-2">0</span>
+                                        <small class="text-muted ms-2">(out of {{ competition.arrows_per_round * 10 }})</small>
+                                    </div>
+                                    <div class="col-md-6 text-end">
+                                        <strong>X Count:</strong>
+                                        <span id="xCount" class="badge bg-info fs-6 ms-2">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('competitions.scoring', id=competition.id) }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                        <div>
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-check-circle"></i> Record Round {{ current_round }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="round_number" value="{{ current_round }}">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+<script>
+// Store template variables for use in JavaScript
+const ARROWS_PER_ROUND = {{ competition.arrows_per_round }};
+
+function updateRoundTotal() {
+    let total = 0;
+    let xCount = 0;
+    
+    // Loop through all arrows dynamically
+    for (let i = 1; i <= ARROWS_PER_ROUND; i++) {
+        const arrowInput = document.getElementById('arrow_' + i);
+        const xCheckbox = document.getElementById('is_x_' + i);
+        
+        if (arrowInput && arrowInput.value) {
+            const score = parseInt(arrowInput.value) || 0;
+            total += score;
+            
+            if (xCheckbox && xCheckbox.checked) {
+                xCount++;
+            }
+        }
+    }
+    
+    document.getElementById('roundTotal').textContent = total;
+    document.getElementById('xCount').textContent = xCount;
+}
+
+// Auto-check X when score is 10
+function setupAutoX() {
+    // Loop through all arrow inputs dynamically
+    for (let i = 1; i <= ARROWS_PER_ROUND; i++) {
+        const arrowInput = document.getElementById('arrow_' + i);
+        const xCheckbox = document.getElementById('is_x_' + i);
+        
+        if (arrowInput) {
+            arrowInput.addEventListener('input', function() {
+                const score = parseInt(this.value);
+                
+                // Validate score range
+                if (score < 0) this.value = 0;
+                if (score > 10) this.value = 10;
+                
+                // Uncheck X if score is not 10
+                if (xCheckbox && score !== 10) {
+                    xCheckbox.checked = false;
+                }
+                
+                updateRoundTotal();
+            });
+        }
+        
+        // Update total when X status changes
+        if (xCheckbox) {
+            xCheckbox.addEventListener('change', updateRoundTotal);
+        }
+    }
+}
+
+// Form validation
+document.getElementById('scoringForm').addEventListener('submit', function(e) {
+    let allFilled = true;
+    let hasInvalidScore = false;
+    
+    // Get the number of arrows from the form elements
+    const arrowInputs = document.querySelectorAll('input[name^="arrow_"]');
+    
+    arrowInputs.forEach(function(arrowInput) {
+        const score = parseInt(arrowInput.value);
+        
+        if (!arrowInput.value.trim()) {
+            allFilled = false;
+        }
+        
+        if (isNaN(score) || score < 0 || score > 10) {
+            hasInvalidScore = true;
+            arrowInput.classList.add('is-invalid');
+        } else {
+            arrowInput.classList.remove('is-invalid');
+        }
+    });
+    
+    if (!allFilled) {
+        e.preventDefault();
+        alert('Please enter scores for all arrows.');
+        return;
+    }
+    
+    if (hasInvalidScore) {
+        e.preventDefault();
+        alert('All scores must be between 0 and 10.');
+        return;
+    }
+});
+
+// Initialize the page
+document.addEventListener('DOMContentLoaded', function() {
+    setupAutoX();
+    updateRoundTotal();
+});
+</script>
+{% endblock %}

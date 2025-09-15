@@ -61,7 +61,15 @@
                                 <div class="small">
                                     <div><strong>Total Participants:</strong> {{ competition.registrations|length }}</div>
                                     <div><strong>Groups:</strong> {{ competition.groups|length }}</div>
-                                    <div><strong>Teams:</strong> {{ results_by_group.values()|sum(attribute='__len__')|sum if competition.max_team_size > 1 else 'Individual' }}</div>
+                                    {% if competition.max_team_size > 1 %}
+                                        {% set team_count = namespace(value=0) %}
+                                        {% for group in competition.groups %}
+                                            {% set team_count.value = team_count.value + group.teams|length %}
+                                        {% endfor %}
+                                        <div><strong>Teams:</strong> {{ team_count.value }}</div>
+                                    {% else %}
+                                        <div><strong>Teams:</strong> Individual</div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>

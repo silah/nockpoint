@@ -221,6 +221,30 @@ class Competition(db.Model):
             group_registrations.sort(key=lambda x: x.total_score, reverse=True)
             results[group.name] = group_registrations
         return results
+    
+    def get_completion_stats(self):
+        """Get completion statistics for the competition"""
+        if not self.registrations:
+            return {
+                'total_participants': 0,
+                'completed_participants': 0,
+                'completion_percentage': 0,
+                'missing_arrows_total': 0
+            }
+        
+        total_participants = len(self.registrations)
+        completed_participants = sum(1 for reg in self.registrations if reg.is_complete)
+        missing_arrows_total = sum(
+            max(0, self.total_arrows - len(reg.arrow_scores)) 
+            for reg in self.registrations
+        )
+        
+        return {
+            'total_participants': total_participants,
+            'completed_participants': completed_participants,
+            'completion_percentage': (completed_participants / total_participants * 100) if total_participants > 0 else 0,
+            'missing_arrows_total': missing_arrows_total
+        }
 
 class CompetitionGroup(db.Model):
     id = db.Column(db.Integer, primary_key=True)

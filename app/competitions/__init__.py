@@ -380,7 +380,7 @@ def start_competition(id):
 
 @competitions_bp.route('/<int:id>/scoring')
 @login_required
-@admin_required
+@admin_required  
 def scoring(id):
     """Competition scoring interface for admins"""
     competition = Competition.query.get_or_404(id)
@@ -401,9 +401,13 @@ def scoring(id):
             'is_complete': registration.is_complete
         })
     
+    # Get completion statistics
+    completion_stats = competition.get_completion_stats()
+    
     return render_template('competitions/scoring.html',
                          competition=competition,
-                         registrations_with_scores=registrations_with_scores)
+                         registrations_with_scores=registrations_with_scores,
+                         completion_stats=completion_stats)
 
 @competitions_bp.route('/<int:id>/score/<int:registration_id>', methods=['GET', 'POST'])
 @login_required
@@ -424,37 +428,78 @@ def score_registration(id, registration_id):
     if current_round > competition.number_of_rounds:
         flash('All rounds completed for this participant.', 'info')
         return redirect(url_for('competitions.scoring', id=id))
-    
-    form = BulkArrowScoreForm(arrows_per_round=competition.arrows_per_round)
-    form.round_number.data = current_round
-    
-    if form.validate_on_submit():
+
+    if request.method == 'POST':
+        # Basic CSRF token check
+        if not request.form.get('csrf_token'):
+            flash('Missing CSRF token.', 'error')
+            return redirect(url_for('competitions.score_registration', id=id, registration_id=registration_id))
+        
+        # Validate round number
+        submitted_round = request.form.get('round_number')
+        if not submitted_round or int(submitted_round) != current_round:
+            flash('Invalid round number.', 'error')
+            return redirect(url_for('competitions.score_registration', id=id, registration_id=registration_id))
+        
         # Record scores for this round
         base_arrow_number = (current_round - 1) * competition.arrows_per_round
         
+        # Validate all arrow scores are present and valid
+        all_valid = True
+        arrow_data = []
+        
         for i in range(competition.arrows_per_round):
-            arrow_field = getattr(form, f'arrow_{i+1}')
-            is_x_field = getattr(form, f'is_x_{i+1}')
+            arrow_score_str = request.form.get(f'arrow_{i+1}')
+            is_x_checked = request.form.get(f'is_x_{i+1}') == 'on'
             
-            arrow_score = ArrowScore(
-                registration_id=registration.id,
-                arrow_number=base_arrow_number + i + 1,
-                points=arrow_field.data,
-                is_x=is_x_field.data,
-                round_number=current_round,
-                recorded_by=current_user.id
-            )
-            db.session.add(arrow_score)
+            if not arrow_score_str:
+                flash(f'Score for Arrow {i+1} is missing.', 'error')
+                all_valid = False
+                continue
+                
+            try:
+                arrow_score = int(arrow_score_str)
+                if arrow_score < 0 or arrow_score > 10:
+                    flash(f'Score for Arrow {i+1} must be between 0 and 10.', 'error')
+                    all_valid = False
+                    continue
+                    
+                arrow_data.append({
+                    'points': arrow_score,
+                    'is_x': is_x_checked,
+                    'arrow_number': base_arrow_number + i + 1
+                })
+            except ValueError:
+                flash(f'Invalid score for Arrow {i+1}.', 'error')
+                all_valid = False
+                continue
         
-        db.session.commit()
-        
-        flash(f'Round {current_round} scored successfully for {registration.member.first_name} {registration.member.last_name}!', 'success')
-        return redirect(url_for('competitions.scoring', id=id))
+        if all_valid:
+            # Save all arrow scores
+            for arrow_info in arrow_data:
+                arrow_score = ArrowScore(
+                    registration_id=registration.id,
+                    arrow_number=arrow_info['arrow_number'],
+                    points=arrow_info['points'],
+                    is_x=arrow_info['is_x'],
+                    round_number=current_round,
+                    recorded_by=current_user.id
+                )
+                db.session.add(arrow_score)
+            
+            db.session.commit()
+            flash(f'Round {current_round} scored successfully for {registration.member.first_name} {registration.member.last_name}!', 'success')
+            return redirect(url_for('competitions.scoring', id=id))
+        else:
+            # If validation failed, stay on the same page to show errors
+            return render_template('competitions/score_registration.html',
+                                 competition=competition,
+                                 registration=registration,
+                                 current_round=current_round)
     
     return render_template('competitions/score_registration.html',
                          competition=competition,
                          registration=registration,
-                         form=form,
                          current_round=current_round)
 
 @competitions_bp.route('/<int:id>/results')
@@ -477,17 +522,46 @@ def results(id):
 @login_required
 @admin_required
 def complete_competition(id):
-    """Complete the competition"""
+    """Complete the competition and fill missing arrows with 0-point scores"""
     competition = Competition.query.get_or_404(id)
     
-    if competition.status != 'in_progress':
-        flash('Only competitions in progress can be completed.', 'error')
+    if competition.status not in ['in_progress', 'registration_open']:
+        flash('Only competitions in progress or with open registration can be completed.', 'error')
         return redirect(url_for('competitions.view_competition', id=id))
     
+    # Fill missing arrows with 0-point scores for all registrations
+    total_arrows_needed = competition.total_arrows
+    filled_count = 0
+    
+    for registration in competition.registrations:
+        current_arrows = len(registration.arrow_scores)
+        
+        if current_arrows < total_arrows_needed:
+            # Fill remaining arrows with 0-point scores
+            for arrow_num in range(current_arrows + 1, total_arrows_needed + 1):
+                round_num = ((arrow_num - 1) // competition.arrows_per_round) + 1
+                
+                arrow_score = ArrowScore(
+                    registration_id=registration.id,
+                    arrow_number=arrow_num,
+                    points=0,
+                    is_x=False,
+                    round_number=round_num,
+                    recorded_by=current_user.id,
+                    notes="Auto-filled on competition completion"
+                )
+                db.session.add(arrow_score)
+                filled_count += 1
+    
+    # Mark competition as completed
     competition.status = 'completed'
     db.session.commit()
     
-    flash('Competition has been completed! Results are now final.', 'success')
+    if filled_count > 0:
+        flash(f'Competition completed! {filled_count} missing arrows were automatically filled with 0-point scores. Results are now final.', 'success')
+    else:
+        flash('Competition has been completed! Results are now final.', 'success')
+    
     return redirect(url_for('competitions.view_competition', id=id))
 
 @competitions_bp.route('/<int:id>/delete', methods=['POST'])

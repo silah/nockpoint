@@ -32,6 +32,10 @@
                                 <li><a class="dropdown-item" href="#" onclick="startCompetition()">
                                     <i class="bi bi-play-circle me-2"></i>Start Competition
                                 </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-warning" href="#" onclick="completeCompetition()">
+                                    <i class="bi bi-flag-checkered me-2"></i>Complete Competition (Skip Scoring)
+                                </a></li>
                             {% elif competition.status == 'in_progress' %}
                                 <li><a class="dropdown-item" href="{{ url_for('competitions.scoring', id=competition.id) }}">
                                     <i class="bi bi-calculator me-2"></i>Manage Scoring
@@ -311,7 +315,7 @@ function startCompetition() {
 }
 
 function completeCompetition() {
-    if (confirm('Mark competition as completed? This will finalize all results.')) {
+    if (confirm('Are you sure you want to complete this competition? Missing arrows will be filled with 0-point scores. This will finalize all results and cannot be undone.')) {
         document.getElementById('completeCompetitionForm').submit();
     }
 }
