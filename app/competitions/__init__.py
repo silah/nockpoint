@@ -287,25 +287,67 @@ def generate_teams(id):
         import random
         random.shuffle(registrations)
         
-        # Create teams
+        # Smart team balancing logic
         team_size = competition.max_team_size
-        num_teams = (len(registrations) + team_size - 1) // team_size  # Ceiling division
+        total_members = len(registrations)
         
+        # Calculate optimal team distribution
+        if total_members <= team_size:
+            # Everyone on one team
+            num_teams = 1
+        else:
+            # Calculate number of full teams and remainder
+            full_teams = total_members // team_size
+            remainder = total_members % team_size
+            
+            if remainder == 0:
+                # Perfect division
+                num_teams = full_teams
+            elif remainder == 1:
+                # One person left over - redistribute
+                # Make one less full team and distribute extras
+                if full_teams > 1:
+                    num_teams = full_teams
+                    # The last team will have (team_size + 1) members
+                else:
+                    num_teams = 1  # All members in one team
+            else:
+                # Remainder > 1, create one extra team with remainder members
+                num_teams = full_teams + 1
+        
+        # Create teams with balanced member distribution
         for team_num in range(num_teams):
             team = CompetitionTeam(
                 group_id=group.id,
-                name=f"{group.name} Team {team_num + 1}",
-                target_assignment=f"Target {teams_created + team_num + 1}"
+                team_number=team_num + 1,
+                target_number=teams_created + team_num + 1
             )
             db.session.add(team)
             db.session.flush()  # Get team ID
             
-            # Assign members to team
-            start_idx = team_num * team_size
-            end_idx = min(start_idx + team_size, len(registrations))
-            
-            for i in range(start_idx, end_idx):
-                registrations[i].team_id = team.id
+        # Now assign members to teams with balanced distribution
+        members_per_team = [0] * num_teams
+        target_per_team = total_members // num_teams
+        extra_members = total_members % num_teams
+        
+        # Calculate how many members each team should get
+        for i in range(num_teams):
+            members_per_team[i] = target_per_team
+            if i < extra_members:  # Distribute extra members to first few teams
+                members_per_team[i] += 1
+        
+        # Get the created teams
+        created_teams = CompetitionTeam.query.filter_by(group_id=group.id).order_by(CompetitionTeam.team_number.desc()).limit(num_teams).all()
+        created_teams.reverse()  # Get in correct order
+        
+        # Assign members to teams
+        member_index = 0
+        for team_idx, team in enumerate(created_teams):
+            members_for_this_team = members_per_team[team_idx]
+            for _ in range(members_for_this_team):
+                if member_index < len(registrations):
+                    registrations[member_index].team_id = team.id
+                    member_index += 1
         
         teams_created += num_teams
     

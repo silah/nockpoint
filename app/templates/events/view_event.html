@@ -281,6 +281,69 @@
 </div>
 {% endif %}
 
+<!-- Competition Teams Section -->
+{% if event.competition and event.competition|length > 0 and competition_teams %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-people-fill me-2"></i>Competition Teams
+                    <span class="badge bg-info ms-2">{{ competition_teams|length }} teams</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                {% set teams_by_group = competition_teams | groupby('group.name') %}
+                {% for group_name, teams in teams_by_group %}
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-3">
+                            <i class="bi bi-diagram-3 me-2"></i>{{ group_name }}
+                        </h6>
+                        <div class="row">
+                            {% for team in teams %}
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    <div class="card border-secondary">
+                                        <div class="card-header bg-light py-2">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="fw-bold">
+                                                    <i class="bi bi-people me-1"></i>Team {{ team.team_number }}
+                                                </span>
+                                                <span class="badge bg-primary">
+                                                    Target {{ team.target_number }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="card-body py-2">
+                                            {% if team.registrations %}
+                                                <div class="small">
+                                                    {% for registration in team.registrations %}
+                                                        <div class="d-flex align-items-center mb-1">
+                                                            <i class="bi bi-person-circle text-muted me-2"></i>
+                                                            <span>{{ registration.member.first_name }} {{ registration.member.last_name }}</span>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                                <div class="text-muted small mt-2">
+                                                    <i class="bi bi-info-circle me-1"></i>{{ team.registrations|length }} member{{ 's' if team.registrations|length != 1 else '' }}
+                                                </div>
+                                            {% else %}
+                                                <div class="text-muted small">
+                                                    <i class="bi bi-exclamation-triangle me-1"></i>No members assigned
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- Delete Confirmation Modal -->
 {% if current_user.is_admin %}
 <div class="modal fade" id="deleteModal" tabindex="-1">

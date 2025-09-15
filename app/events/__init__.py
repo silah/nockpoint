@@ -83,14 +83,22 @@ def view_event(id):
     
     # If this event has a competition, also get competition registrations
     competition_registrations = []
+    competition_teams = []
     if event.competition and len(event.competition) > 0:
-        from app.models import CompetitionRegistration, CompetitionGroup
+        from app.models import CompetitionRegistration, CompetitionGroup, CompetitionTeam
         competition = event.competition[0]
         competition_registrations = CompetitionRegistration.query.filter_by(
             competition_id=competition.id
         ).join(User, CompetitionRegistration.member_id == User.id).join(
             CompetitionGroup, CompetitionRegistration.group_id == CompetitionGroup.id
         ).order_by(User.first_name, User.last_name).all()
+        
+        # Get competition teams with their members
+        competition_teams = CompetitionTeam.query.join(
+            CompetitionGroup, CompetitionTeam.group_id == CompetitionGroup.id
+        ).filter(
+            CompetitionGroup.competition_id == competition.id
+        ).order_by(CompetitionGroup.name, CompetitionTeam.team_number).all()
     
     # Combine attendances and competition registrations for the "Registered Participants" display
     # Create a unified list with consistent structure
@@ -150,7 +158,8 @@ def view_event(id):
                          attended_count=attended_count,
                          total_registered=total_registered,
                          total_revenue=total_revenue,
-                         competition_form=competition_form)
+                         competition_form=competition_form,
+                         competition_teams=competition_teams)
 
 @events_bp.route('/event/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
