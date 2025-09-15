@@ -110,10 +110,20 @@ def view_competition(id):
             'participants': group_participants
         })
     
+    # Get available users for admin registration (users not already registered)
+    available_users = []
+    if current_user.is_admin() and competition.status == 'registration_open':
+        registered_user_ids = [registration.member_id for registration in competition.registrations]
+        available_users = User.query.filter(
+            User.is_active == True,
+            ~User.id.in_(registered_user_ids)
+        ).order_by(User.first_name, User.last_name).all()
+    
     return render_template('competitions/view.html',
                          competition=competition,
                          total_participants=total_participants,
-                         groups_with_stats=groups_with_stats)
+                         groups_with_stats=groups_with_stats,
+                         available_users=available_users)
 
 @competitions_bp.route('/<int:id>/setup-groups', methods=['GET', 'POST'])
 @login_required
@@ -197,6 +207,55 @@ def register(id):
     return render_template('competitions/register.html',
                          competition=competition,
                          form=form)
+
+@competitions_bp.route('/<int:id>/admin-register', methods=['POST'])
+@login_required
+@admin_required
+def admin_register_member(id):
+    """Admin register a member for competition"""
+    competition = Competition.query.get_or_404(id)
+    
+    member_id = request.form.get('member_id', type=int)
+    group_id = request.form.get('group_id', type=int)
+    
+    if not member_id:
+        flash('Please select a member', 'error')
+        return redirect(url_for('competitions.view_competition', id=id))
+    
+    if not group_id:
+        flash('Please select a group', 'error')
+        return redirect(url_for('competitions.view_competition', id=id))
+    
+    # Check if already registered
+    existing_registration = CompetitionRegistration.query.filter_by(
+        competition_id=id, member_id=member_id
+    ).first()
+    
+    if existing_registration:
+        flash('Member is already registered for this competition', 'error')
+        return redirect(url_for('competitions.view_competition', id=id))
+    
+    try:
+        # Create registration record
+        registration = CompetitionRegistration(
+            competition_id=id,
+            member_id=member_id,
+            group_id=group_id,
+            notes=f'Registered by admin: {current_user.first_name} {current_user.last_name}'
+        )
+        
+        db.session.add(registration)
+        db.session.commit()
+        
+        member = User.query.get(member_id)
+        group = CompetitionGroup.query.get(group_id)
+        flash(f'{member.first_name} {member.last_name} has been registered for {group.name} group', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error registering member: {str(e)}', 'error')
+    
+    return redirect(url_for('competitions.view_competition', id=id))
 
 @competitions_bp.route('/<int:id>/generate-teams', methods=['POST'])
 @login_required

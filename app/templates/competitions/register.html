@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Register for {{ competition.event.name }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4>Register for Competition</h4>
+                <div class="small text-muted">
+                    <i class="bi bi-trophy me-1"></i>{{ competition.event.name }}
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Competition Details -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">Event Details</h6>
+                        <div class="small">
+                            <div><i class="bi bi-calendar me-2"></i>{{ competition.event.date.strftime('%B %d, %Y') }}</div>
+                            <div><i class="bi bi-clock me-2"></i>{{ competition.event.start_time.strftime('%I:%M %p') }}</div>
+                            <div><i class="bi bi-geo-alt me-2"></i>{{ competition.event.location }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">Competition Format</h6>
+                        <div class="small">
+                            <div><i class="bi bi-arrow-repeat me-2"></i>{{ competition.number_of_rounds }} rounds</div>
+                            <div><i class="bi bi-bullseye me-2"></i>{{ competition.arrows_per_round }} arrows per round</div>
+                            <div><i class="bi bi-circle me-2"></i>{{ competition.target_size_cm }}cm target</div>
+                            {% if competition.max_team_size > 1 %}
+                                <div><i class="bi bi-people me-2"></i>{{ competition.max_team_size }} members per team</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                {% if competition.event.description %}
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-2">Description</h6>
+                        <p class="text-muted">{{ competition.event.description }}</p>
+                    </div>
+                {% endif %}
+
+                <!-- Registration Form -->
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.group_id.label(class="form-label") }}
+                        {{ form.group_id(class="form-select") }}
+                        {% if form.group_id.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.group_id.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">Select the competition group/category you want to participate in.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.notes.label(class="form-label") }}
+                        {{ form.notes(class="form-control", rows="3", placeholder="Any additional notes or comments (optional)") }}
+                        {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.notes.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Fee Information -->
+                    {% if competition.event.price > 0 %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Entry Fee:</strong> ${{ "%.2f"|format(competition.event.price) }}
+                            <div class="small mt-1">A charge will be added to your account upon registration.</div>
+                        </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('competitions.view_competition', id=competition.id) }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Back
+                        </a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Registration Status Alert -->
+{% if competition.status != 'registration_open' %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Disable form if registration is not open
+    const form = document.querySelector('form');
+    const inputs = form.querySelectorAll('input, select, textarea, button');
+    inputs.forEach(input => {
+        if (input.type !== 'hidden') {
+            input.disabled = true;
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

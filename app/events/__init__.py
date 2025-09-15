@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app import db
-from app.models import ShootingEvent, EventAttendance, MemberCharge, User
-from app.forms import ShootingEventForm, AttendanceForm, PaymentUpdateForm
+from app.models import ShootingEvent, EventAttendance, MemberCharge, User, Competition
+from app.forms import ShootingEventForm, AttendanceForm, PaymentUpdateForm, CompetitionForm
 from datetime import datetime, date, time
 from sqlalchemy import desc, asc
 from decimal import Decimal
@@ -91,13 +91,21 @@ def view_event(id):
     # For template compatibility, also pass attendances as 'attendees'
     attendees = attendances
     
+    # Check if event has a competition and prepare form for editing
+    competition_form = None
+    if event.competition and len(event.competition) > 0:
+        competition = event.competition[0]
+        competition_form = CompetitionForm(obj=competition)
+        competition_form.submit.label.text = 'Update Competition'
+    
     return render_template('events/view_event.html', 
                          event=event, 
                          attendances=attendances,
                          attendees=attendees,
                          attendance_count=attendance_count,
                          attended_count=attended_count,
-                         total_revenue=total_revenue)
+                         total_revenue=total_revenue,
+                         competition_form=competition_form)
 
 @events_bp.route('/event/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -520,3 +528,36 @@ def delete_charge():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)})
+
+@events_bp.route('/event/<int:id>/update-competition', methods=['POST'])
+@login_required
+@admin_required
+def update_event_competition(id):
+    """Update competition settings from event view"""
+    event = ShootingEvent.query.get_or_404(id)
+    
+    # Check if event has a competition
+    if not event.competition or len(event.competition) == 0:
+        flash('No competition found for this event.', 'error')
+        return redirect(url_for('events.view_event', id=id))
+    
+    competition = event.competition[0]
+    form = CompetitionForm()
+    
+    if form.validate_on_submit():
+        # Update competition fields
+        competition.number_of_rounds = form.number_of_rounds.data
+        competition.arrows_per_round = form.arrows_per_round.data
+        competition.target_size_cm = form.target_size_cm.data
+        competition.max_team_size = form.max_team_size.data
+        
+        db.session.commit()
+        flash('Competition settings updated successfully!', 'success')
+        return redirect(url_for('events.view_event', id=id))
+    
+    # If validation fails, show errors
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(f'{field}: {error}', 'error')
+    
+    return redirect(url_for('events.view_event', id=id))

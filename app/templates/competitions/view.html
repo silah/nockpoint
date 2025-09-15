@@ -179,6 +179,49 @@
                 {% endif %}
             </div>
         </div>
+
+        <!-- Admin Registration Section -->
+        {% if current_user.is_admin() and competition.status == 'registration_open' and available_users and competition.groups %}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6><i class="bi bi-person-plus-fill me-2"></i>Register Member</h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('competitions.admin_register_member', id=competition.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        
+                        <div class="mb-3">
+                            <label for="member_id" class="form-label">Select Member</label>
+                            <select name="member_id" id="member_id" class="form-select" required>
+                                <option value="">Choose a member...</option>
+                                {% for user in available_users %}
+                                    <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }} ({{ user.username }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="group_id" class="form-label">Select Group</label>
+                            <select name="group_id" id="group_id" class="form-select" required>
+                                <option value="">Choose a group...</option>
+                                {% for group in competition.groups %}
+                                    <option value="{{ group.id }}">
+                                        {{ group.name }}
+                                        {% if group.min_age or group.max_age %}
+                                            ({% if group.min_age and group.max_age %}{{ group.min_age }}-{{ group.max_age }}{% elif group.min_age %}{{ group.min_age }}+{% elif group.max_age %}≤{{ group.max_age }}{% endif %} years)
+                                        {% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-person-plus me-2"></i>Register Member
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
         
         <!-- Progress Tracker -->
         <div class="card">

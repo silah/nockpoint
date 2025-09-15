@@ -189,6 +189,91 @@
     </div>
 </div>
 
+<!-- Competition Settings Section -->
+{% if current_user.is_admin and event.competition and event.competition|length > 0 %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-trophy me-2"></i>Competition Settings
+                    <span class="badge bg-{{ 'success' if event.competition[0].status == 'registration_open' else 'info' }} ms-2">
+                        {{ event.competition[0].status|title|replace('_', ' ') }}
+                    </span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('events.update_event_competition', id=event.id) }}">
+                    {{ competition_form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                {{ competition_form.number_of_rounds.label(class="form-label") }}
+                                {{ competition_form.number_of_rounds(class="form-control") }}
+                                {% for error in competition_form.number_of_rounds.errors %}
+                                    <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                {{ competition_form.arrows_per_round.label(class="form-label") }}
+                                {{ competition_form.arrows_per_round(class="form-control") }}
+                                {% for error in competition_form.arrows_per_round.errors %}
+                                    <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                {{ competition_form.target_size_cm.label(class="form-label") }}
+                                {{ competition_form.target_size_cm(class="form-control") }}
+                                {% for error in competition_form.target_size_cm.errors %}
+                                    <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                {{ competition_form.max_team_size.label(class="form-label") }}
+                                {{ competition_form.max_team_size(class="form-control") }}
+                                {% for error in competition_form.max_team_size.errors %}
+                                    <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Total arrows calculation -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <strong>Total arrows per archer:</strong> 
+                                <span id="total-arrows">{{ event.competition[0].total_arrows }}</span>
+                                <small class="text-muted ms-2">
+                                    ({{ event.competition[0].number_of_rounds }} rounds × {{ event.competition[0].arrows_per_round }} arrows)
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        {{ competition_form.submit(class="btn btn-primary") }}
+                        <a href="{{ url_for('competitions.view_competition', id=event.competition[0].id) }}" class="btn btn-outline-info">
+                            <i class="bi bi-trophy me-1"></i>Full Competition View
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- Delete Confirmation Modal -->
 {% if current_user.is_admin %}
 <div class="modal fade" id="deleteModal" tabindex="-1">
@@ -221,4 +306,34 @@
     </div>
 </div>
 {% endif %}
+
+<script>
+// Update total arrows calculation in real-time
+document.addEventListener('DOMContentLoaded', function() {
+    const roundsInput = document.getElementById('number_of_rounds');
+    const arrowsInput = document.getElementById('arrows_per_round');
+    const totalDisplay = document.getElementById('total-arrows');
+    
+    function updateTotal() {
+        if (roundsInput && arrowsInput && totalDisplay) {
+            const rounds = parseInt(roundsInput.value) || 0;
+            const arrows = parseInt(arrowsInput.value) || 0;
+            const total = rounds * arrows;
+            
+            totalDisplay.textContent = total;
+            
+            // Update the description text as well
+            const parent = totalDisplay.parentElement;
+            const smallText = parent.querySelector('small');
+            if (smallText) {
+                smallText.textContent = `(${rounds} rounds × ${arrows} arrows)`;
+            }
+        }
+    }
+    
+    if (roundsInput) roundsInput.addEventListener('input', updateTotal);
+    if (arrowsInput) arrowsInput.addEventListener('input', updateTotal);
+});
+</script>
+
 {% endblock %}

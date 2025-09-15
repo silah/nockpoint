@@ -141,7 +141,7 @@ class CompetitionForm(FlaskForm):
     number_of_rounds = IntegerField('Number of Rounds', validators=[DataRequired(), NumberRange(min=1, max=20)], default=6)
     target_size_cm = IntegerField('Target Size (cm)', validators=[DataRequired(), NumberRange(min=40, max=200)], default=122)
     arrows_per_round = IntegerField('Arrows per Round', validators=[DataRequired(), NumberRange(min=3, max=12)], default=6)
-    max_team_size = SelectField('Team Size', coerce=int, choices=[(3, '3 members per team'), (4, '4 members per team')], default=4)
+    max_team_size = SelectField('Team Size', coerce=int, choices=[(2, '2 members per team'), (3, '3 members per team'), (4, '4 members per team')], default=4)
     submit = SubmitField('Create Competition')
 
 class CompetitionGroupForm(FlaskForm):
