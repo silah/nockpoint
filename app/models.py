@@ -130,6 +130,19 @@ class EventAttendance(db.Model):
     
     @property
     def attended(self):
+        """Check if member actually attended (not just registered)"""
+        return self.attended_at is not None
+    
+    @property
+    def charge(self):
+        """Get the associated charge for this attendance"""
+        return MemberCharge.query.filter_by(
+            member_id=self.member_id,
+            event_id=self.event_id
+        ).first()
+    
+    @property
+    def attended(self):
         """Check if member actually attended (has attended_at timestamp)"""
         return self.attended_at is not None
     

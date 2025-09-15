@@ -237,10 +237,19 @@ def my_charges():
         desc(MemberCharge.charge_date)
     ).all()
     
-    # Calculate outstanding amount
-    outstanding = sum(charge.amount for charge in charges if not charge.is_paid)
+    # Separate charges into paid and unpaid
+    outstanding_charges = [charge for charge in charges if not charge.is_paid]
+    paid_charges = [charge for charge in charges if charge.is_paid]
     
-    return render_template('events/my_charges.html', charges=charges, outstanding=outstanding)
+    # Calculate outstanding amount
+    total_outstanding = sum(charge.amount for charge in outstanding_charges)
+    
+    return render_template('events/my_charges.html', 
+                         charges=charges,
+                         my_charges=charges,  # Template uses both 'charges' and 'my_charges'
+                         outstanding_charges=outstanding_charges,
+                         paid_charges=paid_charges,
+                         total_outstanding=total_outstanding)
 
 @events_bp.route('/event/<int:event_id>/add-attendee', methods=['POST'])
 @login_required
