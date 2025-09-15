@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Create Competition - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4>Create Competition for "{{ event.name }}"</h4>
+                <div class="small text-muted">
+                    <i class="bi bi-calendar me-1"></i>{{ event.date.strftime('%B %d, %Y') }} at {{ event.start_time.strftime('%I:%M %p') }}
+                    <br>
+                    <i class="bi bi-geo-alt me-1"></i>{{ event.location }}
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.number_of_rounds.label(class="form-label") }}
+                            {{ form.number_of_rounds(class="form-control") }}
+                            {% if form.number_of_rounds.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.number_of_rounds.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Number of shooting rounds in the competition</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.arrows_per_round.label(class="form-label") }}
+                            {{ form.arrows_per_round(class="form-control") }}
+                            {% if form.arrows_per_round.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.arrows_per_round.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Number of arrows shot per round</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.target_size_cm.label(class="form-label") }}
+                            {{ form.target_size_cm(class="form-control") }}
+                            {% if form.target_size_cm.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.target_size_cm.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Target face diameter in centimeters</div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.max_team_size.label(class="form-label") }}
+                            {{ form.max_team_size(class="form-control") }}
+                            {% if form.max_team_size.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.max_team_size.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Maximum number of archers per team</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Competition Summary -->
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <h6><i class="bi bi-info-circle me-2"></i>Competition Summary</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="small">
+                                        <strong>Total Arrows:</strong> <span id="total-arrows">36</span><br>
+                                        <strong>Maximum Score:</strong> <span id="max-score">360</span> points<br>
+                                        <strong>Duration:</strong> Approx. <span id="duration">2-3</span> hours
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="small">
+                                        <strong>Target Size:</strong> <span id="target-display">122cm</span><br>
+                                        <strong>Team Format:</strong> <span id="team-display">4 members per team</span><br>
+                                        <strong>Scoring:</strong> Standard 10-ring target
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-trophy me-2"></i>Create Competition
+                        </button>
+                        <a href="{{ url_for('events.view_event', id=event.id) }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Back to Event
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Update competition summary dynamically
+function updateSummary() {
+    const rounds = document.getElementById('{{ form.number_of_rounds.id }}').value || 6;
+    const arrowsPerRound = document.getElementById('{{ form.arrows_per_round.id }}').value || 6;
+    const targetSize = document.getElementById('{{ form.target_size_cm.id }}').value || 122;
+    const teamSize = document.getElementById('{{ form.max_team_size.id }}').value || 4;
+    
+    const totalArrows = rounds * arrowsPerRound;
+    const maxScore = totalArrows * 10;
+    const estimatedDuration = Math.ceil(totalArrows / 20); // Rough estimate: 20 arrows per hour
+    
+    document.getElementById('total-arrows').textContent = totalArrows;
+    document.getElementById('max-score').textContent = maxScore;
+    document.getElementById('duration').textContent = estimatedDuration + '-' + (estimatedDuration + 1);
+    document.getElementById('target-display').textContent = targetSize + 'cm';
+    document.getElementById('team-display').textContent = teamSize + ' members per team';
+}
+
+// Add event listeners to form fields
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('{{ form.number_of_rounds.id }}').addEventListener('input', updateSummary);
+    document.getElementById('{{ form.arrows_per_round.id }}').addEventListener('input', updateSummary);
+    document.getElementById('{{ form.target_size_cm.id }}').addEventListener('input', updateSummary);
+    document.getElementById('{{ form.max_team_size.id }}').addEventListener('change', updateSummary);
+    
+    // Initial update
+    updateSummary();
+});
+</script>
+{% endblock %}

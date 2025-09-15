@@ -166,6 +166,16 @@
                         <a href="{{ url_for('events.manage_attendance', id=event.id) }}" class="btn btn-success">
                             <i class="bi bi-person-plus"></i> Manage Attendance
                         </a>
+                        
+                        {% if not event.competition %}
+                            <a href="{{ url_for('competitions.create_competition', event_id=event.id) }}" class="btn btn-info">
+                                <i class="bi bi-trophy"></i> Create Competition
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('competitions.view_competition', id=event.competition.id) }}" class="btn btn-outline-info">
+                                <i class="bi bi-trophy"></i> View Competition
+                            </a>
+                        {% endif %}
                     {% endif %}
                     
                     {% if event.price > 0 %}

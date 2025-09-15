@@ -86,14 +86,14 @@
                                                 <div class="d-flex align-items-center">
                                                     <i class="bi bi-person-circle text-muted me-2"></i>
                                                     <div>
-                                                        <div class="fw-semibold">{{ attendee.user.first_name }} {{ attendee.user.last_name }}</div>
-                                                        {% if attendee.user.is_admin %}
+                                                        <div class="fw-semibold">{{ attendee.member.first_name }} {{ attendee.member.last_name }}</div>
+                                                        {% if attendee.member.is_admin %}
                                                             <small class="badge bg-primary">Admin</small>
                                                         {% endif %}
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td>{{ attendee.user.email }}</td>
+                                            <td>{{ attendee.member.email }}</td>
                                             <td>
                                                 <small class="text-muted">
                                                     {{ attendee.created_at.strftime('%m/%d/%y %I:%M %p') }}
@@ -190,8 +190,8 @@
                 <form method="POST" action="{{ url_for('events.add_attendee', event_id=event.id) }}" id="addAttendeeForm">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
-                        <label for="user_id" class="form-label">Select Member</label>
-                        <select class="form-select" id="user_id" name="user_id" required>
+                        <label for="member_id" class="form-label">Select Member</label>
+                        <select class="form-select" id="member_id" name="member_id" required>
                             <option value="">Choose a member...</option>
                             {% for user in available_users %}
                                 <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }} ({{ user.email }})</option>

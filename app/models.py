@@ -114,7 +114,8 @@ class EventAttendance(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     event_id = db.Column(db.Integer, db.ForeignKey('shooting_event.id'), nullable=False)
     member_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    attended_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)  # When registered for event
+    attended_at = db.Column(db.DateTime, nullable=True)  # When actually attended (None if not attended)
     recorded_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     notes = db.Column(db.Text)  # Optional notes about attendance
     
@@ -173,3 +174,191 @@ class MemberCharge(db.Model):
     
     def __repr__(self):
         return f'<MemberCharge {self.member.username}: ${self.amount}>'
+
+# Competition Models
+
+class Competition(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey('shooting_event.id'), nullable=False)
+    number_of_rounds = db.Column(db.Integer, nullable=False, default=6)
+    target_size_cm = db.Column(db.Integer, nullable=False, default=122)  # Target face size in cm
+    arrows_per_round = db.Column(db.Integer, nullable=False, default=6)
+    max_team_size = db.Column(db.Integer, nullable=False, default=4)  # Can be 3 or 4
+    status = db.Column(db.String(20), nullable=False, default='setup')  # setup, registration_open, in_progress, completed
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    # Relationships
+    event = db.relationship('ShootingEvent', backref='competition')
+    creator = db.relationship('User', backref='created_competitions')
+    groups = db.relationship('CompetitionGroup', backref='competition', lazy=True, cascade='all, delete-orphan')
+    registrations = db.relationship('CompetitionRegistration', backref='competition', lazy=True, cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<Competition for {self.event.name}>'
+    
+    @property
+    def total_arrows(self):
+        """Calculate total arrows per archer"""
+        return self.number_of_rounds * self.arrows_per_round
+    
+    @property
+    def max_possible_score(self):
+        """Calculate maximum possible score (assuming 10 points per arrow)"""
+        return self.total_arrows * 10
+    
+    @property
+    def registration_count(self):
+        """Get total number of registered participants"""
+        return len(self.registrations)
+    
+    def get_results_by_group(self):
+        """Get competition results organized by group"""
+        results = {}
+        for group in self.groups:
+            group_registrations = [r for r in self.registrations if r.group_id == group.id]
+            # Sort by total score descending
+            group_registrations.sort(key=lambda x: x.total_score, reverse=True)
+            results[group.name] = group_registrations
+        return results
+
+class CompetitionGroup(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    competition_id = db.Column(db.Integer, db.ForeignKey('competition.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)  # e.g., "Adults", "Juniors", "Seniors"
+    description = db.Column(db.Text)
+    min_age = db.Column(db.Integer)  # Optional age restrictions
+    max_age = db.Column(db.Integer)  # Optional age restrictions
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    teams = db.relationship('CompetitionTeam', backref='group', lazy=True, cascade='all, delete-orphan')
+    registrations = db.relationship('CompetitionRegistration', backref='group', lazy=True)
+    
+    def __repr__(self):
+        return f'<CompetitionGroup {self.name}>'
+    
+    @property
+    def participant_count(self):
+        """Get number of participants in this group"""
+        return len(self.registrations)
+    
+    @property
+    def team_count(self):
+        """Get number of teams in this group"""
+        return len(self.teams)
+
+class CompetitionTeam(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    group_id = db.Column(db.Integer, db.ForeignKey('competition_group.id'), nullable=False)
+    team_number = db.Column(db.Integer, nullable=False)  # Team 1, 2, 3, etc. within the group
+    target_number = db.Column(db.Integer, nullable=False)  # Target assignment
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    registrations = db.relationship('CompetitionRegistration', backref='team', lazy=True)
+    
+    # Unique constraint: one team number per group
+    __table_args__ = (db.UniqueConstraint('group_id', 'team_number', name='unique_team_per_group'),)
+    
+    def __repr__(self):
+        return f'<CompetitionTeam {self.group.name} Team {self.team_number}>'
+    
+    @property
+    def member_count(self):
+        """Get number of members in this team"""
+        return len(self.registrations)
+    
+    @property
+    def team_total_score(self):
+        """Calculate total score for all team members"""
+        return sum(reg.total_score for reg in self.registrations)
+    
+    @property
+    def team_average_score(self):
+        """Calculate average score per team member"""
+        if self.member_count == 0:
+            return 0
+        return self.team_total_score / self.member_count
+
+class CompetitionRegistration(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    competition_id = db.Column(db.Integer, db.ForeignKey('competition.id'), nullable=False)
+    member_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    group_id = db.Column(db.Integer, db.ForeignKey('competition_group.id'), nullable=False)
+    team_id = db.Column(db.Integer, db.ForeignKey('competition_team.id'), nullable=True)  # Assigned when teams are created
+    registration_date = db.Column(db.DateTime, default=datetime.utcnow)
+    notes = db.Column(db.Text)
+    
+    # Relationships
+    member = db.relationship('User', backref='competition_registrations')
+    arrow_scores = db.relationship('ArrowScore', backref='registration', lazy=True, cascade='all, delete-orphan')
+    
+    # Unique constraint: one registration per member per competition
+    __table_args__ = (db.UniqueConstraint('competition_id', 'member_id', name='unique_member_per_competition'),)
+    
+    def __repr__(self):
+        return f'<CompetitionRegistration {self.member.username} in {self.competition.event.name}>'
+    
+    @property
+    def total_score(self):
+        """Calculate total score from all arrows"""
+        return sum(score.points for score in self.arrow_scores)
+    
+    @property
+    def completed_rounds(self):
+        """Get number of completed rounds"""
+        total_arrows = len(self.arrow_scores)
+        return total_arrows // self.competition.arrows_per_round
+    
+    @property
+    def is_complete(self):
+        """Check if all rounds are completed"""
+        expected_arrows = self.competition.total_arrows
+        return len(self.arrow_scores) >= expected_arrows
+    
+    def get_round_score(self, round_number):
+        """Get score for a specific round (1-indexed)"""
+        start_arrow = (round_number - 1) * self.competition.arrows_per_round
+        end_arrow = start_arrow + self.competition.arrows_per_round
+        
+        round_arrows = [score for score in self.arrow_scores 
+                       if start_arrow < score.arrow_number <= end_arrow]
+        return sum(score.points for score in round_arrows)
+    
+    def get_round_scores(self):
+        """Get scores for all rounds"""
+        scores = []
+        for round_num in range(1, self.competition.number_of_rounds + 1):
+            scores.append(self.get_round_score(round_num))
+        return scores
+
+class ArrowScore(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    registration_id = db.Column(db.Integer, db.ForeignKey('competition_registration.id'), nullable=False)
+    arrow_number = db.Column(db.Integer, nullable=False)  # 1, 2, 3... up to total_arrows
+    points = db.Column(db.Integer, nullable=False)  # 0-10 points per arrow
+    is_x = db.Column(db.Boolean, default=False)  # Inner X ring (for tie-breaking)
+    round_number = db.Column(db.Integer, nullable=False)  # Which round this arrow belongs to
+    recorded_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    recorded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    notes = db.Column(db.Text)  # Optional notes about the shot
+    
+    # Relationships
+    recorder = db.relationship('User', backref='recorded_arrow_scores')
+    
+    # Unique constraint: one score per arrow per registration
+    __table_args__ = (db.UniqueConstraint('registration_id', 'arrow_number', name='unique_arrow_per_registration'),)
+    
+    def __repr__(self):
+        return f'<ArrowScore {self.points} points for arrow {self.arrow_number}>'
+    
+    @property
+    def is_bullseye(self):
+        """Check if this is a bullseye (10 points)"""
+        return self.points == 10
+    
+    @property
+    def is_inner_ring(self):
+        """Check if this hit the inner ring (9 or 10 points)"""
+        return self.points >= 9

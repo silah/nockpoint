@@ -78,10 +78,26 @@ def view_event(id):
     """View shooting event details"""
     event = ShootingEvent.query.get_or_404(id)
     
-    # Get attendance list
-    attendances = EventAttendance.query.filter_by(event_id=id).join(User).order_by(User.first_name, User.last_name).all()
+    # Get attendance list - specify which User relationship to join on
+    attendances = EventAttendance.query.filter_by(event_id=id).join(User, EventAttendance.member_id == User.id).order_by(User.first_name, User.last_name).all()
     
-    return render_template('events/view_event.html', event=event, attendances=attendances)
+    # Calculate statistics for template
+    attendance_count = len(attendances)
+    attended_count = sum(1 for attendance in attendances if attendance.attended_at is not None)
+    
+    # Calculate total revenue from charges for this event
+    total_revenue = db.session.query(db.func.sum(MemberCharge.amount)).filter_by(event_id=id, is_paid=True).scalar() or 0
+    
+    # For template compatibility, also pass attendances as 'attendees'
+    attendees = attendances
+    
+    return render_template('events/view_event.html', 
+                         event=event, 
+                         attendances=attendances,
+                         attendees=attendees,
+                         attendance_count=attendance_count,
+                         attended_count=attended_count,
+                         total_revenue=total_revenue)
 
 @events_bp.route('/event/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -184,9 +200,32 @@ def manage_attendance(id):
             form.notes.data = ''
     
     # Get current attendances
-    attendances = EventAttendance.query.filter_by(event_id=id).join(User).order_by(User.first_name, User.last_name).all()
+    attendances = EventAttendance.query.filter_by(event_id=id).join(User, EventAttendance.member_id == User.id).order_by(User.first_name, User.last_name).all()
     
-    return render_template('events/manage_attendance.html', event=event, form=form, attendances=attendances)
+    # Calculate statistics for template
+    attended_count = sum(1 for attendance in attendances if attendance.attended_at is not None)
+    
+    # Calculate total revenue collected from charges for this event
+    total_collected = db.session.query(db.func.sum(MemberCharge.amount)).filter_by(event_id=id, is_paid=True).scalar() or 0
+    
+    # Get available users for the add attendee modal (users not already registered)
+    registered_user_ids = [attendance.member_id for attendance in attendances]
+    available_users = User.query.filter(
+        User.is_active == True,
+        ~User.id.in_(registered_user_ids)
+    ).order_by(User.first_name, User.last_name).all()
+    
+    # For template compatibility, also pass attendances as 'all_attendees'
+    all_attendees = attendances
+    
+    return render_template('events/manage_attendance.html', 
+                         event=event, 
+                         form=form, 
+                         attendances=attendances,
+                         all_attendees=all_attendees,
+                         attended_count=attended_count,
+                         total_collected=total_collected,
+                         available_users=available_users)
 
 @events_bp.route('/payments')
 @login_required
@@ -194,7 +233,7 @@ def manage_attendance(id):
 def outstanding_payments():
     """Show outstanding payments admin page"""
     # Get all unpaid charges
-    unpaid_charges = MemberCharge.query.filter_by(is_paid=False).join(User).order_by(
+    unpaid_charges = MemberCharge.query.filter_by(is_paid=False).join(User, MemberCharge.member_id == User.id).order_by(
         MemberCharge.charge_date.desc()
     ).all()
     

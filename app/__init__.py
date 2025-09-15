@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
+from flask_wtf.csrf import CSRFProtect
 import os
 from dotenv import load_dotenv
 
@@ -12,6 +13,7 @@ load_dotenv()
 db = SQLAlchemy()
 login_manager = LoginManager()
 migrate = Migrate()
+csrf = CSRFProtect()
 
 def create_app(config=None):
     app = Flask(__name__)
@@ -28,6 +30,7 @@ def create_app(config=None):
     db.init_app(app)
     login_manager.init_app(app)
     migrate.init_app(app, db)
+    csrf.init_app(app)
     
     # Login manager configuration
     login_manager.login_view = 'auth.login'
@@ -40,11 +43,13 @@ def create_app(config=None):
     from app.inventory import inventory_bp
     from app.members import members_bp
     from app.events import events_bp
+    from app.competitions import competitions_bp
     
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(main_bp)
     app.register_blueprint(inventory_bp, url_prefix='/inventory')
     app.register_blueprint(members_bp, url_prefix='/members')
     app.register_blueprint(events_bp, url_prefix='/events')
+    app.register_blueprint(competitions_bp, url_prefix='/competitions')
     
     return app
