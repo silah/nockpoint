@@ -54,15 +54,18 @@
                         
                         <h6><i class="bi bi-people text-primary"></i> Participants</h6>
                         <p>
-                            {{ attendance_count }} registered
+                            {{ total_registered }} registered
                             {% if event.max_participants %}
                                 / {{ event.max_participants }} max
-                                {% set remaining = event.max_participants - attendance_count %}
+                                {% set remaining = event.max_participants - total_registered %}
                                 {% if remaining > 0 %}
                                     <br><small class="text-success">{{ remaining }} spots remaining</small>
                                 {% else %}
                                     <br><small class="text-danger">Event is full</small>
                                 {% endif %}
+                            {% endif %}
+                            {% if attended_count > 0 %}
+                                <br><small class="text-info">{{ attended_count }} attended</small>
                             {% endif %}
                         </p>
                     </div>
@@ -77,24 +80,28 @@
         </div>
         
         <!-- Attendance List -->
-        {% if attendees %}
+        {% if all_participants %}
             <div class="card mt-4">
                 <div class="card-header">
-                    <h5><i class="bi bi-people-fill"></i> Registered Participants ({{ attendees|length }})</h5>
+                    <h5><i class="bi bi-people-fill"></i> Registered Participants ({{ all_participants|length }})</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        {% for attendee in attendees %}
+                        {% for participant in all_participants %}
                             <div class="col-md-6 mb-2">
                                 <div class="d-flex align-items-center">
                                     <i class="bi bi-person-circle text-muted me-2"></i>
-                                    {{ attendee.member.first_name }} {{ attendee.member.last_name }}
-                                    {% if attendee.attended %}
-                                        <span class="badge bg-success ms-2">Attended</span>
-                                    {% elif event.is_past %}
-                                        <span class="badge bg-secondary ms-2">Absent</span>
-                                    {% else %}
-                                        <span class="badge bg-info ms-2">Registered</span>
+                                    {{ participant.member.first_name }} {{ participant.member.last_name }}
+                                    {% if participant.type == 'attendance' %}
+                                        {% if participant.attended %}
+                                            <span class="badge bg-success ms-2">Attended</span>
+                                        {% elif event.is_past %}
+                                            <span class="badge bg-secondary ms-2">Absent</span>
+                                        {% else %}
+                                            <span class="badge bg-info ms-2">Registered</span>
+                                        {% endif %}
+                                    {% elif participant.type == 'competition' %}
+                                        <span class="badge bg-warning ms-2">Competition: {{ participant.group_name }}</span>
                                     {% endif %}
                                 </div>
                             </div>

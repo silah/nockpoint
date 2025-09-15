@@ -199,10 +199,32 @@
                         </select>
                         <div class="form-text">Only members not already registered are shown</div>
                     </div>
+                    
+                    {% if competition_groups %}
+                        <div class="mb-3">
+                            <label for="group_id" class="form-label">Competition Group</label>
+                            <select class="form-select" id="group_id" name="group_id">
+                                <option value="">Auto-select group (recommended)</option>
+                                {% for group in competition_groups %}
+                                    <option value="{{ group.id }}">
+                                        {{ group.name }}
+                                        {% if group.min_age or group.max_age %}
+                                            ({% if group.min_age and group.max_age %}{{ group.min_age }}-{{ group.max_age }}{% elif group.min_age %}{{ group.min_age }}+{% elif group.max_age %}≤{{ group.max_age }}{% endif %} years)
+                                        {% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">This member will be registered for the competition when marked as attended</div>
+                        </div>
+                    {% endif %}
+                    
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" id="mark_attended" name="mark_attended" value="1">
                         <label class="form-check-label" for="mark_attended">
                             Mark as attended immediately
+                            {% if competition_groups %}
+                                <br><small class="text-muted">Will also register for competition</small>
+                            {% endif %}
                         </label>
                     </div>
                 </form>

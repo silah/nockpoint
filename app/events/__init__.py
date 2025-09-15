@@ -81,14 +81,57 @@ def view_event(id):
     # Get attendance list - specify which User relationship to join on
     attendances = EventAttendance.query.filter_by(event_id=id).join(User, EventAttendance.member_id == User.id).order_by(User.first_name, User.last_name).all()
     
+    # If this event has a competition, also get competition registrations
+    competition_registrations = []
+    if event.competition and len(event.competition) > 0:
+        from app.models import CompetitionRegistration, CompetitionGroup
+        competition = event.competition[0]
+        competition_registrations = CompetitionRegistration.query.filter_by(
+            competition_id=competition.id
+        ).join(User, CompetitionRegistration.member_id == User.id).join(
+            CompetitionGroup, CompetitionRegistration.group_id == CompetitionGroup.id
+        ).order_by(User.first_name, User.last_name).all()
+    
+    # Combine attendances and competition registrations for the "Registered Participants" display
+    # Create a unified list with consistent structure
+    all_participants = []
+    
+    # Add event attendances
+    for attendance in attendances:
+        all_participants.append({
+            'member': attendance.member,
+            'attended': attendance.attended_at is not None,
+            'type': 'attendance',
+            'registration_time': attendance.attended_at or attendance.id,  # Use ID as fallback for sorting
+            'notes': attendance.notes,
+            'group_name': None
+        })
+    
+    # Add competition registrations (avoiding duplicates if someone is in both lists)
+    attendance_member_ids = [a.member_id for a in attendances]
+    for registration in competition_registrations:
+        if registration.member_id not in attendance_member_ids:
+            all_participants.append({
+                'member': registration.member,
+                'attended': False,  # Competition registrations don't have attendance status
+                'type': 'competition',
+                'registration_time': registration.id,  # Use ID for sorting
+                'notes': registration.notes,
+                'group_name': registration.group.name
+            })
+    
+    # Sort by member name
+    all_participants.sort(key=lambda x: (x['member'].first_name, x['member'].last_name))
+    
     # Calculate statistics for template
     attendance_count = len(attendances)
     attended_count = sum(1 for attendance in attendances if attendance.attended_at is not None)
+    total_registered = len(all_participants)
     
     # Calculate total revenue from charges for this event
     total_revenue = db.session.query(db.func.sum(MemberCharge.amount)).filter_by(event_id=id, is_paid=True).scalar() or 0
     
-    # For template compatibility, also pass attendances as 'attendees'
+    # For template compatibility, also pass attendances as 'attendees' and the unified list as 'all_participants'
     attendees = attendances
     
     # Check if event has a competition and prepare form for editing
@@ -102,8 +145,10 @@ def view_event(id):
                          event=event, 
                          attendances=attendances,
                          attendees=attendees,
+                         all_participants=all_participants,
                          attendance_count=attendance_count,
                          attended_count=attended_count,
+                         total_registered=total_registered,
                          total_revenue=total_revenue,
                          competition_form=competition_form)
 
@@ -187,6 +232,28 @@ def manage_attendance(id):
             )
             db.session.add(attendance)
             
+            # If this is a competition event, auto-register them for competition
+            if event.competition and len(event.competition) > 0:
+                from app.models import CompetitionRegistration
+                competition = event.competition[0]
+                
+                # Check if already registered for competition
+                existing_comp_registration = CompetitionRegistration.query.filter_by(
+                    competition_id=competition.id, member_id=form.member_id.data
+                ).first()
+                
+                if not existing_comp_registration:
+                    # Get the first available group
+                    if competition.groups:
+                        default_group = competition.groups[0]
+                        comp_registration = CompetitionRegistration(
+                            competition_id=competition.id,
+                            member_id=form.member_id.data,
+                            group_id=default_group.id,
+                            notes=f'Auto-registered via event attendance by admin: {current_user.first_name} {current_user.last_name}'
+                        )
+                        db.session.add(comp_registration)
+            
             # Create charge for the member if event has a price
             if event.price > 0:
                 member = User.query.get(form.member_id.data)
@@ -223,6 +290,12 @@ def manage_attendance(id):
         ~User.id.in_(registered_user_ids)
     ).order_by(User.first_name, User.last_name).all()
     
+    # Get competition groups if this is a competition event
+    competition_groups = []
+    if event.competition and len(event.competition) > 0:
+        competition = event.competition[0]
+        competition_groups = competition.groups
+    
     # For template compatibility, also pass attendances as 'all_attendees'
     all_attendees = attendances
     
@@ -233,7 +306,8 @@ def manage_attendance(id):
                          all_attendees=all_attendees,
                          attended_count=attended_count,
                          total_collected=total_collected,
-                         available_users=available_users)
+                         available_users=available_users,
+                         competition_groups=competition_groups)
 
 @events_bp.route('/payments')
 @login_required
@@ -307,6 +381,7 @@ def add_attendee(event_id):
     
     member_id = request.form.get('member_id', type=int)
     mark_attended = request.form.get('mark_attended') == '1'
+    group_id = request.form.get('group_id', type=int)  # For competition events
     
     if not member_id:
         flash('Please select a member', 'error')
@@ -333,6 +408,29 @@ def add_attendee(event_id):
             attendance.attended_at = datetime.utcnow()
         
         db.session.add(attendance)
+        
+        # If this is a competition event and member is attending, auto-register them for competition
+        if mark_attended and event.competition and len(event.competition) > 0:
+            from app.models import CompetitionRegistration
+            competition = event.competition[0]
+            
+            # Check if already registered for competition
+            existing_comp_registration = CompetitionRegistration.query.filter_by(
+                competition_id=competition.id, member_id=member_id
+            ).first()
+            
+            if not existing_comp_registration:
+                # Use provided group_id or default to first group
+                target_group_id = group_id if group_id else (competition.groups[0].id if competition.groups else None)
+                
+                if target_group_id:
+                    comp_registration = CompetitionRegistration(
+                        competition_id=competition.id,
+                        member_id=member_id,
+                        group_id=target_group_id,
+                        notes=f'Auto-registered via event attendance by admin: {current_user.first_name} {current_user.last_name}'
+                    )
+                    db.session.add(comp_registration)
         
         # Create charge if event is paid and member attended
         if mark_attended and event.price > 0:
@@ -379,8 +477,32 @@ def update_attendance(id):
         attendance.attended_at = datetime.utcnow() if attended else None
         attendance.recorded_by = current_user.id
         
-        # Create charge if attending and event is paid
+        # Get event for further processing
         event = ShootingEvent.query.get(id)
+        
+        # If this is a competition event and member is now attending, auto-register them for competition
+        if attended and event.competition and len(event.competition) > 0:
+            from app.models import CompetitionRegistration
+            competition = event.competition[0]
+            
+            # Check if already registered for competition
+            existing_comp_registration = CompetitionRegistration.query.filter_by(
+                competition_id=competition.id, member_id=attendee_id
+            ).first()
+            
+            if not existing_comp_registration:
+                # Get the first available group
+                if competition.groups:
+                    default_group = competition.groups[0]
+                    comp_registration = CompetitionRegistration(
+                        competition_id=competition.id,
+                        member_id=attendee_id,
+                        group_id=default_group.id,
+                        notes=f'Auto-registered via event attendance by admin: {current_user.first_name} {current_user.last_name}'
+                    )
+                    db.session.add(comp_registration)
+        
+        # Create charge if attending and event is paid
         if attended and event.price > 0:
             existing_charge = MemberCharge.query.filter_by(
                 member_id=attendee_id, event_id=id
