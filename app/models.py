@@ -127,6 +127,19 @@ class EventAttendance(db.Model):
     
     def __repr__(self):
         return f'<EventAttendance {self.member.username} at {self.event.name}>'
+    
+    @property
+    def attended(self):
+        """Check if member actually attended (has attended_at timestamp)"""
+        return self.attended_at is not None
+    
+    @property
+    def charge(self):
+        """Get the charge associated with this attendance"""
+        return MemberCharge.query.filter_by(
+            member_id=self.member_id,
+            event_id=self.event_id
+        ).first()
 
 class MemberCharge(db.Model):
     id = db.Column(db.Integer, primary_key=True)

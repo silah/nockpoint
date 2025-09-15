@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app import db
 from app.models import ShootingEvent, EventAttendance, MemberCharge, User
@@ -188,33 +188,6 @@ def manage_attendance(id):
     
     return render_template('events/manage_attendance.html', event=event, form=form, attendances=attendances)
 
-@events_bp.route('/attendance/<int:id>/remove', methods=['POST'])
-@login_required
-@admin_required
-def remove_attendance(id):
-    """Remove attendance record"""
-    attendance = EventAttendance.query.get_or_404(id)
-    event_id = attendance.event_id
-    member_name = f"{attendance.member.first_name} {attendance.member.last_name}"
-    
-    # Also remove associated charge if exists
-    charge = MemberCharge.query.filter_by(
-        member_id=attendance.member_id,
-        event_id=attendance.event_id
-    ).first()
-    
-    if charge and not charge.is_paid:
-        db.session.delete(charge)
-    elif charge and charge.is_paid:
-        flash(f'Cannot remove attendance for {member_name} - payment has already been processed.', 'error')
-        return redirect(url_for('events.manage_attendance', id=event_id))
-    
-    db.session.delete(attendance)
-    db.session.commit()
-    
-    flash(f'Attendance removed for {member_name}', 'success')
-    return redirect(url_for('events.manage_attendance', id=event_id))
-
 @events_bp.route('/payments')
 @login_required
 @admin_required
@@ -268,3 +241,234 @@ def my_charges():
     outstanding = sum(charge.amount for charge in charges if not charge.is_paid)
     
     return render_template('events/my_charges.html', charges=charges, outstanding=outstanding)
+
+@events_bp.route('/event/<int:event_id>/add-attendee', methods=['POST'])
+@login_required
+@admin_required
+def add_attendee(event_id):
+    """Add an attendee to an event"""
+    event = ShootingEvent.query.get_or_404(event_id)
+    
+    member_id = request.form.get('member_id', type=int)
+    mark_attended = request.form.get('mark_attended') == '1'
+    
+    if not member_id:
+        flash('Please select a member', 'error')
+        return redirect(url_for('events.manage_attendance', id=event_id))
+    
+    # Check if already registered
+    existing = EventAttendance.query.filter_by(
+        event_id=event_id, member_id=member_id
+    ).first()
+    
+    if existing:
+        flash('Member is already registered for this event', 'error')
+        return redirect(url_for('events.manage_attendance', id=event_id))
+    
+    try:
+        # Create attendance record
+        attendance = EventAttendance(
+            event_id=event_id,
+            member_id=member_id,
+            recorded_by=current_user.id
+        )
+        
+        if mark_attended:
+            attendance.attended_at = datetime.utcnow()
+        
+        db.session.add(attendance)
+        
+        # Create charge if event is paid and member attended
+        if mark_attended and event.price > 0:
+            member = User.query.get(member_id)
+            charge = MemberCharge(
+                member_id=member.id,
+                event_id=event.id,
+                description=f"Charge for {event.name}",
+                amount=event.price,
+                is_paid=False
+            )
+            db.session.add(charge)
+        
+        db.session.commit()
+        
+        member = User.query.get(member_id)
+        flash(f'{member.first_name} {member.last_name} has been added to the event', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error adding attendee: {str(e)}', 'error')
+    
+    return redirect(url_for('events.manage_attendance', id=event_id))
+
+@events_bp.route('/event/<int:id>/update-attendance', methods=['POST'])
+@login_required
+@admin_required
+def update_attendance(id):
+    """Update attendance status via AJAX"""
+    
+    data = request.get_json()
+    attendee_id = data.get('attendee_id')
+    attended = data.get('attended', False)
+    
+    try:
+        attendance = EventAttendance.query.filter_by(
+            event_id=id, member_id=attendee_id
+        ).first()
+        
+        if not attendance:
+            return jsonify({'success': False, 'error': 'Attendance record not found'})
+        
+        # Update attended status
+        attendance.attended_at = datetime.utcnow() if attended else None
+        attendance.recorded_by = current_user.id
+        
+        # Create charge if attending and event is paid
+        event = ShootingEvent.query.get(id)
+        if attended and event.price > 0:
+            existing_charge = MemberCharge.query.filter_by(
+                member_id=attendee_id, event_id=id
+            ).first()
+            
+            if not existing_charge:
+                charge = MemberCharge(
+                    member_id=attendee_id,
+                    event_id=id,
+                    description=f"Charge for {event.name}",
+                    amount=event.price,
+                    is_paid=False
+                )
+                db.session.add(charge)
+        
+        db.session.commit()
+        return jsonify({'success': True})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)})
+
+@events_bp.route('/mark-paid', methods=['POST'])
+@login_required
+@admin_required
+def mark_paid():
+    """Mark a charge as paid via AJAX"""
+    
+    data = request.get_json()
+    charge_id = data.get('charge_id')
+    
+    try:
+        charge = MemberCharge.query.get_or_404(charge_id)
+        charge.is_paid = True
+        charge.paid_date = datetime.utcnow()
+        charge.paid_by_admin = current_user.id
+        
+        db.session.commit()
+        return jsonify({'success': True})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)})
+
+@events_bp.route('/attendance/<int:id>/remove', methods=['POST'])
+@login_required  
+@admin_required
+def remove_attendee(id):
+    """Remove an attendee from an event via AJAX"""
+    
+    data = request.get_json()
+    member_id = data.get('member_id')
+    
+    try:
+        # Find and remove attendance record
+        attendance = EventAttendance.query.filter_by(
+            event_id=id, member_id=member_id
+        ).first()
+        
+        if not attendance:
+            return jsonify({'success': False, 'error': 'Attendance record not found'})
+        
+        # Remove associated charges
+        charges = MemberCharge.query.filter_by(
+            member_id=member_id, event_id=id
+        ).all()
+        
+        for charge in charges:
+            db.session.delete(charge)
+        
+        db.session.delete(attendance)
+        db.session.commit()
+        
+        return jsonify({'success': True})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)})
+
+@events_bp.route('/update-payment-status', methods=['POST'])
+@login_required
+@admin_required
+def update_payment_status():
+    """Update payment status via AJAX"""
+    
+    data = request.get_json()
+    charge_id = data.get('charge_id')
+    paid = data.get('paid', False)
+    
+    try:
+        charge = MemberCharge.query.get_or_404(charge_id)
+        charge.is_paid = paid
+        
+        if paid:
+            charge.paid_date = datetime.utcnow()
+            charge.paid_by_admin = current_user.id
+        else:
+            charge.paid_date = None
+            charge.paid_by_admin = None
+        
+        db.session.commit()
+        return jsonify({'success': True})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)})
+
+@events_bp.route('/update-charge-amount', methods=['POST'])
+@login_required
+@admin_required
+def update_charge_amount():
+    """Update charge amount via AJAX"""
+    
+    data = request.get_json()
+    charge_id = data.get('charge_id')
+    new_amount = data.get('amount')
+    
+    try:
+        charge = MemberCharge.query.get_or_404(charge_id)
+        charge.amount = Decimal(str(new_amount))
+        
+        db.session.commit()
+        return jsonify({'success': True})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)})
+
+@events_bp.route('/delete-charge', methods=['POST'])
+@login_required
+@admin_required  
+def delete_charge():
+    """Delete a charge via AJAX"""
+    
+    data = request.get_json()
+    charge_id = data.get('charge_id')
+    
+    try:
+        charge = MemberCharge.query.get_or_404(charge_id)
+        db.session.delete(charge)
+        db.session.commit()
+        
+        return jsonify({'success': True})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)})

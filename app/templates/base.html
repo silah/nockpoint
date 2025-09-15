@@ -43,7 +43,7 @@
                                 <li><a class="dropdown-item" href="{{ url_for('events.my_charges') }}">My Charges</a></li>
                                 {% if current_user.is_admin() %}
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{{ url_for('events.create_event') }}">Create Event</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('events.new_event') }}">Create Event</a></li>
                                     <li><a class="dropdown-item" href="{{ url_for('events.outstanding_payments') }}">Manage Payments</a></li>
                                 {% endif %}
                             </ul>
