@@ -3,6 +3,52 @@
 {% block title %}Score Registration - {{ competition.name }} - {{ super() }}{% endblock %}
 
 {% block content %}
+<style>
+.scoring-grid {
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.score-buttons .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    margin-right: 2px;
+}
+
+.score-buttons .btn:last-child {
+    margin-right: 0;
+}
+
+.score-buttons .btn.active {
+    box-shadow: 0 0 5px rgba(0,123,255,0.5);
+}
+
+@media (max-width: 768px) {
+    .scoring-grid .col-2 {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    .scoring-grid .col-8 {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    .scoring-grid .col-2:last-child {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    .score-buttons .btn {
+        padding: 0.375rem 0.5rem;
+        margin-right: 3px;
+        margin-bottom: 5px;
+    }
+}
+</style>
+
 <div class="row">
     <div class="col-md-8 mx-auto">
         <div class="card">
@@ -83,41 +129,44 @@
                         <div class="col-md-12">
                             <h6 class="mb-3">Enter Scores for Round {{ current_round }}</h6>
                             
-                            <!-- Arrow Scoring Grid -->
-                            <div class="row g-3">
+                            <!-- Arrow Scoring Grid with Button Interface -->
+                            <div class="scoring-grid">
                                 {% for i in range(competition.arrows_per_round) %}
                                     {% set arrow_num = i + 1 %}
                                     
-                                    <div class="col-md-4 col-lg-3">
-                                        <div class="card h-100">
-                                            <div class="card-header text-center bg-primary text-white py-2">
-                                                <strong>Arrow {{ arrow_num }}</strong>
+                                    <div class="row mb-3 align-items-center border rounded p-3">
+                                        <div class="col-2">
+                                            <strong class="h6">Arrow {{ arrow_num }}:</strong>
+                                        </div>
+                                        <div class="col-8">
+                                            <!-- Score Buttons 0-10 -->
+                                            <div class="btn-group score-buttons" role="group" aria-label="Score for arrow {{ arrow_num }}">
+                                                {% for score in range(11) %}
+                                                    <button type="button" 
+                                                            class="btn btn-outline-primary btn-sm score-btn" 
+                                                            data-arrow="{{ arrow_num }}" 
+                                                            data-score="{{ score }}"
+                                                            style="min-width: 35px;">
+                                                        {{ score }}
+                                                    </button>
+                                                {% endfor %}
                                             </div>
-                                            <div class="card-body text-center">
-                                                <!-- Score Input -->
-                                                <div class="mb-3">
-                                                    <label class="form-label visually-hidden" for="arrow_{{ arrow_num }}">Arrow {{ arrow_num }}</label>
-                                                    <input class="form-control form-control-lg text-center" 
-                                                           type="number" 
-                                                           name="arrow_{{ arrow_num }}" 
-                                                           id="arrow_{{ arrow_num }}" 
-                                                           placeholder="0-10" 
-                                                           min="0" 
-                                                           max="10" 
-                                                           required>
-                                                </div>
-                                                
-                                                <!-- X Ring Checkbox -->
-                                                <div class="form-check">
-                                                    <input class="form-check-input" 
-                                                           type="checkbox" 
-                                                           name="is_x_{{ arrow_num }}" 
-                                                           id="is_x_{{ arrow_num }}">
-                                                    <label class="form-check-label" for="is_x_{{ arrow_num }}">
-                                                        X{{ arrow_num }}
-                                                    </label>
-                                                    <br><small class="form-text text-muted">X-ring hit</small>
-                                                </div>
+                                            <!-- Hidden input to store the selected score -->
+                                            <input type="hidden" 
+                                                   name="arrow_{{ arrow_num }}" 
+                                                   id="arrow_{{ arrow_num }}" 
+                                                   required>
+                                        </div>
+                                        <div class="col-2">
+                                            <!-- X Ring Checkbox -->
+                                            <div class="form-check">
+                                                <input class="form-check-input" 
+                                                       type="checkbox" 
+                                                       name="is_x_{{ arrow_num }}" 
+                                                       id="is_x_{{ arrow_num }}">
+                                                <label class="form-check-label" for="is_x_{{ arrow_num }}">
+                                                    X-ring
+                                                </label>
                                             </div>
                                         </div>
                                     </div>
@@ -163,8 +212,9 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
-<script>
+{% block scripts %}
 <script>
 // Store template variables for use in JavaScript
 const ARROWS_PER_ROUND = {{ competition.arrows_per_round }};
@@ -192,33 +242,61 @@ function updateRoundTotal() {
     document.getElementById('xCount').textContent = xCount;
 }
 
-// Auto-check X when score is 10
-function setupAutoX() {
-    // Loop through all arrow inputs dynamically
+// Handle score button clicks
+function setupScoreButtons() {
+    const scoreButtons = document.querySelectorAll('.score-btn');
+    
+    scoreButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const arrow = this.getAttribute('data-arrow');
+            const score = parseInt(this.getAttribute('data-score'));
+            
+            // Remove active class from all buttons in this arrow group
+            const arrowButtons = document.querySelectorAll(`.score-btn[data-arrow="${arrow}"]`);
+            arrowButtons.forEach(btn => btn.classList.remove('btn-primary', 'active'));
+            arrowButtons.forEach(btn => btn.classList.add('btn-outline-primary'));
+            
+            // Add active class to selected button
+            this.classList.remove('btn-outline-primary');
+            this.classList.add('btn-primary', 'active');
+            
+            // Set the hidden input value
+            const hiddenInput = document.getElementById('arrow_' + arrow);
+            hiddenInput.value = score;
+            
+            // Auto-check X if score is 10, uncheck if not
+            const xCheckbox = document.getElementById('is_x_' + arrow);
+            if (xCheckbox) {
+                if (score === 10) {
+                    xCheckbox.checked = true;
+                } else {
+                    xCheckbox.checked = false;
+                }
+            }
+            
+            updateRoundTotal();
+        });
+    });
+}
+
+// Handle X checkbox changes
+function setupXCheckboxes() {
     for (let i = 1; i <= ARROWS_PER_ROUND; i++) {
-        const arrowInput = document.getElementById('arrow_' + i);
         const xCheckbox = document.getElementById('is_x_' + i);
         
-        if (arrowInput) {
-            arrowInput.addEventListener('input', function() {
-                const score = parseInt(this.value);
+        if (xCheckbox) {
+            xCheckbox.addEventListener('change', function() {
+                const arrow = i;
+                const hiddenInput = document.getElementById('arrow_' + arrow);
                 
-                // Validate score range
-                if (score < 0) this.value = 0;
-                if (score > 10) this.value = 10;
-                
-                // Uncheck X if score is not 10
-                if (xCheckbox && score !== 10) {
-                    xCheckbox.checked = false;
+                // If X is checked but score is not 10, uncheck X
+                if (this.checked && hiddenInput.value !== '10') {
+                    this.checked = false;
+                    alert('X-ring can only be marked for 10-point shots');
                 }
                 
                 updateRoundTotal();
             });
-        }
-        
-        // Update total when X status changes
-        if (xCheckbox) {
-            xCheckbox.addEventListener('change', updateRoundTotal);
         }
     }
 }
@@ -226,42 +304,28 @@ function setupAutoX() {
 // Form validation
 document.getElementById('scoringForm').addEventListener('submit', function(e) {
     let allFilled = true;
-    let hasInvalidScore = false;
     
-    // Get the number of arrows from the form elements
-    const arrowInputs = document.querySelectorAll('input[name^="arrow_"]');
-    
-    arrowInputs.forEach(function(arrowInput) {
-        const score = parseInt(arrowInput.value);
+    // Check that all arrows have scores
+    for (let i = 1; i <= ARROWS_PER_ROUND; i++) {
+        const hiddenInput = document.getElementById('arrow_' + i);
         
-        if (!arrowInput.value.trim()) {
+        if (!hiddenInput.value || hiddenInput.value === '') {
             allFilled = false;
+            break;
         }
-        
-        if (isNaN(score) || score < 0 || score > 10) {
-            hasInvalidScore = true;
-            arrowInput.classList.add('is-invalid');
-        } else {
-            arrowInput.classList.remove('is-invalid');
-        }
-    });
+    }
     
     if (!allFilled) {
         e.preventDefault();
-        alert('Please enter scores for all arrows.');
-        return;
-    }
-    
-    if (hasInvalidScore) {
-        e.preventDefault();
-        alert('All scores must be between 0 and 10.');
+        alert('Please select a score for all arrows.');
         return;
     }
 });
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
-    setupAutoX();
+    setupScoreButtons();
+    setupXCheckboxes();
     updateRoundTotal();
 });
 </script>
