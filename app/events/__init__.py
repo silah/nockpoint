@@ -72,90 +72,40 @@ def new_event():
     
     return render_template('events/event_form.html', form=form, title='New Shooting Event')
 
-@events_bp.route('/event/<int:id>')
+@events_bp.route('/events/<int:id>')
 @login_required
 def view_event(id):
-    """View shooting event details"""
+    """View event details and attendees"""
     event = ShootingEvent.query.get_or_404(id)
+    attendances = EventAttendance.query.filter_by(event_id=id).all()
     
-    # Get attendance list - specify which User relationship to join on
-    attendances = EventAttendance.query.filter_by(event_id=id).join(User, EventAttendance.member_id == User.id).order_by(User.first_name, User.last_name).all()
+    # Get all participants (from attendances and registered members)
+    all_participants = User.query.join(
+        EventAttendance, User.id == EventAttendance.member_id
+    ).filter(
+        EventAttendance.event_id == id
+    ).all()
     
-    # If this event has a competition, also get competition registrations
-    competition_registrations = []
-    competition_teams = []
-    if event.competition and len(event.competition) > 0:
-        from app.models import CompetitionRegistration, CompetitionGroup, CompetitionTeam
-        competition = event.competition[0]
-        competition_registrations = CompetitionRegistration.query.filter_by(
-            competition_id=competition.id
-        ).join(User, CompetitionRegistration.member_id == User.id).join(
-            CompetitionGroup, CompetitionRegistration.group_id == CompetitionGroup.id
-        ).order_by(User.first_name, User.last_name).all()
-        
-        # Get competition teams with their members
-        competition_teams = CompetitionTeam.query.join(
-            CompetitionGroup, CompetitionTeam.group_id == CompetitionGroup.id
-        ).filter(
-            CompetitionGroup.competition_id == competition.id
-        ).order_by(CompetitionGroup.name, CompetitionTeam.team_number).all()
+    # Check if current user is registered
+    user_registration = EventAttendance.query.filter_by(
+        event_id=id, member_id=current_user.id
+    ).first()
     
-    # Combine attendances and competition registrations for the "Registered Participants" display
-    # Create a unified list with consistent structure
-    all_participants = []
-    
-    # Add event attendances
-    for attendance in attendances:
-        all_participants.append({
-            'member': attendance.member,
-            'attended': attendance.attended_at is not None,
-            'type': 'attendance',
-            'registration_time': attendance.attended_at or attendance.id,  # Use ID as fallback for sorting
-            'notes': attendance.notes,
-            'group_name': None
-        })
-    
-    # Add competition registrations (avoiding duplicates if someone is in both lists)
-    attendance_member_ids = [a.member_id for a in attendances]
-    for registration in competition_registrations:
-        if registration.member_id not in attendance_member_ids:
-            all_participants.append({
-                'member': registration.member,
-                'attended': False,  # Competition registrations don't have attendance status
-                'type': 'competition',
-                'registration_time': registration.id,  # Use ID for sorting
-                'notes': registration.notes,
-                'group_name': registration.group.name
-            })
-    
-    # Sort by member name
-    all_participants.sort(key=lambda x: (x['member'].first_name, x['member'].last_name))
-    
-    # Calculate statistics for template
-    attendance_count = len(attendances)
-    attended_count = sum(1 for attendance in attendances if attendance.attended_at is not None)
+    # Count totals for display
     total_registered = len(all_participants)
-    
-    # For template compatibility, also pass attendances as 'attendees' and the unified list as 'all_participants'
-    attendees = attendances
-    
-    # Check if event has a competition and prepare form for editing
-    competition_form = None
-    if event.competition and len(event.competition) > 0:
-        competition = event.competition[0]
-        competition_form = CompetitionForm(obj=competition)
-        competition_form.submit.label.text = 'Update Competition'
+    total_attended = sum(1 for attendance in attendances if attendance.attended_at)
+    attended_count = total_attended  # Alias for template compatibility
+    attendance_count = total_registered  # Alias for template compatibility
     
     return render_template('events/view_event.html', 
                          event=event, 
                          attendances=attendances,
-                         attendees=attendees,
                          all_participants=all_participants,
-                         attendance_count=attendance_count,
-                         attended_count=attended_count,
                          total_registered=total_registered,
-                         competition_form=competition_form,
-                         competition_teams=competition_teams)
+                         total_attended=total_attended,
+                         attended_count=attended_count,
+                         attendance_count=attendance_count,
+                         user_registration=user_registration)
 
 @events_bp.route('/event/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -692,4 +642,92 @@ def update_event_competition(id):
         for error in errors:
             flash(f'{field}: {error}', 'error')
     
+    return redirect(url_for('events.view_event', id=id))
+
+@events_bp.route('/event/<int:id>/register', methods=['POST'])
+@login_required
+def register_for_event(id):
+    """Register current user for an event"""
+    event = ShootingEvent.query.get_or_404(id)
+    
+    # Check if already registered
+    existing_attendance = EventAttendance.query.filter_by(
+        event_id=id, member_id=current_user.id
+    ).first()
+    
+    if existing_attendance:
+        flash('You are already registered for this event.', 'warning')
+        return redirect(url_for('events.view_event', id=id))
+    
+    # Check capacity if set
+    if event.max_participants:
+        current_registrations = EventAttendance.query.filter_by(event_id=id).count()
+        if current_registrations >= event.max_participants:
+            flash('This event is full. No more registrations accepted.', 'error')
+            return redirect(url_for('events.view_event', id=id))
+    
+    # Create attendance record (registration)
+    attendance = EventAttendance(
+        event_id=id,
+        member_id=current_user.id,
+        recorded_by=current_user.id,  # Self-registration
+        notes='Self-registered by member'
+    )
+    
+    db.session.add(attendance)
+    
+    # Create charge if event is not free
+    if not event.is_free_event:
+        member_price = current_user.get_membership_price()
+        charge = MemberCharge(
+            member_id=current_user.id,
+            event_id=id,
+            description=f'Shooting event: {event.name} on {event.date.strftime("%Y-%m-%d")}',
+            amount=member_price
+        )
+        db.session.add(charge)
+    
+    db.session.commit()
+    
+    if event.is_free_event:
+        flash('Successfully registered for this event!', 'success')
+    else:
+        flash(f'Successfully registered! A charge of ${current_user.get_membership_price():.2f} has been added to your account.', 'success')
+    
+    return redirect(url_for('events.view_event', id=id))
+
+
+@events_bp.route('/event/<int:id>/cancel-registration', methods=['POST'])
+@login_required
+def cancel_registration(id):
+    """Cancel current user's registration for an event"""
+    event = ShootingEvent.query.get_or_404(id)
+    
+    # Find existing attendance record
+    attendance = EventAttendance.query.filter_by(
+        event_id=id, member_id=current_user.id
+    ).first()
+    
+    if not attendance:
+        flash('You are not registered for this event.', 'warning')
+        return redirect(url_for('events.view_event', id=id))
+    
+    # Check if already attended - cannot cancel if attended
+    if attendance.attended_at:
+        flash('Cannot cancel registration - you have already attended this event.', 'error')
+        return redirect(url_for('events.view_event', id=id))
+    
+    # Remove associated charges if not paid
+    charges = MemberCharge.query.filter_by(
+        event_id=id, member_id=current_user.id, is_paid=False
+    ).all()
+    
+    for charge in charges:
+        db.session.delete(charge)
+    
+    # Remove attendance record
+    db.session.delete(attendance)
+    db.session.commit()
+    
+    flash('Registration cancelled successfully!', 'success')
     return redirect(url_for('events.view_event', id=id))

@@ -79,7 +79,7 @@
                             </tr>
                             <tr>
                                 <td><strong>Member Since:</strong></td>
-                                <td>{{ (member.created_at.date() - member.created_at.date()).days }} days</td>
+                                <td>{{ member.created_at.strftime('%B %d, %Y') if member.created_at else 'N/A' }}</td>
                             </tr>
                         </table>
                     </div>

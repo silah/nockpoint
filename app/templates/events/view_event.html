@@ -91,17 +91,16 @@
                             <div class="col-md-6 mb-2">
                                 <div class="d-flex align-items-center">
                                     <i class="bi bi-person-circle text-muted me-2"></i>
-                                    {{ participant.member.first_name }} {{ participant.member.last_name }}
-                                    {% if participant.type == 'attendance' %}
-                                        {% if participant.attended %}
+                                    {{ participant.first_name }} {{ participant.last_name }}
+                                    {% set user_attendance = attendances | selectattr('member_id', 'equalto', participant.id) | first %}
+                                    {% if user_attendance %}
+                                        {% if user_attendance.attended_at %}
                                             <span class="badge bg-success ms-2">Attended</span>
                                         {% elif event.is_past %}
                                             <span class="badge bg-secondary ms-2">Absent</span>
                                         {% else %}
                                             <span class="badge bg-info ms-2">Registered</span>
                                         {% endif %}
-                                    {% elif participant.type == 'competition' %}
-                                        <span class="badge bg-warning ms-2">Competition: {{ participant.group_name }}</span>
                                     {% endif %}
                                 </div>
                             </div>
@@ -144,6 +143,63 @@
                             </div>
                         {% endif %}
                     </div>
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Member Registration -->
+        {% if not event.is_past %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6><i class="bi bi-person-check"></i> Registration</h6>
+                </div>
+                <div class="card-body">
+                    {% if user_registration %}
+                        <!-- Already registered -->
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle"></i> You are registered for this event!
+                            {% if user_registration.attended_at %}
+                                <br><small>Attended on {{ user_registration.attended_at.strftime('%Y-%m-%d at %I:%M %p') }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        {% if not user_registration.attended_at %}
+                            <form method="POST" action="{{ url_for('events.cancel_registration', id=event.id) }}" 
+                                  onsubmit="return confirm('Are you sure you want to cancel your registration?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="btn btn-outline-danger w-100">
+                                    <i class="bi bi-x-circle"></i> Cancel Registration
+                                </button>
+                            </form>
+                        {% endif %}
+                    {% else %}
+                        <!-- Not registered -->
+                        {% if event.max_participants and total_registered >= event.max_participants %}
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle"></i> This event is full
+                            </div>
+                        {% else %}
+                            <div class="mb-3">
+                                {% if event.is_free_event %}
+                                    <p class="text-success mb-2">
+                                        <i class="bi bi-check-circle"></i> This event is free of charge
+                                    </p>
+                                {% else %}
+                                    <p class="text-info mb-2">
+                                        <i class="bi bi-info-circle"></i> Registration fee: ${{ current_user.get_membership_price() }}
+                                        <br><small class="text-muted">Based on your {{ current_user.membership_type }} membership</small>
+                                    </p>
+                                {% endif %}
+                            </div>
+                            
+                            <form method="POST" action="{{ url_for('events.register_for_event', id=event.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="bi bi-person-plus"></i> Register for Event
+                                </button>
+                            </form>
+                        {% endif %}
+                    {% endif %}
                 </div>
             </div>
         {% endif %}

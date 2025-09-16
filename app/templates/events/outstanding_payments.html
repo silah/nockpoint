@@ -119,8 +119,7 @@
                                                 <span class="badge bg-warning">
                                                     <i class="bi bi-clock"></i> Outstanding
                                                 </span>
-                                                {% set days_outstanding = (moment().date() - charge.created_at.date()).days %}
-                                                <br><small class="text-muted">{{ days_outstanding }} days ago</small>
+                                                <br><small class="text-muted">Since {{ charge.charge_date.strftime('%b %d, %Y') if charge.charge_date else 'N/A' }}</small>
                                             {% endif %}
                                         </td>
                                         <td>
