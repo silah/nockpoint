@@ -42,7 +42,7 @@ def calendar():
 @admin_required
 def new_event():
     """Create new shooting event"""
-    form = ShootingEventForm()
+    form = ShootingEventForm(auto_populate_location=True)
     
     if form.validate_on_submit():
         try:

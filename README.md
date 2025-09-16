@@ -8,6 +8,7 @@ This is a **traditional web application** that serves HTML pages and uses form-b
 
 ## Key Features
 
+- **Club Settings Management**: Customize club name, default event location, and social links
 - **Competition Management**: Button-based scoring system with team management and comprehensive results
 - **Dynamic Inventory System**: Category-specific forms with bow attributes (handedness, length, draw weight)  
 - **Member Administration**: Complete member profile and role management
@@ -163,6 +164,9 @@ To add new inventory categories with specific attributes:
 
 ## Recent Updates
 
+- ✅ **Club Settings Management**: Admin interface for club name, default location, and social links
+- ✅ **Auto-populated Event Location**: New events automatically use club's default location
+- ✅ **Dynamic Club Branding**: Club name displayed in navbar and page titles
 - ✅ **Button-based Competition Scoring**: Replaced dropdowns with numbered buttons
 - ✅ **Dynamic Inventory Forms**: Category-specific forms with bow attributes
 - ✅ **Documentation Update**: Accurate documentation reflecting web app architecture

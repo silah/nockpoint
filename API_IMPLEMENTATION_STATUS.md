@@ -17,6 +17,9 @@ Based on analysis of the current codebase, here's what API features are **actual
 ### Main Application 
 - **GET /** - Home page
 - **GET /dashboard** - User dashboard (login required)
+- **GET /settings** - Club settings page (admin only)
+- **GET /settings/edit** - Edit club settings form (admin only)
+- **POST /settings/edit** - Update club settings (admin only)
 
 ### Member Management (HTML Web Pages)
 - **GET /members** - List members page 

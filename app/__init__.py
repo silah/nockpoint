@@ -52,4 +52,17 @@ def create_app(config=None):
     app.register_blueprint(events_bp, url_prefix='/events')
     app.register_blueprint(competitions_bp, url_prefix='/competitions')
     
+    # Context processor to make club settings available in all templates
+    @app.context_processor
+    def inject_club_settings():
+        from app.models import ClubSettings
+        return dict(club_settings=ClubSettings.get_settings())
+    
+    # Template filter to convert newlines to HTML breaks
+    @app.template_filter('nl2br')
+    def nl2br_filter(text):
+        if not text:
+            return text
+        return text.replace('\n', '<br>')
+    
     return app

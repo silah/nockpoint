@@ -118,6 +118,19 @@ class ShootingEventForm(FlaskForm):
     price = DecimalField('Price per Person', validators=[DataRequired(), NumberRange(min=0)], places=2, default=0.00)
     max_participants = IntegerField('Max Participants', validators=[Optional(), NumberRange(min=1)])
     submit = SubmitField('Save Event')
+    
+    def __init__(self, *args, **kwargs):
+        # Extract auto_populate flag if present
+        auto_populate_location = kwargs.pop('auto_populate_location', False)
+        
+        super(ShootingEventForm, self).__init__(*args, **kwargs)
+        
+        # Auto-populate location with club default if creating new event
+        if auto_populate_location and not self.location.data:
+            from app.models import ClubSettings
+            settings = ClubSettings.get_settings()
+            if settings.default_location:
+                self.location.data = settings.default_location
 
 class AttendanceForm(FlaskForm):
     member_id = SelectField('Member', coerce=int, validators=[DataRequired()])
