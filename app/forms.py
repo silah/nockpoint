@@ -188,3 +188,32 @@ class BulkArrowScoreForm(FlaskForm):
 class TeamAssignmentForm(FlaskForm):
     """Form for assigning teams and targets"""
     submit = SubmitField('Generate Teams')
+
+class ClubSettingsForm(FlaskForm):
+    club_name = StringField('Club Name', validators=[DataRequired(), Length(1, 200)])
+    description = TextAreaField('Club Description', validators=[Optional(), Length(0, 1000)])
+    default_location = StringField('Default Event Location', validators=[Optional(), Length(0, 200)])
+    address = TextAreaField('Club Address', validators=[Optional(), Length(0, 500)])
+    email = StringField('Contact Email', validators=[Optional(), Email(), Length(0, 120)])
+    phone = StringField('Phone Number', validators=[Optional(), Length(0, 20)])
+    website_url = StringField('Website URL', validators=[Optional(), Length(0, 200)])
+    facebook_url = StringField('Facebook URL', validators=[Optional(), Length(0, 200)])
+    instagram_url = StringField('Instagram URL', validators=[Optional(), Length(0, 200)])
+    twitter_url = StringField('Twitter URL', validators=[Optional(), Length(0, 200)])
+    submit = SubmitField('Save Settings')
+    
+    def validate_website_url(self, field):
+        if field.data and not field.data.startswith(('http://', 'https://')):
+            raise ValidationError('Website URL must start with http:// or https://')
+    
+    def validate_facebook_url(self, field):
+        if field.data and 'facebook.com' not in field.data:
+            raise ValidationError('Please enter a valid Facebook URL')
+    
+    def validate_instagram_url(self, field):
+        if field.data and 'instagram.com' not in field.data:
+            raise ValidationError('Please enter a valid Instagram URL')
+    
+    def validate_twitter_url(self, field):
+        if field.data and 'twitter.com' not in field.data and 'x.com' not in field.data:
+            raise ValidationError('Please enter a valid Twitter/X URL')

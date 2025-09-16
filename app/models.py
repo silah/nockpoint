@@ -386,3 +386,34 @@ class ArrowScore(db.Model):
     def is_inner_ring(self):
         """Check if this hit the inner ring (9 or 10 points)"""
         return self.points >= 9
+
+class ClubSettings(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    club_name = db.Column(db.String(200), nullable=False, default='Nockpoint Archery Club')
+    default_location = db.Column(db.String(200))
+    description = db.Column(db.Text)
+    website_url = db.Column(db.String(200))
+    facebook_url = db.Column(db.String(200))
+    instagram_url = db.Column(db.String(200))
+    twitter_url = db.Column(db.String(200))
+    email = db.Column(db.String(120))
+    phone = db.Column(db.String(20))
+    address = db.Column(db.Text)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    
+    # Relationships
+    updater = db.relationship('User', backref='club_settings_updates')
+    
+    def __repr__(self):
+        return f'<ClubSettings {self.club_name}>'
+    
+    @staticmethod
+    def get_settings():
+        """Get club settings, create default if none exist"""
+        settings = ClubSettings.query.first()
+        if not settings:
+            settings = ClubSettings()
+            db.session.add(settings)
+            db.session.commit()
+        return settings
