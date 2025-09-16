@@ -20,9 +20,12 @@ The Competition Management System provides comprehensive functionality for organ
 - **Completed**: Final results with comprehensive statistics
 
 ### 3. Scoring System
+- **Button-based Interface**: Web interface with numbered buttons 1-10 for each arrow
+- **JavaScript Enhancement**: Dynamic button selection with visual feedback
 - **Individual Arrow Scoring**: 0-10 points per arrow with X-ring tracking
-- **Round-based Progress**: Track completion across multiple rounds
-- **Real-time Calculations**: Automatic score totals and progress indicators
+- **Round-based Progress**: Track completion across multiple rounds via web forms
+- **HTML Form Submission**: Scores submitted via traditional form POST requests
+- **Server-side Calculations**: Automatic score totals and progress indicators
 - **Auto-completion**: Fill missing arrows with 0-point scores when competition ends
 
 ### 4. Results & Analytics
@@ -264,11 +267,119 @@ class ArrowScore(db.Model):
 - Bulk operations for team generation
 
 ### UI Performance
-- Real-time score calculations using JavaScript
-- Minimal server round-trips for scoring updates
-- Progressive loading for large competition lists
+- **Button-based scoring interface** with JavaScript visual feedback
+- **Client-side validation** before form submission
+- **Server-side score calculations** using Flask routes
+- **HTML form submissions** for score persistence
+- **Progressive loading** for large competition lists
 
 ### Scalability
 - Support for competitions with 100+ participants
 - Efficient team generation algorithms
 - Optimized results calculation for large datasets
+
+## Scoring Interface Implementation
+
+### Button-Based Scoring System
+
+The competition scoring system uses a modern button-based interface instead of traditional dropdown selections:
+
+#### Interface Design
+- **One row per arrow**: Each arrow gets its own scoring row
+- **Numbered buttons 1-10**: Visual buttons for each possible score value
+- **X-ring checkbox**: Separate checkbox for inner X-ring hits on score 10
+- **Visual feedback**: Selected buttons highlighted with Bootstrap styling
+- **JavaScript enhancement**: Dynamic button state management
+
+#### Technical Implementation
+
+**HTML Structure**:
+```html
+<div class="arrow-row mb-2">
+    <label class="form-label">Arrow {{ loop.index }}:</label>
+    <div class="score-buttons">
+        {% for score in range(1, 11) %}
+            <button type="button" class="btn btn-outline-primary btn-score me-1" 
+                    data-arrow="{{ loop0.index }}" data-score="{{ score }}">
+                {{ score }}
+            </button>
+        {% endfor %}
+        <div class="form-check form-check-inline ms-2">
+            <input class="form-check-input" type="checkbox" 
+                   id="x_{{ loop0.index }}" name="x_{{ loop0.index }}">
+            <label class="form-check-label" for="x_{{ loop0.index }}">X</label>
+        </div>
+    </div>
+    <input type="hidden" name="arrow_{{ loop0.index }}" id="arrow_{{ loop0.index }}" value="">
+</div>
+```
+
+**JavaScript Button Management**:
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+    const scoreButtons = document.querySelectorAll('.btn-score');
+    
+    scoreButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const arrow = this.dataset.arrow;
+            const score = this.dataset.score;
+            
+            // Clear other buttons in this row
+            const rowButtons = document.querySelectorAll(`[data-arrow="${arrow}"]`);
+            rowButtons.forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-outline-primary');
+            });
+            
+            // Highlight selected button
+            this.classList.remove('btn-outline-primary');
+            this.classList.add('btn-primary');
+            
+            // Set hidden field value
+            document.getElementById(`arrow_${arrow}`).value = score;
+        });
+    });
+});
+```
+
+#### Form Processing
+
+**Flask Route**: Processes scoring form submissions
+```python
+@bp.route('/<int:competition_id>/score/<int:registration_id>', methods=['POST'])
+@login_required
+def submit_score(competition_id, registration_id):
+    # Process button-selected scores
+    for i in range(arrows_per_round):
+        score = request.form.get(f'arrow_{i}', '0')
+        is_x = f'x_{i}' in request.form
+        
+        # Save arrow score to database
+        arrow_score = ArrowScore(
+            registration_id=registration_id,
+            arrow_number=current_arrow + i,
+            points=int(score) if score else 0,
+            is_x=is_x and score == '10',
+            round_number=current_round,
+            recorded_by=current_user.id
+        )
+        db.session.add(arrow_score)
+    
+    db.session.commit()
+    return redirect(url_for('competitions.scoring', id=competition_id))
+```
+
+#### User Experience Benefits
+
+1. **Faster Input**: Click buttons instead of dropdown navigation
+2. **Visual Clarity**: Clear indication of selected scores
+3. **Error Prevention**: Impossible to select invalid scores
+4. **Mobile Friendly**: Large touch targets for mobile devices
+5. **Accessibility**: Proper ARIA labels and keyboard navigation
+
+#### Validation & Error Handling
+
+- **Client-side**: JavaScript validates all arrows have scores before submission
+- **Server-side**: Flask validates score ranges (0-10) and data integrity
+- **Error Display**: Bootstrap alerts for validation failures
+- **Progress Tracking**: Visual indicators for completion status

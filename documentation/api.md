@@ -1,8 +1,39 @@
-# API Documentation
+# API Documentation - OUTDATED
 
-## Overview
+## ⚠️ **IMPORTANT WARNING: THIS DOCUMENTATION IS OUTDATED** ⚠️
 
-The Nockpoint API provides RESTful endpoints for managing archery club operations. All endpoints require proper authentication and authorization based on user roles.
+**This documentation describes a REST API that does NOT exist in the current system.**
+
+The Nockpoint system is currently implemented as a **traditional web application** that serves HTML pages and uses form-based interactions. It is **NOT** a REST API system.
+
+## Current System Architecture
+
+- **HTML Web Application**: All routes return rendered HTML pages
+- **Form-Based Interactions**: Uses HTML forms with POST/redirect pattern
+- **Session Authentication**: Flask-Login with browser sessions (not API tokens)
+- **Server-Side Rendering**: Jinja2 templates with server-side logic
+- **CSRF Protection**: Form-based CSRF tokens (not API-compatible)
+
+## Actual Implementation
+
+For the real system documentation, see:
+- [Web Interface Overview](./web-interface.md) - Actual HTML routes and forms
+- [Views and Routes](./views-and-routes.md) - Flask blueprint routes
+- [Authentication](./authentication.md) - Session-based authentication
+
+## Limited JSON Endpoints
+
+Only 2 true JSON API endpoints exist:
+- `GET /inventory/api/category-fields/<int:category_id>` - Dynamic form fields
+- `GET /inventory/api/item-attributes/<int:item_id>` - Item attributes
+
+Plus some AJAX helpers for payment/attendance updates that return simple JSON responses.
+
+---
+
+## Legacy Documentation (Does Not Match Implementation)
+
+The following documentation was written for a planned REST API that was never implemented:
 
 ## Authentication
 

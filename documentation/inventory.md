@@ -53,6 +53,7 @@ class InventoryItem(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey('inventory_category.id'))
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    attributes = db.Column(db.JSON)  # Category-specific attributes
     
     # Relationships
     creator = db.relationship('User', backref='inventory_items')
@@ -424,6 +425,164 @@ document.querySelector('select[name="category_id"]').addEventListener('change', 
     }
 });
 ```
+
+## Dynamic Category-Specific Forms
+
+### Overview
+The inventory system features **dynamic forms** that adapt based on the selected item category. Different categories can have different attributes (e.g., bows have handedness, length, and draw weight).
+
+### Technical Implementation
+
+#### Category-Specific Attributes
+Items store category-specific attributes in a JSON field in the database:
+
+```python
+class InventoryItem(db.Model):
+    # ...existing fields...
+    attributes = db.Column(db.JSON)  # Category-specific attributes
+    
+    def get_attributes(self):
+        """Get category-specific attributes as dictionary"""
+        return self.attributes or {}
+    
+    def set_attributes(self, attrs_dict):
+        """Set category-specific attributes"""
+        self.attributes = attrs_dict
+```
+
+#### Dynamic Form System
+Forms automatically load different fields based on selected category:
+
+**JavaScript Implementation**:
+```javascript
+document.addEventListener('DOMContentLoaded', function() {
+    const categorySelect = document.getElementById('category_id');
+    const dynamicFields = document.getElementById('dynamic-fields');
+    
+    if (categorySelect) {
+        categorySelect.addEventListener('change', function() {
+            loadCategoryFields(this.value);
+        });
+    }
+    
+    function loadCategoryFields(categoryId) {
+        if (!categoryId || categoryId == '0') {
+            dynamicFields.innerHTML = '';
+            return;
+        }
+        
+        fetch(`/inventory/api/category-fields/${categoryId}`)
+            .then(response => response.json())
+            .then(data => {
+                dynamicFields.innerHTML = data.fields_html;
+            })
+            .catch(error => console.error('Error loading fields:', error));
+    }
+});
+```
+
+#### JSON API Endpoints
+Two JSON endpoints support the dynamic form system:
+
+**Get Category Fields**:
+```python
+@bp.route('/api/category-fields/<int:category_id>')
+@login_required
+def get_category_fields(category_id):
+    """Return HTML form fields for specific category"""
+    category = InventoryCategory.query.get_or_404(category_id)
+    
+    # Define fields for each category type
+    if category.name.lower() == 'bow':
+        fields_html = render_template_string('''
+            <div class="mb-3">
+                <label class="form-label">Handedness</label>
+                <select name="handedness" class="form-select">
+                    <option value="">Select handedness</option>
+                    <option value="left">Left Handed</option>
+                    <option value="right">Right Handed</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Length (inches)</label>
+                <input type="number" name="length" class="form-control" min="48" max="72">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Draw Weight (lbs)</label>
+                <input type="number" name="draw_weight" class="form-control" min="10" max="70">
+            </div>
+        ''')
+    else:
+        fields_html = ''
+    
+    return jsonify({'fields_html': fields_html})
+```
+
+**Get Item Attributes**:
+```python
+@bp.route('/api/item-attributes/<int:item_id>')
+@login_required
+def get_item_attributes(item_id):
+    """Return item's category-specific attributes"""
+    item = InventoryItem.query.get_or_404(item_id)
+    return jsonify(item.get_attributes())
+```
+
+### Category-Specific Forms
+
+#### BowForm
+For bow items, additional fields are dynamically loaded:
+
+```python
+class BowForm(InventoryItemForm):
+    """Extended form for bow-specific attributes"""
+    handedness = SelectField('Handedness', choices=[
+        ('', 'Select handedness'),
+        ('left', 'Left Handed'),
+        ('right', 'Right Handed')
+    ])
+    length = IntegerField('Length (inches)', validators=[
+        Optional(), NumberRange(min=48, max=72)
+    ])
+    draw_weight = IntegerField('Draw Weight (lbs)', validators=[
+        Optional(), NumberRange(min=10, max=70)
+    ])
+```
+
+#### Form Processing
+The form processor extracts category-specific attributes:
+
+```python
+def extract_category_attributes(form, category_name):
+    """Extract category-specific attributes from form data"""
+    attributes = {}
+    
+    if category_name.lower() == 'bow':
+        if form.get('handedness'):
+            attributes['handedness'] = form.get('handedness')
+        if form.get('length'):
+            attributes['length'] = int(form.get('length'))
+        if form.get('draw_weight'):
+            attributes['draw_weight'] = int(form.get('draw_weight'))
+    
+    return attributes
+```
+
+### User Experience
+
+#### Dynamic Field Loading
+1. User selects category from dropdown
+2. JavaScript detects change event
+3. AJAX request fetches category-specific fields
+4. Form fields dynamically inserted without page reload
+5. User completes category-specific attributes
+6. Form submission includes both standard and category fields
+
+#### Benefits
+- **Flexible**: Easy to add new categories and attributes
+- **User-Friendly**: Only relevant fields displayed
+- **Maintainable**: Category logic centralized in one place
+- **Extensible**: JSON storage allows complex attribute structures
 
 ## Access Control
 
