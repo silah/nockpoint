@@ -130,69 +130,9 @@
                         </div>
                     </div>
                     
-                    <!-- Category-specific fields (will be populated by JavaScript based on category) -->
+                    <!-- Category-specific fields (dynamically loaded based on category selection) -->
                     <div id="categorySpecificFields">
-                        <!-- Bow-specific fields -->
-                        {% if form.draw_weight is defined %}
-                            <div class="row bow-fields category-fields" style="display: none;">
-                                <div class="col-md-3 mb-3">
-                                    {{ form.draw_weight.label(class="form-label") }}
-                                    {{ form.draw_weight(class="form-control") }}
-                                </div>
-                                <div class="col-md-3 mb-3">
-                                    {{ form.draw_length.label(class="form-label") }}
-                                    {{ form.draw_length(class="form-control") }}
-                                </div>
-                                <div class="col-md-3 mb-3">
-                                    {{ form.bow_type.label(class="form-label") }}
-                                    {{ form.bow_type(class="form-select") }}
-                                </div>
-                                <div class="col-md-3 mb-3">
-                                    {{ form.handedness.label(class="form-label") }}
-                                    {{ form.handedness(class="form-select") }}
-                                </div>
-                            </div>
-                        {% endif %}
-                        
-                        <!-- Arrow-specific fields -->
-                        {% if form.spine is defined %}
-                            <div class="row arrow-fields category-fields" style="display: none;">
-                                <div class="col-md-3 mb-3">
-                                    {{ form.spine.label(class="form-label") }}
-                                    {{ form.spine(class="form-control") }}
-                                </div>
-                                <div class="col-md-3 mb-3">
-                                    {{ form.length.label(class="form-label") }}
-                                    {{ form.length(class="form-control") }}
-                                </div>
-                                <div class="col-md-3 mb-3">
-                                    {{ form.point_weight.label(class="form-label") }}
-                                    {{ form.point_weight(class="form-control") }}
-                                </div>
-                                <div class="col-md-3 mb-3">
-                                    {{ form.fletching_type.label(class="form-label") }}
-                                    {{ form.fletching_type(class="form-select") }}
-                                </div>
-                            </div>
-                        {% endif %}
-                        
-                        <!-- Target-specific fields -->
-                        {% if form.face_size is defined %}
-                            <div class="row target-fields category-fields" style="display: none;">
-                                <div class="col-md-4 mb-3">
-                                    {{ form.face_size.label(class="form-label") }}
-                                    {{ form.face_size(class="form-control") }}
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    {{ form.target_type.label(class="form-label") }}
-                                    {{ form.target_type(class="form-select") }}
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    {{ form.material.label(class="form-label") }}
-                                    {{ form.material(class="form-select") }}
-                                </div>
-                            </div>
-                        {% endif %}
+                        <!-- Fields will be populated by JavaScript when category is selected -->
                     </div>
                     
                     <div class="mb-3">
@@ -216,4 +156,106 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const categorySelect = document.getElementById('{{ form.category_id.id }}');
+    const categoryFieldsContainer = document.getElementById('categorySpecificFields');
+    
+    // Check if we're editing an existing item
+    const isEdit = {{ 'true' if item else 'false' }};
+    const itemId = {{ item.id if item else 'null' }};
+    
+    // Load category fields when category changes
+    categorySelect.addEventListener('change', function() {
+        const categoryId = this.value;
+        
+        if (!categoryId) {
+            categoryFieldsContainer.innerHTML = '';
+            return;
+        }
+        
+        // Fetch category-specific fields
+        fetch(`{{ url_for('inventory.get_category_fields', category_id=0) }}`.replace('0', categoryId))
+            .then(response => response.json())
+            .then(data => {
+                renderCategoryFields(data.fields);
+                
+                // If editing, populate existing values
+                if (isEdit && itemId) {
+                    populateExistingValues();
+                }
+            })
+            .catch(error => {
+                console.error('Error loading category fields:', error);
+                categoryFieldsContainer.innerHTML = '<div class="alert alert-danger">Error loading category fields</div>';
+            });
+    });
+    
+    function renderCategoryFields(fields) {
+        if (!fields || fields.length === 0) {
+            categoryFieldsContainer.innerHTML = '';
+            return;
+        }
+        
+        let html = '<div class="row category-specific-fields">';
+        html += '<div class="col-12"><h6 class="text-primary mb-3">Category-Specific Attributes</h6></div>';
+        
+        fields.forEach(field => {
+            const colSize = fields.length <= 2 ? 6 : fields.length <= 4 ? 3 : 2;
+            html += `<div class="col-md-${colSize} mb-3">`;
+            html += `<label class="form-label" for="${field.name}">${field.label}</label>`;
+            
+            if (field.type === 'select') {
+                html += `<select class="form-select" name="${field.name}" id="${field.name}">`;
+                field.options.forEach(option => {
+                    html += `<option value="${option.value}">${option.label}</option>`;
+                });
+                html += '</select>';
+            } else if (field.type === 'number') {
+                html += `<input type="number" class="form-control" name="${field.name}" id="${field.name}"`;
+                if (field.min !== undefined) html += ` min="${field.min}"`;
+                if (field.max !== undefined) html += ` max="${field.max}"`;
+                if (field.step !== undefined) html += ` step="${field.step}"`;
+                html += '>';
+            } else {
+                html += `<input type="text" class="form-control" name="${field.name}" id="${field.name}">`;
+            }
+            
+            html += '</div>';
+        });
+        
+        html += '</div>';
+        categoryFieldsContainer.innerHTML = html;
+    }
+    
+    function populateExistingValues() {
+        if (!itemId) return;
+        
+        fetch(`{{ url_for('inventory.get_item_attributes', item_id=0) }}`.replace('0', itemId))
+            .then(response => response.json())
+            .then(data => {
+                const attributes = data.attributes;
+                
+                // Populate form fields with existing values
+                Object.keys(attributes).forEach(key => {
+                    const field = document.getElementById(key);
+                    if (field) {
+                        field.value = attributes[key];
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error loading item attributes:', error);
+            });
+    }
+    
+    // Trigger change event if category is already selected (for edit forms)
+    if (categorySelect.value) {
+        categorySelect.dispatchEvent(new Event('change'));
+    }
+});
+</script>
 {% endblock %}

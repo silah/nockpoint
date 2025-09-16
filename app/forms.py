@@ -59,16 +59,16 @@ class InventoryItemForm(FlaskForm):
 # Specialized forms for different inventory categories
 class BowForm(InventoryItemForm):
     draw_weight = IntegerField('Draw Weight (lbs)', validators=[Optional(), NumberRange(min=10, max=80)])
-    draw_length = DecimalField('Draw Length (inches)', validators=[Optional(), NumberRange(min=20, max=35)], places=1)
+    length = DecimalField('Length (inches)', validators=[Optional(), NumberRange(min=48, max=72)], places=1)
     bow_type = SelectField('Bow Type', choices=[
         ('recurve', 'Recurve'),
         ('compound', 'Compound'),
         ('longbow', 'Longbow'),
         ('barebow', 'Barebow')
     ], validators=[Optional()])
-    handedness = SelectField('Handedness', choices=[
-        ('right', 'Right Hand'),
-        ('left', 'Left Hand')
+    handedness = SelectField('Direction', choices=[
+        ('right', 'Right Handed'),
+        ('left', 'Left Handed')
     ], validators=[Optional()])
 
 class ArrowForm(InventoryItemForm):
