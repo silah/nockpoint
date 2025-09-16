@@ -43,9 +43,13 @@
                                             <strong>{{ event.date.strftime('%A, %B %d') }}</strong><br>
                                             <span class="text-muted">{{ event.start_time.strftime('%H:%M') }} - {{ event.end_time.strftime('%H:%M') }}</span>
                                         </div>
-                                        {% if event.price > 0 %}
+                                        {% if event.is_free_event %}
                                             <div class="mb-2">
-                                                <span class="badge bg-info">${{ "%.2f"|format(event.price) }}</span>
+                                                <span class="badge bg-success">Free</span>
+                                            </div>
+                                        {% else %}
+                                            <div class="mb-2">
+                                                <span class="badge bg-info">Membership Rate</span>
                                             </div>
                                         {% endif %}
                                         <div class="small text-muted">

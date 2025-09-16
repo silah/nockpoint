@@ -82,6 +82,7 @@ def new_member():
             email=form.email.data,
             first_name=form.first_name.data,
             last_name=form.last_name.data,
+            membership_type=form.membership_type.data,
             role='admin' if form.is_admin.data else 'member'
         )
         member.set_password(form.password.data)
@@ -145,6 +146,7 @@ def edit_member(id):
         member.email = form.email.data
         member.first_name = form.first_name.data
         member.last_name = form.last_name.data
+        member.membership_type = form.membership_type.data
         
         # Only admins can update role and status
         if current_user.is_admin():

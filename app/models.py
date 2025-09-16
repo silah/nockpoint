@@ -15,6 +15,7 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(20), nullable=False, default='member')  # 'admin' or 'member'
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
+    membership_type = db.Column(db.String(20), nullable=False, default='monthly')  # 'annual', 'quarterly', 'monthly', 'per_event'
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)
     
@@ -26,6 +27,21 @@ class User(UserMixin, db.Model):
     
     def is_admin(self):
         return self.role == 'admin'
+    
+    def get_membership_price(self):
+        """Get the price for this user's membership type"""
+        from app.models import ClubSettings
+        settings = ClubSettings.get_settings()
+        
+        if self.membership_type == 'annual':
+            return settings.annual_membership_price or 0.00
+        elif self.membership_type == 'quarterly':
+            return settings.quarterly_membership_price or 0.00
+        elif self.membership_type == 'monthly':
+            return settings.monthly_membership_price or 0.00
+        elif self.membership_type == 'per_event':
+            return settings.per_event_price or 0.00
+        return 0.00
     
     def __repr__(self):
         return f'<User {self.username}>'
@@ -79,7 +95,7 @@ class ShootingEvent(db.Model):
     date = db.Column(db.Date, nullable=False)
     start_time = db.Column(db.Time, nullable=False)
     duration_hours = db.Column(db.Integer, nullable=False, default=2)  # Duration in hours
-    price = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
+    is_free_event = db.Column(db.Boolean, nullable=False, default=False)  # True if event is free of charge
     max_participants = db.Column(db.Integer)  # Optional capacity limit
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -399,6 +415,13 @@ class ClubSettings(db.Model):
     email = db.Column(db.String(120))
     phone = db.Column(db.String(20))
     address = db.Column(db.Text)
+    
+    # Membership pricing
+    annual_membership_price = db.Column(db.Numeric(10, 2), default=0.00)
+    quarterly_membership_price = db.Column(db.Numeric(10, 2), default=0.00)
+    monthly_membership_price = db.Column(db.Numeric(10, 2), default=0.00)
+    per_event_price = db.Column(db.Numeric(10, 2), default=0.00)
+    
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_by = db.Column(db.Integer, db.ForeignKey('user.id'))
     

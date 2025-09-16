@@ -90,6 +90,70 @@
                         </div>
                     </div>
                 </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5><i class="bi bi-credit-card"></i> Membership Pricing</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">
+                            <i class="bi bi-info-circle"></i> Set the prices for different membership types. Members can be assigned different membership plans.
+                        </p>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.annual_membership_price.label(class="form-label") }}
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        {{ form.annual_membership_price(class="form-control" + (" is-invalid" if form.annual_membership_price.errors else "")) }}
+                                    </div>
+                                    {% for error in form.annual_membership_price.errors %}
+                                        <div class="invalid-feedback d-block">{{ error }}</div>
+                                    {% endfor %}
+                                    <small class="form-text text-muted">12 month membership</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.quarterly_membership_price.label(class="form-label") }}
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        {{ form.quarterly_membership_price(class="form-control" + (" is-invalid" if form.quarterly_membership_price.errors else "")) }}
+                                    </div>
+                                    {% for error in form.quarterly_membership_price.errors %}
+                                        <div class="invalid-feedback d-block">{{ error }}</div>
+                                    {% endfor %}
+                                    <small class="form-text text-muted">3 month membership</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.monthly_membership_price.label(class="form-label") }}
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        {{ form.monthly_membership_price(class="form-control" + (" is-invalid" if form.monthly_membership_price.errors else "")) }}
+                                    </div>
+                                    {% for error in form.monthly_membership_price.errors %}
+                                        <div class="invalid-feedback d-block">{{ error }}</div>
+                                    {% endfor %}
+                                    <small class="form-text text-muted">1 month membership</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.per_event_price.label(class="form-label") }}
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        {{ form.per_event_price(class="form-control" + (" is-invalid" if form.per_event_price.errors else "")) }}
+                                    </div>
+                                    {% for error in form.per_event_price.errors %}
+                                        <div class="invalid-feedback d-block">{{ error }}</div>
+                                    {% endfor %}
+                                    <small class="form-text text-muted">Price per event attended</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <div class="col-lg-4">

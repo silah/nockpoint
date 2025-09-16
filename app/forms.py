@@ -14,6 +14,12 @@ class RegistrationForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     first_name = StringField('First Name', validators=[DataRequired(), Length(1, 50)])
     last_name = StringField('Last Name', validators=[DataRequired(), Length(1, 50)])
+    membership_type = SelectField('Membership Type', choices=[
+        ('monthly', 'Monthly'),
+        ('quarterly', 'Quarterly'),  
+        ('annual', 'Annual'),
+        ('per_event', 'Per-Event')
+    ], default='monthly', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired(), Length(6)])
     password2 = PasswordField('Repeat Password', 
                              validators=[DataRequired(), EqualTo('password')])
@@ -101,6 +107,12 @@ class MemberEditForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     first_name = StringField('First Name', validators=[DataRequired(), Length(1, 50)])
     last_name = StringField('Last Name', validators=[DataRequired(), Length(1, 50)])
+    membership_type = SelectField('Membership Type', choices=[
+        ('monthly', 'Monthly'),
+        ('quarterly', 'Quarterly'),  
+        ('annual', 'Annual'),
+        ('per_event', 'Per-Event')
+    ], validators=[DataRequired()])
     password = PasswordField('New Password (leave blank to keep current)', validators=[Optional(), Length(6)])
     password2 = PasswordField('Repeat New Password', 
                              validators=[EqualTo('password', message='Passwords must match')])
@@ -115,7 +127,7 @@ class ShootingEventForm(FlaskForm):
     date = DateField('Event Date', validators=[DataRequired()])
     start_time = StringField('Start Time', validators=[DataRequired()], render_kw={'placeholder': 'HH:MM (24-hour format)'})
     duration_hours = IntegerField('Duration (hours)', validators=[DataRequired(), NumberRange(min=1, max=12)], default=2)
-    price = DecimalField('Price per Person', validators=[DataRequired(), NumberRange(min=0)], places=2, default=0.00)
+    is_free_event = BooleanField('Free of charge', default=False)
     max_participants = IntegerField('Max Participants', validators=[Optional(), NumberRange(min=1)])
     submit = SubmitField('Save Event')
     
@@ -209,6 +221,13 @@ class ClubSettingsForm(FlaskForm):
     address = TextAreaField('Club Address', validators=[Optional(), Length(0, 500)])
     email = StringField('Contact Email', validators=[Optional(), Email(), Length(0, 120)])
     phone = StringField('Phone Number', validators=[Optional(), Length(0, 20)])
+    
+    # Membership pricing
+    annual_membership_price = DecimalField('Annual Membership Price', validators=[DataRequired(), NumberRange(min=0)], places=2, default=0.00)
+    quarterly_membership_price = DecimalField('Quarterly Membership Price', validators=[DataRequired(), NumberRange(min=0)], places=2, default=0.00)
+    monthly_membership_price = DecimalField('Monthly Membership Price', validators=[DataRequired(), NumberRange(min=0)], places=2, default=0.00)
+    per_event_price = DecimalField('Per-Event Price', validators=[DataRequired(), NumberRange(min=0)], places=2, default=0.00)
+    
     website_url = StringField('Website URL', validators=[Optional(), Length(0, 200)])
     facebook_url = StringField('Facebook URL', validators=[Optional(), Length(0, 200)])
     instagram_url = StringField('Instagram URL', validators=[Optional(), Length(0, 200)])

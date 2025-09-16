@@ -110,6 +110,7 @@
                             <th>Username</th>
                             <th>Email</th>
                             <th>Role</th>
+                            <th>Membership</th>
                             <th>Status</th>
                             <th>Joined</th>
                             <th>Actions</th>
@@ -132,6 +133,12 @@
                                     {% else %}
                                         <span class="badge bg-primary">Member</span>
                                     {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-info text-dark">
+                                        {{ member.membership_type.replace('_', ' ').title() }}
+                                    </span>
+                                    <br><small class="text-muted">${{"%.2f"|format(member.get_membership_price() or 0)}}</small>
                                 </td>
                                 <td>
                                     {% if member.is_active %}

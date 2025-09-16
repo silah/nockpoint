@@ -56,7 +56,7 @@ def new_event():
                 date=form.date.data,
                 start_time=start_time_obj,
                 duration_hours=form.duration_hours.data,
-                price=form.price.data,
+                is_free_event=form.is_free_event.data,
                 max_participants=form.max_participants.data,
                 created_by=current_user.id
             )
@@ -136,9 +136,6 @@ def view_event(id):
     attended_count = sum(1 for attendance in attendances if attendance.attended_at is not None)
     total_registered = len(all_participants)
     
-    # Calculate total revenue from charges for this event
-    total_revenue = db.session.query(db.func.sum(MemberCharge.amount)).filter_by(event_id=id, is_paid=True).scalar() or 0
-    
     # For template compatibility, also pass attendances as 'attendees' and the unified list as 'all_participants'
     attendees = attendances
     
@@ -157,7 +154,6 @@ def view_event(id):
                          attendance_count=attendance_count,
                          attended_count=attended_count,
                          total_registered=total_registered,
-                         total_revenue=total_revenue,
                          competition_form=competition_form,
                          competition_teams=competition_teams)
 
@@ -183,7 +179,7 @@ def edit_event(id):
             event.date = form.date.data
             event.start_time = start_time_obj
             event.duration_hours = form.duration_hours.data
-            event.price = form.price.data
+            event.is_free_event = form.is_free_event.data
             event.max_participants = form.max_participants.data
             
             db.session.commit()
@@ -263,14 +259,15 @@ def manage_attendance(id):
                         )
                         db.session.add(comp_registration)
             
-            # Create charge for the member if event has a price
-            if event.price > 0:
+            # Create charge for the member if event is not free
+            if not event.is_free_event:
                 member = User.query.get(form.member_id.data)
+                member_price = member.get_membership_price()
                 charge = MemberCharge(
                     member_id=member.id,
                     event_id=event.id,
                     description=f'Shooting event: {event.name} on {event.date.strftime("%Y-%m-%d")}',
-                    amount=event.price
+                    amount=member_price
                 )
                 db.session.add(charge)
             
@@ -288,9 +285,6 @@ def manage_attendance(id):
     
     # Calculate statistics for template
     attended_count = sum(1 for attendance in attendances if attendance.attended_at is not None)
-    
-    # Calculate total revenue collected from charges for this event
-    total_collected = db.session.query(db.func.sum(MemberCharge.amount)).filter_by(event_id=id, is_paid=True).scalar() or 0
     
     # Get available users for the add attendee modal (users not already registered)
     registered_user_ids = [attendance.member_id for attendance in attendances]
@@ -314,7 +308,6 @@ def manage_attendance(id):
                          attendances=attendances,
                          all_attendees=all_attendees,
                          attended_count=attended_count,
-                         total_collected=total_collected,
                          available_users=available_users,
                          competition_groups=competition_groups)
 
@@ -328,12 +321,15 @@ def outstanding_payments():
         MemberCharge.charge_date.desc()
     ).all()
     
-    # Calculate total outstanding
+    # Calculate total outstanding and unique members with debt
     total_outstanding = sum(charge.amount for charge in unpaid_charges)
+    unique_members = len(set(charge.member_id for charge in unpaid_charges))
     
     return render_template('events/outstanding_payments.html', 
                          unpaid_charges=unpaid_charges,
-                         total_outstanding=total_outstanding)
+                         outstanding_charges=unpaid_charges,  # For template compatibility
+                         total_outstanding=total_outstanding,
+                         unique_members=unique_members)
 
 @events_bp.route('/payment/<int:id>/mark-paid', methods=['POST'])
 @login_required
@@ -441,14 +437,15 @@ def add_attendee(event_id):
                     )
                     db.session.add(comp_registration)
         
-        # Create charge if event is paid and member attended
-        if mark_attended and event.price > 0:
+        # Create charge if event is not free and member attended
+        if mark_attended and not event.is_free_event:
             member = User.query.get(member_id)
+            member_price = member.get_membership_price()
             charge = MemberCharge(
                 member_id=member.id,
                 event_id=event.id,
                 description=f"Charge for {event.name}",
-                amount=event.price,
+                amount=member_price,
                 is_paid=False
             )
             db.session.add(charge)
@@ -511,18 +508,20 @@ def update_attendance(id):
                     )
                     db.session.add(comp_registration)
         
-        # Create charge if attending and event is paid
-        if attended and event.price > 0:
+        # Create charge if attending and event is not free
+        if attended and not event.is_free_event:
             existing_charge = MemberCharge.query.filter_by(
                 member_id=attendee_id, event_id=id
             ).first()
             
             if not existing_charge:
+                member = User.query.get(attendee_id)
+                member_price = member.get_membership_price()
                 charge = MemberCharge(
                     member_id=attendee_id,
                     event_id=id,
                     description=f"Charge for {event.name}",
-                    amount=event.price,
+                    amount=member_price,
                     is_paid=False
                 )
                 db.session.add(charge)

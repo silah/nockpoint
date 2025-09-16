@@ -73,11 +73,16 @@
                     </div>
 
                     <!-- Fee Information -->
-                    {% if competition.event.price > 0 %}
+                    {% if competition.event.is_free_event %}
+                        <div class="alert alert-success">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Entry Fee:</strong> Free of charge
+                        </div>
+                    {% else %}
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle me-2"></i>
-                            <strong>Entry Fee:</strong> ${{ "%.2f"|format(competition.event.price) }}
-                            <div class="small mt-1">A charge will be added to your account upon registration.</div>
+                            <strong>Entry Fee:</strong> Depends on your membership plan
+                            <div class="small mt-1">A charge based on your membership type will be added to your account upon registration.</div>
                         </div>
                     {% endif %}
 

@@ -91,19 +91,18 @@
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            {{ form.price.label(class="form-label") }}
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                {{ form.price(class="form-control") }}
+                            <div class="form-check">
+                                {{ form.is_free_event(class="form-check-input") }}
+                                {{ form.is_free_event.label(class="form-check-label") }}
                             </div>
-                            {% if form.price.errors %}
+                            {% if form.is_free_event.errors %}
                                 <div class="text-danger small">
-                                    {% for error in form.price.errors %}
+                                    {% for error in form.is_free_event.errors %}
                                         <div>{{ error }}</div>
                                     {% endfor %}
                                 </div>
                             {% endif %}
-                            <div class="form-text">Cost per participant (set to 0 for free events)</div>
+                            <div class="form-text">Check this box if the event is free of charge. Otherwise, cost depends on membership plan.</div>
                         </div>
                         
                         <div class="col-md-6 mb-3">

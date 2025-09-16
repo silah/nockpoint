@@ -18,28 +18,22 @@
             <div class="card-body">
                 <!-- Summary Stats -->
                 <div class="row mb-4">
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="text-center p-3 bg-light rounded">
                             <div class="h4 text-warning">${{ "%.2f"|format(total_outstanding) }}</div>
                             <div class="small text-muted">Total Outstanding</div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="text-center p-3 bg-light rounded">
                             <div class="h4 text-danger">{{ outstanding_charges|length }}</div>
                             <div class="small text-muted">Unpaid Charges</div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="text-center p-3 bg-light rounded">
                             <div class="h4 text-info">{{ unique_members }}</div>
                             <div class="small text-muted">Members with Debt</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="text-center p-3 bg-light rounded">
-                            <div class="h4 text-success">${{ "%.2f"|format(total_paid) }}</div>
-                            <div class="small text-muted">Total Collected</div>
                         </div>
                     </div>
                 </div>

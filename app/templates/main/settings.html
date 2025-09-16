@@ -99,6 +99,46 @@
         </div>
         
         <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-credit-card"></i> Membership Pricing</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-7">
+                            <strong>Annual:</strong>
+                        </div>
+                        <div class="col-5 text-end">
+                            ${{ "%.2f"|format(settings.annual_membership_price or 0) }}
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-7">
+                            <strong>Quarterly:</strong>
+                        </div>
+                        <div class="col-5 text-end">
+                            ${{ "%.2f"|format(settings.quarterly_membership_price or 0) }}
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-7">
+                            <strong>Monthly:</strong>
+                        </div>
+                        <div class="col-5 text-end">
+                            ${{ "%.2f"|format(settings.monthly_membership_price or 0) }}
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-7">
+                            <strong>Per-Event:</strong>
+                        </div>
+                        <div class="col-5 text-end">
+                            ${{ "%.2f"|format(settings.per_event_price or 0) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             {% if settings.website_url or settings.facebook_url or settings.instagram_url or settings.twitter_url %}
             <div class="card">
                 <div class="card-header">
