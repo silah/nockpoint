@@ -80,7 +80,7 @@
                             </thead>
                             <tbody>
                                 {% for charge in all_charges %}
-                                    <tr class="charge-row {% if charge.paid %}paid-charge{% else %}outstanding-charge{% endif %}" 
+                                    <tr class="charge-row {% if charge.is_paid %}paid-charge{% else %}outstanding-charge{% endif %}" 
                                         data-member-name="{{ charge.member.first_name|lower }} {{ charge.member.last_name|lower }}"
                                         data-event-name="{{ charge.event.name|lower }}">
                                         <td>
@@ -108,12 +108,12 @@
                                             <span class="fw-semibold">${{ "%.2f"|format(charge.amount) }}</span>
                                         </td>
                                         <td>
-                                            {% if charge.paid %}
+                                            {% if charge.is_paid %}
                                                 <span class="badge bg-success">
                                                     <i class="bi bi-check-circle"></i> Paid
                                                 </span>
-                                                {% if charge.paid_at %}
-                                                    <br><small class="text-muted">{{ charge.paid_at.strftime('%m/%d/%y') }}</small>
+                                                {% if charge.paid_date %}
+                                                    <br><small class="text-muted">{{ charge.paid_date.strftime('%m/%d/%y') }}</small>
                                                 {% endif %}
                                             {% else %}
                                                 <span class="badge bg-warning">
@@ -124,12 +124,12 @@
                                         </td>
                                         <td>
                                             <small class="text-muted">
-                                                {{ charge.created_at.strftime('%m/%d/%y %I:%M %p') }}
+                                                {{ charge.charge_date.strftime('%m/%d/%y %I:%M %p') if charge.charge_date else 'N/A' }}
                                             </small>
                                         </td>
                                         <td>
                                             <div class="btn-group btn-group-sm">
-                                                {% if not charge.paid %}
+                                                {% if not charge.is_paid %}
                                                     <button type="button" class="btn btn-success btn-sm" 
                                                             onclick="markAsPaid({{ charge.id }})">
                                                         <i class="bi bi-cash"></i> Mark Paid

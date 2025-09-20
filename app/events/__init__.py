@@ -91,6 +91,12 @@ def view_event(id):
         event_id=id, member_id=current_user.id
     ).first()
     
+    # Get competitions for this event
+    competitions = Competition.query.filter_by(event_id=id).all()
+    
+    # Create competition form (needed by template)
+    competition_form = CompetitionForm()
+    
     # Count totals for display
     total_registered = len(all_participants)
     total_attended = sum(1 for attendance in attendances if attendance.attended_at)
@@ -101,6 +107,8 @@ def view_event(id):
                          event=event, 
                          attendances=attendances,
                          all_participants=all_participants,
+                         competitions=competitions,
+                         competition_form=competition_form,
                          total_registered=total_registered,
                          total_attended=total_attended,
                          attended_count=attended_count,
@@ -266,16 +274,20 @@ def manage_attendance(id):
 @admin_required
 def outstanding_payments():
     """Show outstanding payments admin page"""
-    # Get all unpaid charges
-    unpaid_charges = MemberCharge.query.filter_by(is_paid=False).join(User, MemberCharge.member_id == User.id).order_by(
+    # Get all charges (both paid and unpaid) for comprehensive view
+    all_charges = MemberCharge.query.join(User, MemberCharge.member_id == User.id).order_by(
         MemberCharge.charge_date.desc()
     ).all()
+    
+    # Get only unpaid charges for statistics
+    unpaid_charges = [charge for charge in all_charges if not charge.is_paid]
     
     # Calculate total outstanding and unique members with debt
     total_outstanding = sum(charge.amount for charge in unpaid_charges)
     unique_members = len(set(charge.member_id for charge in unpaid_charges))
     
     return render_template('events/outstanding_payments.html', 
+                         all_charges=all_charges,  # For template display
                          unpaid_charges=unpaid_charges,
                          outstanding_charges=unpaid_charges,  # For template compatibility
                          total_outstanding=total_outstanding,
