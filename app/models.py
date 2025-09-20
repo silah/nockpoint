@@ -95,6 +95,7 @@ class ShootingEvent(db.Model):
     date = db.Column(db.Date, nullable=False)
     start_time = db.Column(db.Time, nullable=False)
     duration_hours = db.Column(db.Integer, nullable=False, default=2)  # Duration in hours
+    event_type = db.Column(db.String(50), nullable=False, default='regular')  # 'regular' or 'beginners_course'
     is_free_event = db.Column(db.Boolean, nullable=False, default=False)  # True if event is free of charge
     max_participants = db.Column(db.Integer)  # Optional capacity limit
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -440,3 +441,25 @@ class ClubSettings(db.Model):
             db.session.add(settings)
             db.session.commit()
         return settings
+
+
+class BeginnersStudent(db.Model):
+    """Model for non-member participants in beginners courses"""
+    id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey('shooting_event.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    age = db.Column(db.Integer, nullable=False)
+    height_cm = db.Column(db.Integer, nullable=True)  # Height in centimeters
+    gender = db.Column(db.String(20), nullable=False)  # Male, Female, Other
+    orientation = db.Column(db.String(20), nullable=False)  # Right-handed, Left-handed
+    has_paid = db.Column(db.Boolean, default=False)
+    insurance_done = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    notes = db.Column(db.Text)  # Additional notes about the student
+    
+    # Relationship to event
+    event = db.relationship('ShootingEvent', backref='beginners_students')
+    
+    def __repr__(self):
+        return f'<BeginnersStudent {self.name} (Age: {self.age})>'

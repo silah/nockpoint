@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app import db
-from app.models import ShootingEvent, EventAttendance, MemberCharge, User, Competition
-from app.forms import ShootingEventForm, AttendanceForm, PaymentUpdateForm, CompetitionForm
+from app.models import ShootingEvent, EventAttendance, MemberCharge, User, Competition, BeginnersStudent
+from app.forms import ShootingEventForm, AttendanceForm, PaymentUpdateForm, CompetitionForm, BeginnersStudentForm
 from datetime import datetime, date, time
 from sqlalchemy import desc, asc
 from decimal import Decimal
@@ -56,6 +56,7 @@ def new_event():
                 date=form.date.data,
                 start_time=start_time_obj,
                 duration_hours=form.duration_hours.data,
+                event_type=form.event_type.data,
                 is_free_event=form.is_free_event.data,
                 max_participants=form.max_participants.data,
                 created_by=current_user.id
@@ -97,6 +98,13 @@ def view_event(id):
     # Create competition form (needed by template)
     competition_form = CompetitionForm()
     
+    # Get beginners course data if this is a beginners course
+    beginners_students = []
+    beginners_student_form = None
+    if event.event_type == 'beginners_course':
+        beginners_students = BeginnersStudent.query.filter_by(event_id=id).all()
+        beginners_student_form = BeginnersStudentForm()
+    
     # Count totals for display
     total_registered = len(all_participants)
     total_attended = sum(1 for attendance in attendances if attendance.attended_at)
@@ -109,6 +117,8 @@ def view_event(id):
                          all_participants=all_participants,
                          competitions=competitions,
                          competition_form=competition_form,
+                         beginners_students=beginners_students,
+                         beginners_student_form=beginners_student_form,
                          total_registered=total_registered,
                          total_attended=total_attended,
                          attended_count=attended_count,
@@ -126,6 +136,8 @@ def edit_event(id):
     if request.method == 'GET':
         # Set the time field as string
         form.start_time.data = event.start_time.strftime('%H:%M')
+        # Ensure event_type is properly set
+        form.event_type.data = event.event_type
     
     if form.validate_on_submit():
         try:
@@ -137,6 +149,7 @@ def edit_event(id):
             event.date = form.date.data
             event.start_time = start_time_obj
             event.duration_hours = form.duration_hours.data
+            event.event_type = form.event_type.data
             event.is_free_event = form.is_free_event.data
             event.max_participants = form.max_participants.data
             
@@ -743,3 +756,87 @@ def cancel_registration(id):
     
     flash('Registration cancelled successfully!', 'success')
     return redirect(url_for('events.view_event', id=id))
+
+
+# Beginners Course Student Management Routes
+
+@events_bp.route('/events/<int:event_id>/beginners/add', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def add_beginners_student(event_id):
+    """Add a student to a beginners course"""
+    event = ShootingEvent.query.get_or_404(event_id)
+    
+    if event.event_type != 'beginners_course':
+        flash('This is not a beginners course event.', 'error')
+        return redirect(url_for('events.view_event', id=event_id))
+    
+    form = BeginnersStudentForm()
+    
+    if form.validate_on_submit():
+        student = BeginnersStudent(
+            event_id=event_id,
+            name=form.name.data,
+            age=form.age.data,
+            height_cm=form.height_cm.data,
+            gender=form.gender.data,
+            orientation=form.orientation.data,
+            has_paid=form.has_paid.data,
+            insurance_done=form.insurance_done.data,
+            notes=form.notes.data
+        )
+        
+        db.session.add(student)
+        db.session.commit()
+        
+        flash(f'Student {student.name} added to course successfully!', 'success')
+        return redirect(url_for('events.view_event', id=event_id))
+    
+    return render_template('events/add_beginners_student.html', 
+                         form=form, event=event)
+
+
+@events_bp.route('/events/<int:event_id>/beginners/<int:student_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_beginners_student(event_id, student_id):
+    """Edit a beginners course student"""
+    event = ShootingEvent.query.get_or_404(event_id)
+    student = BeginnersStudent.query.get_or_404(student_id)
+    
+    if student.event_id != event_id:
+        flash('Student not found in this event.', 'error')
+        return redirect(url_for('events.view_event', id=event_id))
+    
+    form = BeginnersStudentForm(obj=student)
+    
+    if form.validate_on_submit():
+        form.populate_obj(student)
+        student.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        flash(f'Student {student.name} updated successfully!', 'success')
+        return redirect(url_for('events.view_event', id=event_id))
+    
+    return render_template('events/edit_beginners_student.html', 
+                         form=form, event=event, student=student)
+
+
+@events_bp.route('/events/<int:event_id>/beginners/<int:student_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_beginners_student(event_id, student_id):
+    """Delete a beginners course student"""
+    student = BeginnersStudent.query.get_or_404(student_id)
+    
+    if student.event_id != event_id:
+        flash('Student not found in this event.', 'error')
+        return redirect(url_for('events.view_event', id=event_id))
+    
+    student_name = student.name
+    db.session.delete(student)
+    db.session.commit()
+    
+    flash(f'Student {student_name} removed from course.', 'success')
+    return redirect(url_for('events.view_event', id=event_id))

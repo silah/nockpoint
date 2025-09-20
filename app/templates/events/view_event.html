@@ -8,7 +8,15 @@
     <div class="col-md-8">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h4>{{ event.name }}</h4>
+                <div>
+                    <h4>{{ event.name }}
+                        {% if event.event_type == 'beginners_course' %}
+                            <span class="badge bg-warning text-dark ms-2">
+                                <i class="bi bi-mortarboard"></i> Beginners Course
+                            </span>
+                        {% endif %}
+                    </h4>
+                </div>
                 {% if current_user.is_admin %}
                     <div class="btn-group">
                         <a href="{{ url_for('events.edit_event', id=event.id) }}" class="btn btn-outline-primary btn-sm">
@@ -52,20 +60,43 @@
                             {% endif %}
                         </p>
                         
-                        <h6><i class="bi bi-people text-primary"></i> Participants</h6>
-                        <p>
-                            {{ total_registered }} registered
-                            {% if event.max_participants %}
-                                / {{ event.max_participants }} max
-                                {% set remaining = event.max_participants - total_registered %}
-                                {% if remaining > 0 %}
-                                    <br><small class="text-success">{{ remaining }} spots remaining</small>
-                                {% else %}
-                                    <br><small class="text-danger">Event is full</small>
-                                {% endif %}
+                        <h6><i class="bi bi-people text-primary"></i> 
+                            {% if event.event_type == 'beginners_course' %}
+                                Course Students
+                            {% else %}
+                                Participants
                             {% endif %}
-                            {% if attended_count > 0 %}
-                                <br><small class="text-info">{{ attended_count }} attended</small>
+                        </h6>
+                        <p>
+                            {% if event.event_type == 'beginners_course' %}
+                                {% if event.beginners_students %}
+                                    {{ event.beginners_students|length }} enrolled
+                                    {% set paid_students = event.beginners_students|selectattr('has_paid')|list|length %}
+                                    {% if paid_students > 0 %}
+                                        <br><small class="text-success">{{ paid_students }} paid</small>
+                                    {% endif %}
+                                    {% set insured_students = event.beginners_students|selectattr('insurance_done')|list|length %}
+                                    {% if insured_students > 0 %}
+                                        <br><small class="text-info">{{ insured_students }} insured</small>
+                                    {% endif %}
+                                {% else %}
+                                    0 enrolled
+                                    <br><small class="text-muted">No students yet</small>
+                                {% endif %}
+                            {% else %}
+                                {{ total_registered }} registered
+                                {% if event.max_participants %}
+                                    / {{ event.max_participants }} max
+                                    {% set remaining = event.max_participants - total_registered %}
+                                    {% if remaining > 0 %}
+                                        <br><small class="text-success">{{ remaining }} spots remaining</small>
+                                    {% else %}
+                                        <br><small class="text-danger">Event is full</small>
+                                    {% endif %}
+                                {% endif %}
+                                {% if attended_count > 0 %}
+                                    <br><small class="text-info">{{ attended_count }} attended</small>
+                                {% endif %}
                             {% endif %}
                         </p>
                     </div>
@@ -79,8 +110,127 @@
             </div>
         </div>
         
-        <!-- Attendance List -->
-        {% if all_participants %}
+        <!-- Beginners Course Students -->
+        {% if event.event_type == 'beginners_course' %}
+            <div class="card mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="bi bi-mortarboard"></i> Course Students ({{ event.beginners_students|length }})</h5>
+                    {% if current_user.is_admin() and not event.is_past %}
+                        <a href="{{ url_for('events.add_beginners_student', event_id=event.id) }}" class="btn btn-success btn-sm">
+                            <i class="bi bi-person-plus"></i> Add Student
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if event.beginners_students %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Age</th>
+                                        <th>Gender</th>
+                                        <th>Hand</th>
+                                        <th>Height</th>
+                                        <th>Payment</th>
+                                        <th>Insurance</th>
+                                        {% if current_user.is_admin() %}
+                                            <th>Actions</th>
+                                        {% endif %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in event.beginners_students %}
+                                        <tr>
+                                            <td>
+                                                <div class="fw-semibold">{{ student.name }}</div>
+                                                {% if student.notes %}
+                                                    <small class="text-muted">{{ student.notes[:50] }}{% if student.notes|length > 50 %}...{% endif %}</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ student.age }}</td>
+                                            <td>{{ student.gender|title }}</td>
+                                            <td>{{ student.orientation.replace('_', ' ')|title }}</td>
+                                            <td>
+                                                {% if student.height_cm %}
+                                                    {{ student.height_cm }} cm
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if student.has_paid %}
+                                                    <span class="badge bg-success"><i class="bi bi-check-circle"></i> Paid</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning"><i class="bi bi-clock"></i> Pending</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if student.insurance_done %}
+                                                    <span class="badge bg-success"><i class="bi bi-shield-check"></i> Done</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger"><i class="bi bi-shield-exclamation"></i> Needed</span>
+                                                {% endif %}
+                                            </td>
+                                            {% if current_user.is_admin() %}
+                                                <td>
+                                                    <a href="{{ url_for('events.edit_beginners_student', event_id=event.id, student_id=student.id) }}" 
+                                                       class="btn btn-outline-primary btn-sm">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                </td>
+                                            {% endif %}
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Summary Statistics -->
+                        <div class="row mt-3">
+                            <div class="col-md-3">
+                                <div class="text-center p-2 bg-light rounded">
+                                    <div class="fw-bold text-primary">{{ event.beginners_students|length }}</div>
+                                    <small class="text-muted">Total Students</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center p-2 bg-light rounded">
+                                    <div class="fw-bold text-success">{{ event.beginners_students|selectattr('has_paid')|list|length }}</div>
+                                    <small class="text-muted">Payments Received</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center p-2 bg-light rounded">
+                                    <div class="fw-bold text-success">{{ event.beginners_students|selectattr('insurance_done')|list|length }}</div>
+                                    <small class="text-muted">Insurance Complete</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center p-2 bg-light rounded">
+                                    <div class="fw-bold text-info">{{ (event.beginners_students|map(attribute='age')|sum / event.beginners_students|length)|round(1) if event.beginners_students else 0 }}</div>
+                                    <small class="text-muted">Average Age</small>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-person-plus display-1 text-muted"></i>
+                            <h6 class="mt-3 text-muted">No Students Registered</h6>
+                            <p class="text-muted">No students have been added to this beginners course yet.</p>
+                            {% if current_user.is_admin() and not event.is_past %}
+                                <a href="{{ url_for('events.add_beginners_student', event_id=event.id) }}" class="btn btn-success">
+                                    <i class="bi bi-person-plus"></i> Add First Student
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Regular Event Attendance List -->
+        {% if event.event_type == 'regular' and all_participants %}
             <div class="card mt-4">
                 <div class="card-header">
                     <h5><i class="bi bi-people-fill"></i> Registered Participants ({{ all_participants|length }})</h5>
@@ -106,6 +256,134 @@
                             </div>
                         {% endfor %}
                     </div>
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Beginners Course Students Management -->
+        {% if event.event_type == 'beginners_course' %}
+            <div class="card mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="bi bi-mortarboard-fill"></i> Course Students 
+                        {% if event.beginners_students %}
+                            ({{ event.beginners_students|length }})
+                        {% else %}
+                            (0)
+                        {% endif %}
+                    </h5>
+                    {% if current_user.is_admin() %}
+                        <a href="{{ url_for('events.add_beginners_student', event_id=event.id) }}" 
+                           class="btn btn-primary btn-sm">
+                            <i class="bi bi-person-plus"></i> Add Student
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if event.beginners_students %}
+                        <div class="row">
+                            {% for student in event.beginners_students %}
+                                <div class="col-md-12 mb-3">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="row align-items-center">
+                                                <div class="col-md-6">
+                                                    <h6 class="mb-1">
+                                                        <i class="bi bi-person-circle text-muted me-2"></i>
+                                                        {{ student.name }}
+                                                    </h6>
+                                                    <small class="text-muted">
+                                                        Age {{ student.age }}
+                                                        {% if student.height_cm %} • {{ student.height_cm }}cm{% endif %}
+                                                        • {{ student.gender|title }}
+                                                        • {{ student.orientation.replace('_', '-')|title }}
+                                                    </small>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="d-flex gap-1 flex-wrap">
+                                                        {% if student.has_paid %}
+                                                            <span class="badge bg-success"><i class="bi bi-cash"></i> Paid</span>
+                                                        {% else %}
+                                                            <span class="badge bg-warning"><i class="bi bi-clock"></i> Unpaid</span>
+                                                        {% endif %}
+                                                        
+                                                        {% if student.insurance_done %}
+                                                            <span class="badge bg-info"><i class="bi bi-shield-check"></i> Insured</span>
+                                                        {% else %}
+                                                            <span class="badge bg-secondary"><i class="bi bi-shield-x"></i> No Insurance</span>
+                                                        {% endif %}
+                                                    </div>
+                                                    {% if student.notes %}
+                                                        <small class="text-muted d-block mt-1">
+                                                            <i class="bi bi-chat-dots"></i> {{ student.notes[:50] }}{% if student.notes|length > 50 %}...{% endif %}
+                                                        </small>
+                                                    {% endif %}
+                                                </div>
+                                                {% if current_user.is_admin() %}
+                                                    <div class="col-md-2 text-end">
+                                                        <div class="btn-group-vertical btn-group-sm">
+                                                            <a href="{{ url_for('events.edit_beginners_student', event_id=event.id, student_id=student.id) }}" 
+                                                               class="btn btn-outline-primary btn-sm" title="Edit Student">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </a>
+                                                            <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                                    onclick="deleteStudent({{ student.id }}, '{{ student.name }}')" 
+                                                                    title="Remove Student">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Course Summary -->
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <div class="alert alert-light">
+                                    <div class="row text-center">
+                                        <div class="col-3">
+                                            <div class="h5 text-primary">{{ event.beginners_students|length }}</div>
+                                            <small class="text-muted">Total Students</small>
+                                        </div>
+                                        <div class="col-3">
+                                            <div class="h5 text-success">{{ event.beginners_students|selectattr('has_paid')|list|length }}</div>
+                                            <small class="text-muted">Paid</small>
+                                        </div>
+                                        <div class="col-3">
+                                            <div class="h5 text-info">{{ event.beginners_students|selectattr('insurance_done')|list|length }}</div>
+                                            <small class="text-muted">Insured</small>
+                                        </div>
+                                        <div class="col-3">
+                                            {% set ages = event.beginners_students|map(attribute='age')|list %}
+                                            {% if ages %}
+                                                <div class="h5 text-warning">{{ (ages|sum / ages|length)|round|int }}</div>
+                                                <small class="text-muted">Avg Age</small>
+                                            {% else %}
+                                                <div class="h5 text-muted">-</div>
+                                                <small class="text-muted">Avg Age</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-mortarboard display-4 text-muted"></i>
+                            <h6 class="mt-3 text-muted">No Students Enrolled</h6>
+                            <p class="text-muted">This beginners course doesn't have any students yet.</p>
+                            {% if current_user.is_admin() %}
+                                <a href="{{ url_for('events.add_beginners_student', event_id=event.id) }}" 
+                                   class="btn btn-primary">
+                                    <i class="bi bi-person-plus"></i> Add First Student
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         {% endif %}
@@ -450,6 +728,22 @@ document.addEventListener('DOMContentLoaded', function() {
     if (roundsInput) roundsInput.addEventListener('input', updateTotal);
     if (arrowsInput) arrowsInput.addEventListener('input', updateTotal);
 });
+
+// Beginners course student management
+function deleteStudent(studentId, studentName) {
+    if (confirm('Are you sure you want to remove ' + studentName + ' from this course?')) {
+        const form = document.getElementById('deleteStudentForm');
+        form.action = "{{ url_for('events.delete_beginners_student', event_id=event.id, student_id=0) }}".replace('0', studentId);
+        form.submit();
+    }
+}
 </script>
+
+<!-- Hidden form for student deletion -->
+{% if event.event_type == 'beginners_course' and current_user.is_admin() %}
+<form id="deleteStudentForm" method="POST" style="display: none;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+</form>
+{% endif %}
 
 {% endblock %}

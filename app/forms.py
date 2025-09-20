@@ -127,6 +127,10 @@ class ShootingEventForm(FlaskForm):
     date = DateField('Event Date', validators=[DataRequired()])
     start_time = StringField('Start Time', validators=[DataRequired()], render_kw={'placeholder': 'HH:MM (24-hour format)'})
     duration_hours = IntegerField('Duration (hours)', validators=[DataRequired(), NumberRange(min=1, max=12)], default=2)
+    event_type = SelectField('Event Type', choices=[
+        ('regular', 'Regular Shooting Event'),
+        ('beginners_course', 'Beginners Course')
+    ], default='regular', validators=[DataRequired()])
     is_free_event = BooleanField('Free of charge', default=False)
     max_participants = IntegerField('Max Participants', validators=[Optional(), NumberRange(min=1)])
     submit = SubmitField('Save Event')
@@ -249,3 +253,22 @@ class ClubSettingsForm(FlaskForm):
     def validate_twitter_url(self, field):
         if field.data and 'twitter.com' not in field.data and 'x.com' not in field.data:
             raise ValidationError('Please enter a valid Twitter/X URL')
+
+
+class BeginnersStudentForm(FlaskForm):
+    name = StringField('Full Name', validators=[DataRequired(), Length(1, 100)])
+    age = IntegerField('Age', validators=[DataRequired(), NumberRange(min=5, max=100)])
+    height_cm = IntegerField('Height (cm)', validators=[Optional(), NumberRange(min=50, max=250)])
+    gender = SelectField('Gender', choices=[
+        ('male', 'Male'),
+        ('female', 'Female'),
+        ('other', 'Other')
+    ], validators=[DataRequired()])
+    orientation = SelectField('Shooting Hand', choices=[
+        ('right_handed', 'Right-handed'),
+        ('left_handed', 'Left-handed')
+    ], validators=[DataRequired()])
+    has_paid = BooleanField('Payment Received', default=False)
+    insurance_done = BooleanField('Insurance Completed', default=False)
+    notes = TextAreaField('Additional Notes', validators=[Optional(), Length(0, 500)])
+    submit = SubmitField('Save Student')

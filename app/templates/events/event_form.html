@@ -39,6 +39,19 @@
                     </div>
                     
                     <div class="mb-3">
+                        {{ form.event_type.label(class="form-label") }}
+                        {{ form.event_type(class="form-select") }}
+                        {% if form.event_type.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.event_type.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">Choose "Beginners Course" to manage non-member students</div>
+                    </div>
+                    
+                    <div class="mb-3">
                         {{ form.location.label(class="form-label") }}
                         {{ form.location(class="form-control") }}
                         {% if form.location.errors %}
