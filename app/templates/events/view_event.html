@@ -266,6 +266,32 @@
             </div>
         {% endif %}
         
+        <!-- Quick Registration for Unregistered Members (Regular Events Only) -->
+        {% if event.event_type == 'regular' and current_user.is_admin() and unregistered_members and not event.is_past %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5><i class="bi bi-person-plus-fill"></i> Quick Registration</h5>
+                    <small class="text-muted">Click any member to register them for this event</small>
+                </div>
+                <div class="card-body">
+                    <div id="unregistered-members" class="d-flex flex-wrap gap-2">
+                        {% for member in unregistered_members %}
+                            <button class="btn btn-warning btn-sm quick-register-btn" 
+                                    data-member-id="{{ member.id }}" 
+                                    data-member-name="{{ member.first_name }} {{ member.last_name }}"
+                                    onclick="quickRegisterMember({{ member.id }}, '{{ member.first_name }} {{ member.last_name }}')"
+                                    title="Click to register {{ member.first_name }} {{ member.last_name }}">
+                                <i class="bi bi-person"></i> {{ member.first_name }} {{ member.last_name }}
+                            </button>
+                        {% endfor %}
+                    </div>
+                    {% if not unregistered_members %}
+                        <p class="text-muted mb-0">All active members are registered for this event.</p>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+        
         <!-- Beginners Course Students Management -->
         {% if event.event_type == 'beginners_course' %}
             <div class="card mt-4">
@@ -749,6 +775,88 @@ function deleteStudent(studentId, studentName) {
         form.submit();
     }
 }
+
+function quickRegisterMember(memberId, memberName) {
+    const button = document.querySelector(`[data-member-id="${memberId}"]`);
+    
+    // Disable the button immediately
+    button.disabled = true;
+    button.innerHTML = '<i class="bi bi-hourglass-split"></i> Registering...';
+    
+    fetch("{{ url_for('events.quick_register_member', id=event.id, member_id=0) }}".replace('0', memberId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove the button with a nice animation
+            button.style.transition = 'opacity 0.3s ease';
+            button.style.opacity = '0';
+            
+            setTimeout(() => {
+                button.remove();
+                
+                // Check if there are no more unregistered members
+                const unregisteredContainer = document.getElementById('unregistered-members');
+                if (unregisteredContainer.children.length === 0) {
+                    unregisteredContainer.innerHTML = '<p class="text-muted mb-0">All active members are registered for this event.</p>';
+                }
+            }, 300);
+            
+            // Show success message
+            showToast('success', data.message);
+            
+            // Update participant counts (if they exist on the page)
+            const participantCount = document.querySelector('.participant-count');
+            if (participantCount) {
+                const currentCount = parseInt(participantCount.textContent);
+                participantCount.textContent = currentCount + 1;
+            }
+            
+            // Refresh the page to update the registered participants list
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+            
+        } else {
+            // Re-enable the button on error
+            button.disabled = false;
+            button.innerHTML = `<i class="bi bi-person"></i> ${memberName}`;
+            showToast('error', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Re-enable the button on error
+        button.disabled = false;
+        button.innerHTML = `<i class="bi bi-person"></i> ${memberName}`;
+        showToast('error', 'Registration failed. Please try again.');
+    });
+}
+
+function showToast(type, message) {
+    // Simple toast notification function
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    toast.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+            ${message}
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
 </script>
 
 <!-- Hidden form for student deletion -->
@@ -757,5 +865,19 @@ function deleteStudent(studentId, studentName) {
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 </form>
 {% endif %}
+
+<style>
+.quick-register-btn {
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+.quick-register-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+}
+.quick-register-btn:active {
+    transform: scale(0.98);
+}
+</style>
 
 {% endblock %}

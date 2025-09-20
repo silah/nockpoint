@@ -105,6 +105,16 @@ def view_event(id):
         beginners_students = BeginnersStudent.query.filter_by(event_id=id).all()
         beginners_student_form = BeginnersStudentForm()
     
+    # Get unregistered members for regular events (for quick registration)
+    unregistered_members = []
+    if event.event_type == 'regular' and current_user.is_admin():
+        registered_member_ids = [p.id for p in all_participants]
+        unregistered_members = User.query.filter(
+            User.role == 'member',
+            User.is_active == True,
+            ~User.id.in_(registered_member_ids)
+        ).order_by(User.first_name, User.last_name).all()
+    
     # Count totals for display
     total_members = len(all_participants)
     total_students = len(beginners_students) if event.event_type == 'beginners_course' else 0
@@ -122,6 +132,7 @@ def view_event(id):
                          competition_form=competition_form,
                          beginners_students=beginners_students,
                          beginners_student_form=beginners_student_form,
+                         unregistered_members=unregistered_members,
                          total_members=total_members,
                          total_students=total_students,
                          total_registered=total_registered,
@@ -728,6 +739,65 @@ def register_for_event(id):
         flash(f'Successfully registered! A charge of ${current_user.get_membership_price():.2f} has been added to your account.', 'success')
     
     return redirect(url_for('events.view_event', id=id))
+
+
+@events_bp.route('/event/<int:id>/quick-register/<int:member_id>', methods=['POST'])
+@login_required
+@admin_required
+def quick_register_member(id, member_id):
+    """Quick registration of a member for an event (admin only)"""
+    event = ShootingEvent.query.get_or_404(id)
+    member = User.query.get_or_404(member_id)
+    
+    if member.role != 'member' or not member.is_active:
+        return jsonify({'success': False, 'message': 'Invalid member'})
+    
+    # Check if already registered
+    existing_attendance = EventAttendance.query.filter_by(
+        event_id=id, member_id=member_id
+    ).first()
+    
+    if existing_attendance:
+        return jsonify({'success': False, 'message': 'Member already registered'})
+    
+    # Check capacity if set
+    if event.max_participants:
+        current_members = EventAttendance.query.filter_by(event_id=id).count()
+        current_students = BeginnersStudent.query.filter_by(event_id=id).count() if event.event_type == 'beginners_course' else 0
+        total_participants = current_members + current_students
+        
+        if total_participants >= event.max_participants:
+            return jsonify({'success': False, 'message': 'Event is full'})
+    
+    # Create attendance record
+    attendance = EventAttendance(
+        event_id=id,
+        member_id=member_id,
+        recorded_by=current_user.id,
+        notes='Quick-registered by admin'
+    )
+    
+    db.session.add(attendance)
+    
+    # Create charge if event is not free
+    if not event.is_free_event:
+        member_price = member.get_membership_price()
+        charge = MemberCharge(
+            member_id=member_id,
+            event_id=id,
+            description=f'Shooting event: {event.name} on {event.date.strftime("%Y-%m-%d")}',
+            amount=member_price
+        )
+        db.session.add(charge)
+    
+    db.session.commit()
+    
+    return jsonify({
+        'success': True, 
+        'message': f'{member.first_name} {member.last_name} registered successfully!',
+        'member_name': f'{member.first_name} {member.last_name}',
+        'member_id': member.id
+    })
 
 
 @events_bp.route('/event/<int:id>/cancel-registration', methods=['POST'])

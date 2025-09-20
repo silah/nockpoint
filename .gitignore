@@ -1,3 +1,4 @@
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -20,17 +21,44 @@ wheels/
 *.egg
 MANIFEST
 
+# Environment variables and configuration
 .env
+.env.local
+.env.development
+.env.production
+.env.test
+!.env.example
+config.py
+instance/config.py
+
+# Virtual environments
 .venv
-env/
 venv/
 ENV/
+env/
 env.bak/
 venv.bak/
+.virtualenv
 
+# Flask instance folder (contains database and sensitive config)
 instance/
-.webassets-cache
 
+# Database files
+*.db
+*.sqlite3
+*.sqlite
+
+# Flask-Migrate database migrations
+migrations/
+
+# Documentation (development docs, not user-facing)
+documentation/
+*.md
+!README.md
+!DEPLOYMENT.md
+!.github/copilot-instructions.md
+
+# Testing files
 .coverage
 .pytest_cache/
 .cache
@@ -38,11 +66,46 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
-.pytest_cache/
+tests/
+run_tests.py
 
+# IDE and editor files
 .DS_Store
 .vscode/
-*.db
-*.sqlite3
+.idea/
+*.swp
+*.swo
+*~
 
-migrations/
+# Logs
+logs/
+*.log
+
+# Development and debugging files
+.webassets-cache
+*.tmp
+*.temp
+temp/
+tmp/
+
+# OS generated files
+Thumbs.db
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Development scripts and workspace files
+*.code-workspace
+start_server.sh
+setup_*.py
+test.sh
+
+# User stories and development documentation
+userstories/
+API_IMPLEMENTATION_STATUS.md
+DOCUMENTATION_UPDATE_SUMMARY.md
+SHOOTING_EVENTS_README.md
+TESTING_RESULTS_SUMMARY.md
