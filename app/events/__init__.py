@@ -106,7 +106,10 @@ def view_event(id):
         beginners_student_form = BeginnersStudentForm()
     
     # Count totals for display
-    total_registered = len(all_participants)
+    total_members = len(all_participants)
+    total_students = len(beginners_students) if event.event_type == 'beginners_course' else 0
+    total_registered = total_members + total_students
+    
     total_attended = sum(1 for attendance in attendances if attendance.attended_at)
     attended_count = total_attended  # Alias for template compatibility
     attendance_count = total_registered  # Alias for template compatibility
@@ -119,6 +122,8 @@ def view_event(id):
                          competition_form=competition_form,
                          beginners_students=beginners_students,
                          beginners_student_form=beginners_student_form,
+                         total_members=total_members,
+                         total_students=total_students,
                          total_registered=total_registered,
                          total_attended=total_attended,
                          attended_count=attended_count,
@@ -686,8 +691,11 @@ def register_for_event(id):
     
     # Check capacity if set
     if event.max_participants:
-        current_registrations = EventAttendance.query.filter_by(event_id=id).count()
-        if current_registrations >= event.max_participants:
+        current_members = EventAttendance.query.filter_by(event_id=id).count()
+        current_students = BeginnersStudent.query.filter_by(event_id=id).count() if event.event_type == 'beginners_course' else 0
+        total_participants = current_members + current_students
+        
+        if total_participants >= event.max_participants:
             flash('This event is full. No more registrations accepted.', 'error')
             return redirect(url_for('events.view_event', id=id))
     
@@ -774,6 +782,16 @@ def add_beginners_student(event_id):
     form = BeginnersStudentForm()
     
     if form.validate_on_submit():
+        # Check capacity if set
+        if event.max_participants:
+            current_members = EventAttendance.query.filter_by(event_id=event_id).count()
+            current_students = BeginnersStudent.query.filter_by(event_id=event_id).count()
+            total_participants = current_members + current_students
+            
+            if total_participants >= event.max_participants:
+                flash('This event is full. No more participants can be added.', 'error')
+                return redirect(url_for('events.view_event', id=event_id))
+        
         student = BeginnersStudent(
             event_id=event_id,
             name=form.name.data,
