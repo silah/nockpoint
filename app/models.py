@@ -126,6 +126,14 @@ class ShootingEvent(db.Model):
     def attendance_count(self):
         """Get number of attendees"""
         return len(self.attendances)
+    
+    def is_regular_event(self):
+        """Check if this is a regular shooting event"""
+        return self.event_type == 'regular'
+    
+    def is_beginners_course(self):
+        """Check if this is a beginners course"""
+        return self.event_type == 'beginners_course'
 
 class EventAttendance(db.Model):
     id = db.Column(db.Integer, primary_key=True)

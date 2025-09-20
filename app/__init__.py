@@ -32,6 +32,9 @@ def create_app(config=None):
     migrate.init_app(app, db)
     csrf.init_app(app)
     
+    # Exempt API routes from CSRF protection
+    csrf.exempt('app.api')
+    
     # Login manager configuration
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Please log in to access this page.'
@@ -44,6 +47,7 @@ def create_app(config=None):
     from app.members import members_bp
     from app.events import events_bp
     from app.competitions import competitions_bp
+    from app.api import api_bp
     
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(main_bp)
@@ -51,6 +55,7 @@ def create_app(config=None):
     app.register_blueprint(members_bp, url_prefix='/members')
     app.register_blueprint(events_bp, url_prefix='/events')
     app.register_blueprint(competitions_bp, url_prefix='/competitions')
+    app.register_blueprint(api_bp, url_prefix='/api')
     
     # Context processor to make club settings available in all templates
     @app.context_processor
