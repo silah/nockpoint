@@ -9,3 +9,4 @@ psycopg2-binary==2.9.7
 Werkzeug==2.3.7
 email-validator
 PyJWT==2.8.0
+gunicorn==21.2.0

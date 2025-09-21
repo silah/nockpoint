@@ -81,3 +81,9 @@ def edit_settings():
         return redirect(url_for('main.settings'))
     
     return render_template('main/settings_form.html', form=form, settings=settings)
+
+
+@main_bp.route('/health')
+def health_check():
+    """Health check endpoint for Docker"""
+    return {'status': 'healthy', 'timestamp': datetime.utcnow().isoformat()}, 200
