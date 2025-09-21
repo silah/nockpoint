@@ -25,11 +25,17 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
+# Set Python path to include the current directory
+ENV PYTHONPATH=/app
+
 # Create instance directory for SQLite database
 RUN mkdir -p instance
 
 # Initialize database with admin user
 RUN python init_db.py
+
+# Test that the app can be imported correctly
+RUN python test_import.py
 
 # Create non-root user for security
 RUN adduser --disabled-password --gecos '' appuser && \
@@ -44,4 +50,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"
 
 # Run gunicorn server
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "2", "--timeout", "120", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "2", "--timeout", "120", "--preload", "wsgi:app"]
