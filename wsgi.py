@@ -4,7 +4,7 @@ WSGI entry point for production deployment
 """
 from app import create_app
 
-# Create the Flask application instance
+# Create the Flask application instance -
 application = create_app()
 app = application
 
