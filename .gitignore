@@ -56,7 +56,6 @@ documentation/
 *.md
 !README.md
 !DEPLOYMENT.md
-!.github/copilot-instructions.md
 
 # Testing files
 .coverage
