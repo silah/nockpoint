@@ -284,6 +284,74 @@ class Competition(db.Model):
             'completion_percentage': (completed_participants / total_participants * 100) if total_participants > 0 else 0,
             'missing_arrows_total': missing_arrows_total
         }
+    
+    def check_target_face_inventory(self):
+        """Check if there are enough target faces in inventory for this competition"""
+        # Get total number of teams across all groups
+        total_teams = sum(len(group.teams) for group in self.groups)
+        
+        if total_teams == 0:
+            return {
+                'has_enough': True,
+                'required': 0,
+                'available': 0,
+                'shortage': 0,
+                'message': 'No teams created yet'
+            }
+        
+        # Find target faces in inventory matching this competition's target size
+        target_face_category = InventoryCategory.query.filter_by(name='Target Faces').first()
+        available_faces = 0
+        
+        if target_face_category:
+            # Get all target face items of the correct size
+            target_face_items = InventoryItem.query.filter_by(category_id=target_face_category.id).all()
+            
+            for item in target_face_items:
+                # Handle both dict and string formats for attributes
+                attributes = item.attributes or {}
+                if isinstance(attributes, str):
+                    try:
+                        import json
+                        attributes = json.loads(attributes)
+                    except (json.JSONDecodeError, TypeError):
+                        attributes = {}
+                
+                # Check if attributes has face_size, or try to infer from item name
+                face_size = None
+                if isinstance(attributes, dict) and 'face_size' in attributes:
+                    face_size = str(attributes['face_size'])
+                else:
+                    # Try to extract size from item name as fallback (e.g., "60cm Target Face")
+                    import re
+                    name_match = re.search(r'(\d+)cm', item.name, re.IGNORECASE)
+                    if name_match:
+                        face_size = name_match.group(1)
+                
+                # Compare face size with competition requirement
+                if face_size and str(face_size) == str(self.target_size_cm):
+                    available_faces += item.quantity
+        
+        has_enough = available_faces >= total_teams
+        shortage = max(0, total_teams - available_faces)
+        
+        return {
+            'has_enough': has_enough,
+            'required': total_teams,
+            'available': available_faces,
+            'shortage': shortage,
+            'message': self._get_inventory_message(has_enough, total_teams, available_faces, shortage)
+        }
+    
+    def _get_inventory_message(self, has_enough, required, available, shortage):
+        """Generate appropriate message for target face inventory status"""
+        if has_enough:
+            if available == required:
+                return f'✅ Perfect! You have exactly {available} target faces ({self.target_size_cm}cm) for {required} teams.'
+            else:
+                return f'✅ Good! You have {available} target faces ({self.target_size_cm}cm) for {required} teams.'
+        else:
+            return f'⚠️ Warning! You need {shortage} more {self.target_size_cm}cm target faces. You have {available} but need {required} for all teams.'
 
 class CompetitionGroup(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -119,11 +119,15 @@ def view_competition(id):
             ~User.id.in_(registered_user_ids)
         ).order_by(User.first_name, User.last_name).all()
     
+    # Get inventory status for target faces
+    inventory_status = competition.check_target_face_inventory()
+    
     return render_template('competitions/view.html',
                          competition=competition,
                          total_participants=total_participants,
                          groups_with_stats=groups_with_stats,
-                         available_users=available_users)
+                         available_users=available_users,
+                         inventory_status=inventory_status)
 
 @competitions_bp.route('/<int:id>/setup-groups', methods=['GET', 'POST'])
 @login_required
@@ -352,7 +356,17 @@ def generate_teams(id):
         teams_created += num_teams
     
     db.session.commit()
+    
+    # Check target face inventory after teams are created
+    inventory_status = competition.check_target_face_inventory()
+    
+    # Always show the success message first
     flash(f'Successfully generated {teams_created} teams.', 'success')
+    
+    # Then show inventory warning if needed
+    if not inventory_status['has_enough']:
+        flash(inventory_status['message'], 'warning')
+    
     return redirect(url_for('competitions.view_competition', id=id))
 
 @competitions_bp.route('/<int:id>/start', methods=['POST'])

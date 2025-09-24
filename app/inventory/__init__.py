@@ -446,7 +446,11 @@ def extract_category_attributes(form_data, category_name):
     
     elif category_name.lower() == 'targets':
         if form_data.get('face_size'):
-            attributes['face_size'] = int(form_data['face_size'])
+            try:
+                # Keep as string for consistency with form data and comparison
+                attributes['face_size'] = str(form_data['face_size'])
+            except (ValueError, TypeError):
+                pass
         if form_data.get('target_type'):
             attributes['target_type'] = form_data['target_type']
         if form_data.get('material'):
@@ -454,7 +458,11 @@ def extract_category_attributes(form_data, category_name):
     
     elif category_name.lower() == 'target faces':
         if form_data.get('face_size'):
-            attributes['face_size'] = int(form_data['face_size'])
+            try:
+                # Keep as string for consistency with form data and comparison
+                attributes['face_size'] = str(form_data['face_size'])
+            except (ValueError, TypeError):
+                pass
         if form_data.get('target_type'):
             attributes['target_type'] = form_data['target_type']
         if form_data.get('material'):

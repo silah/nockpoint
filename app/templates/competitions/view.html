@@ -89,6 +89,25 @@
                     </div>
                 </div>
 
+                <!-- Target Face Inventory Status -->
+                {% if inventory_status and groups_with_stats|sum(attribute='team_count') > 0 %}
+                    <div class="mb-4">
+                        <h6><i class="bi bi-box-seam me-2"></i>Target Face Inventory</h6>
+                        <div class="alert {% if inventory_status.has_enough %}alert-success{% else %}alert-warning{% endif %} mb-0">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    {{ inventory_status.message }}
+                                </div>
+                                {% if not inventory_status.has_enough and current_user.is_admin() %}
+                                    <a href="{{ url_for('inventory.index') }}?category=target%20faces" class="btn btn-outline-primary btn-sm ms-3">
+                                        <i class="bi bi-plus-circle me-1"></i>Add Target Faces
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
                 <!-- Event Description -->
                 {% if competition.event.description %}
                     <div class="mb-4">
