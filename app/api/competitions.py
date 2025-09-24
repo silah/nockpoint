@@ -81,7 +81,7 @@ def api_get_competition(competition_id):
         user_scores = []
         if registration:
             scores = ArrowScore.query.filter_by(
-                competition_registration_id=registration.id
+                registration_id=registration.id
             ).order_by(ArrowScore.round_number, ArrowScore.arrow_number).all()
             
             for score in scores:
@@ -89,7 +89,7 @@ def api_get_competition(competition_id):
                     'id': score.id,
                     'round_number': score.round_number,
                     'arrow_number': score.arrow_number,
-                    'score': score.score,
+                    'score': score.points,
                     'is_x': score.is_x
                 })
         
@@ -185,31 +185,32 @@ def api_submit_score(competition_id):
         
         # Check if score already exists for this arrow
         existing_score = ArrowScore.query.filter_by(
-            competition_registration_id=registration.id,
+            registration_id=registration.id,
             round_number=round_number,
             arrow_number=arrow_number
         ).first()
         
         if existing_score:
             # Update existing score
-            existing_score.score = score
+            existing_score.points = score
             existing_score.is_x = is_x
         else:
             # Create new score
             arrow_score = ArrowScore(
-                competition_registration_id=registration.id,
+                registration_id=registration.id,
                 round_number=round_number,
                 arrow_number=arrow_number,
-                score=score,
-                is_x=is_x
+                points=score,
+                is_x=is_x,
+                recorded_by=user.id
             )
             db.session.add(arrow_score)
         
         db.session.commit()
         
         # Calculate total score for response
-        total_score = db.session.query(db.func.sum(ArrowScore.score)).filter_by(
-            competition_registration_id=registration.id
+        total_score = db.session.query(db.func.sum(ArrowScore.points)).filter_by(
+            registration_id=registration.id
         ).scalar() or 0
         
         return jsonify({
@@ -287,23 +288,24 @@ def api_submit_scores_batch(competition_id):
             
             # Check if score already exists for this arrow
             existing_score = ArrowScore.query.filter_by(
-                competition_registration_id=registration.id,
+                registration_id=registration.id,
                 round_number=round_number,
                 arrow_number=arrow_number
             ).first()
             
             if existing_score:
                 # Update existing score
-                existing_score.score = score
+                existing_score.points = score
                 existing_score.is_x = is_x
             else:
                 # Create new score
                 arrow_score = ArrowScore(
-                    competition_registration_id=registration.id,
+                    registration_id=registration.id,
                     round_number=round_number,
                     arrow_number=arrow_number,
-                    score=score,
-                    is_x=is_x
+                    points=score,
+                    is_x=is_x,
+                    recorded_by=user.id
                 )
                 db.session.add(arrow_score)
             
@@ -317,8 +319,8 @@ def api_submit_scores_batch(competition_id):
         db.session.commit()
         
         # Calculate total score for response
-        total_score = db.session.query(db.func.sum(ArrowScore.score)).filter_by(
-            competition_registration_id=registration.id
+        total_score = db.session.query(db.func.sum(ArrowScore.points)).filter_by(
+            registration_id=registration.id
         ).scalar() or 0
         
         return jsonify({

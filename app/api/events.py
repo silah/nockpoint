@@ -116,7 +116,7 @@ def api_get_event(event_id):
         
         # Get participants list
         participants = []
-        for participant in event.attendees:
+        for participant in event.attendances:
             participants.append({
                 'id': participant.member.id,
                 'name': f"{participant.member.first_name} {participant.member.last_name}",
@@ -130,9 +130,10 @@ def api_get_event(event_id):
             for student in beginners:
                 students.append({
                     'id': student.id,
-                    'name': f"{student.first_name} {student.last_name}",
-                    'email': student.email,
-                    'phone': student.phone
+                    'name': student.name,
+                    'age': student.age,
+                    'gender': student.gender,
+                    'orientation': student.orientation
                 })
         
         event_data = {
