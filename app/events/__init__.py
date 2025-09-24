@@ -246,17 +246,19 @@ def manage_attendance(id):
                         )
                         db.session.add(comp_registration)
             
-            # Create charge for the member if event is not free
+            # Create charge for the member if event is not free and they need to pay
             if not event.is_free_event:
                 member = User.query.get(form.member_id.data)
-                member_price = member.get_membership_price()
-                charge = MemberCharge(
-                    member_id=member.id,
-                    event_id=event.id,
-                    description=f'Shooting event: {event.name} on {event.date.strftime("%Y-%m-%d")}',
-                    amount=member_price
-                )
-                db.session.add(charge)
+                event_price = member.get_event_price()
+                # Only create charge if there's actually a price to pay
+                if event_price > 0:
+                    charge = MemberCharge(
+                        member_id=member.id,
+                        event_id=event.id,
+                        description=f'Shooting event: {event.name} on {event.date.strftime("%Y-%m-%d")}',
+                        amount=event_price
+                    )
+                    db.session.add(charge)
             
             db.session.commit()
             
@@ -430,18 +432,20 @@ def add_attendee(event_id):
                     )
                     db.session.add(comp_registration)
         
-        # Create charge if event is not free and member attended
+        # Create charge if event is not free and member attended and needs to pay
         if mark_attended and not event.is_free_event:
             member = User.query.get(member_id)
-            member_price = member.get_membership_price()
-            charge = MemberCharge(
-                member_id=member.id,
-                event_id=event.id,
-                description=f"Charge for {event.name}",
-                amount=member_price,
-                is_paid=False
-            )
-            db.session.add(charge)
+            event_price = member.get_event_price()
+            # Only create charge if there's actually a price to pay
+            if event_price > 0:
+                charge = MemberCharge(
+                    member_id=member.id,
+                    event_id=event.id,
+                    description=f"Charge for {event.name}",
+                    amount=event_price,
+                    is_paid=False
+                )
+                db.session.add(charge)
         
         db.session.commit()
         
@@ -501,7 +505,7 @@ def update_attendance(id):
                     )
                     db.session.add(comp_registration)
         
-        # Create charge if attending and event is not free
+        # Create charge if attending and event is not free and member needs to pay
         if attended and not event.is_free_event:
             existing_charge = MemberCharge.query.filter_by(
                 member_id=attendee_id, event_id=id
@@ -509,15 +513,17 @@ def update_attendance(id):
             
             if not existing_charge:
                 member = User.query.get(attendee_id)
-                member_price = member.get_membership_price()
-                charge = MemberCharge(
-                    member_id=attendee_id,
-                    event_id=id,
-                    description=f"Charge for {event.name}",
-                    amount=member_price,
-                    is_paid=False
-                )
-                db.session.add(charge)
+                event_price = member.get_event_price()
+                # Only create charge if there's actually a price to pay
+                if event_price > 0:
+                    charge = MemberCharge(
+                        member_id=attendee_id,
+                        event_id=id,
+                        description=f"Charge for {event.name}",
+                        amount=event_price,
+                        is_paid=False
+                    )
+                    db.session.add(charge)
         
         db.session.commit()
         return jsonify({'success': True})
@@ -720,23 +726,26 @@ def register_for_event(id):
     
     db.session.add(attendance)
     
-    # Create charge if event is not free
-    if not event.is_free_event:
-        member_price = current_user.get_membership_price()
+    # Create charge if event is not free and user needs to pay
+    event_price = current_user.get_event_price()
+    if not event.is_free_event and event_price > 0:
         charge = MemberCharge(
             member_id=current_user.id,
             event_id=id,
             description=f'Shooting event: {event.name} on {event.date.strftime("%Y-%m-%d")}',
-            amount=member_price
+            amount=event_price
         )
         db.session.add(charge)
     
     db.session.commit()
     
-    if event.is_free_event:
-        flash('Successfully registered for this event!', 'success')
+    if event.is_free_event or event_price == 0:
+        if event.is_free_event:
+            flash('Successfully registered for this event!', 'success')
+        else:
+            flash('Successfully registered! This event is covered by your membership.', 'success')
     else:
-        flash(f'Successfully registered! A charge of ${current_user.get_membership_price():.2f} has been added to your account.', 'success')
+        flash(f'Successfully registered! A charge of ${event_price:.2f} has been added to your account.', 'success')
     
     return redirect(url_for('events.view_event', id=id))
 
@@ -779,16 +788,19 @@ def quick_register_member(id, member_id):
     
     db.session.add(attendance)
     
-    # Create charge if event is not free
+    # Create charge if event is not free and member needs to pay
     if not event.is_free_event:
-        member_price = member.get_membership_price()
-        charge = MemberCharge(
-            member_id=member_id,
-            event_id=id,
-            description=f'Shooting event: {event.name} on {event.date.strftime("%Y-%m-%d")}',
-            amount=member_price
-        )
-        db.session.add(charge)
+        member = User.query.get(member_id)
+        event_price = member.get_event_price()
+        # Only create charge if there's actually a price to pay
+        if event_price > 0:
+            charge = MemberCharge(
+                member_id=member_id,
+                event_id=id,
+                description=f'Shooting event: {event.name} on {event.date.strftime("%Y-%m-%d")}',
+                amount=event_price
+            )
+            db.session.add(charge)
     
     db.session.commit()
     

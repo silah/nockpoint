@@ -43,6 +43,20 @@ class User(UserMixin, db.Model):
             return settings.per_event_price or 0.00
         return 0.00
     
+    def get_event_price(self):
+        """Get the price this user pays for events based on their membership type"""
+        from app.models import ClubSettings
+        settings = ClubSettings.get_settings()
+        
+        # Members with annual, quarterly, or monthly memberships have already paid
+        # and events are free for them
+        if self.membership_type in ['annual', 'quarterly', 'monthly']:
+            return 0.00
+        # Only per-event members pay per event
+        elif self.membership_type == 'per_event':
+            return settings.per_event_price or 0.00
+        return 0.00
+    
     def __repr__(self):
         return f'<User {self.username}>'
 

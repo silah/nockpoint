@@ -496,14 +496,19 @@
                             </div>
                         {% else %}
                             <div class="mb-3">
-                                {% if event.is_free_event %}
-                                    <p class="text-success mb-2">
-                                        <i class="bi bi-check-circle"></i> This event is free of charge
-                                    </p>
+                                {% if event.is_free_event or current_user.get_event_price() == 0 %}
+                                    <div class="alert alert-success">
+                                        <p class="text-success mb-2">
+                                            <i class="bi bi-check-circle"></i> This event is free of charge
+                                            {% if not event.is_free_event and current_user.membership_type in ['annual', 'quarterly', 'monthly'] %}
+                                                <br><small class="text-muted">Covered by your {{ current_user.membership_type }} membership</small>
+                                            {% endif %}
+                                        </p>
+                                    </div>
                                 {% else %}
                                     <p class="text-info mb-2">
-                                        <i class="bi bi-info-circle"></i> Registration fee: ${{ current_user.get_membership_price() }}
-                                        <br><small class="text-muted">Based on your {{ current_user.membership_type }} membership</small>
+                                        <i class="bi bi-info-circle"></i> Registration fee: ${{ "%.2f"|format(current_user.get_event_price()) }}
+                                        <br><small class="text-muted">Per-event pricing for {{ current_user.membership_type.replace('_', ' ') }} members</small>
                                     </p>
                                 {% endif %}
                             </div>
