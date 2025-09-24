@@ -116,6 +116,7 @@
                     
                     {% if current_user.is_admin() and member.id != current_user.id %}
                         <form method="POST" action="{{ url_for('members.toggle_member_status', id=member.id) }}" style="display: inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             {% if member.is_active %}
                                 <button type="submit" class="btn btn-outline-warning w-100" 
                                         onclick="return confirm('Deactivate this member?')">
@@ -184,6 +185,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <form action="{{ url_for('members.delete_member', id=member.id) }}" method="POST" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <button type="submit" class="btn btn-danger">Delete</button>
                 </form>
             </div>
