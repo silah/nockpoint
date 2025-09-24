@@ -195,7 +195,13 @@ class PaymentUpdateForm(FlaskForm):
 
 class CompetitionForm(FlaskForm):
     number_of_rounds = IntegerField('Number of Rounds', validators=[DataRequired(), NumberRange(min=1, max=20)], default=6)
-    target_size_cm = IntegerField('Target Size (cm)', validators=[DataRequired(), NumberRange(min=40, max=200)], default=122)
+    target_size_cm = SelectField('Target Size (cm)', coerce=int, choices=[
+        (20, '20 cm'),
+        (40, '40 cm'),
+        (60, '60 cm'),
+        (80, '80 cm'),
+        (122, '122 cm')
+    ], default=122, validators=[DataRequired()])
     arrows_per_round = IntegerField('Arrows per Round', validators=[DataRequired(), NumberRange(min=3, max=12)], default=6)
     max_team_size = SelectField('Team Size', coerce=int, choices=[(2, '2 members per team'), (3, '3 members per team'), (4, '4 members per team')], default=4)
     submit = SubmitField('Create Competition')

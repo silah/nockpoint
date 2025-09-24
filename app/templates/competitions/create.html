@@ -126,7 +126,7 @@ function updateSummary() {
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('{{ form.number_of_rounds.id }}').addEventListener('input', updateSummary);
     document.getElementById('{{ form.arrows_per_round.id }}').addEventListener('input', updateSummary);
-    document.getElementById('{{ form.target_size_cm.id }}').addEventListener('input', updateSummary);
+    document.getElementById('{{ form.target_size_cm.id }}').addEventListener('change', updateSummary);
     document.getElementById('{{ form.max_team_size.id }}').addEventListener('change', updateSummary);
     
     // Initial update
