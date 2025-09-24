@@ -10,7 +10,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app import create_app, db
-from app.models import User, ClubSettings
+from app.models import User, ClubSettings, InventoryCategory
 
 def init_database():
     """Initialize database with tables and admin user"""
@@ -52,6 +52,32 @@ def init_database():
         else:
             print("ℹ️  Admin user 'archer' already exists")
         
+        # Create default inventory categories
+        print("Creating default inventory categories...")
+        default_categories = [
+            {'name': 'Bows', 'description': 'Recurve, compound, and traditional bows'},
+            {'name': 'Arrows', 'description': 'Carbon, aluminum, and wooden arrows'},
+            {'name': 'Targets', 'description': 'Target backstops, stands, and boss materials (straw, foam)'},
+            {'name': 'Target Faces', 'description': 'Paper and plastic target faces in standard sizes (20, 40, 60, 80, 122 cm)'},
+            {'name': 'Safety Equipment', 'description': 'Arm guards, finger tabs, chest guards'},
+            {'name': 'Accessories', 'description': 'Quivers, bow stands, and other accessories'},
+            {'name': 'Maintenance', 'description': 'Bow strings, wax, tools'},
+            {'name': 'Arrow Consumables', 'description': 'Tips, vanes, feathers, nocks, shafts'},
+        ]
+        
+        categories_created = 0
+        for cat_data in default_categories:
+            if not InventoryCategory.query.filter_by(name=cat_data['name']).first():
+                category = InventoryCategory(**cat_data)
+                db.session.add(category)
+                categories_created += 1
+        
+        if categories_created > 0:
+            db.session.commit()
+            print(f"✅ Created {categories_created} inventory categories")
+        else:
+            print("ℹ️  All inventory categories already exist")
+
         # Set up default club settings with activation code
         settings = ClubSettings.get_settings()
         if not settings.activation_code:

@@ -107,8 +107,26 @@ class TargetForm(InventoryItemForm):
     material = SelectField('Material', choices=[
         ('straw', 'Straw'),
         ('foam', 'Foam'),
+        ('other', 'Other')
+    ], validators=[Optional()])
+
+class TargetFaceForm(InventoryItemForm):
+    face_size = SelectField('Face Size (cm)', choices=[
+        ('20', '20 cm'),
+        ('40', '40 cm'),
+        ('60', '60 cm'),
+        ('80', '80 cm'),
+        ('122', '122 cm')
+    ], validators=[Optional()])
+    target_type = SelectField('Target Type', choices=[
+        ('10-ring', '10-Ring Target'),
+        ('3-spot', '3-Spot Vertical'),
+        ('field', 'Field Target'),
+        ('3d', '3D Target')
+    ], validators=[Optional()])
+    material = SelectField('Material', choices=[
         ('paper', 'Paper'),
-        ('cardboard', 'Cardboard')
+        ('plastic', 'Plastic')
     ], validators=[Optional()])
 
 class MemberEditForm(FlaskForm):

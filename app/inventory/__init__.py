@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from app import db
 from app.models import InventoryItem, InventoryCategory
-from app.forms import InventoryItemForm, InventoryCategoryForm, BowForm, ArrowForm, TargetForm
+from app.forms import InventoryItemForm, InventoryCategoryForm, BowForm, ArrowForm, TargetForm, TargetFaceForm
 from datetime import datetime
 import json
 
@@ -288,8 +288,48 @@ def get_category_fields(category_id):
                     {'value': '', 'label': 'Select Material'},
                     {'value': 'straw', 'label': 'Straw'},
                     {'value': 'foam', 'label': 'Foam'},
+                    {'value': 'other', 'label': 'Other'}
+                ],
+                'required': False
+            }
+        ]
+    elif category.name.lower() == 'target faces':
+        fields = [
+            {
+                'name': 'face_size',
+                'label': 'Face Size (cm)',
+                'type': 'select',
+                'options': [
+                    {'value': '', 'label': 'Select Size'},
+                    {'value': '20', 'label': '20 cm'},
+                    {'value': '40', 'label': '40 cm'},
+                    {'value': '60', 'label': '60 cm'},
+                    {'value': '80', 'label': '80 cm'},
+                    {'value': '122', 'label': '122 cm'}
+                ],
+                'required': False
+            },
+            {
+                'name': 'target_type',
+                'label': 'Target Type',
+                'type': 'select',
+                'options': [
+                    {'value': '', 'label': 'Select Type'},
+                    {'value': '10-ring', 'label': '10-Ring Target'},
+                    {'value': '3-spot', 'label': '3-Spot Vertical'},
+                    {'value': 'field', 'label': 'Field Target'},
+                    {'value': '3d', 'label': '3D Target'}
+                ],
+                'required': False
+            },
+            {
+                'name': 'material',
+                'label': 'Material',
+                'type': 'select',
+                'options': [
+                    {'value': '', 'label': 'Select Material'},
                     {'value': 'paper', 'label': 'Paper'},
-                    {'value': 'cardboard', 'label': 'Cardboard'}
+                    {'value': 'plastic', 'label': 'Plastic'}
                 ],
                 'required': False
             }
@@ -313,6 +353,7 @@ def get_form_for_category(category):
         'bows': BowForm,
         'arrows': ArrowForm,
         'targets': TargetForm,
+        'target faces': TargetFaceForm,
     }
     
     form_class = category_forms.get(category.name.lower(), InventoryItemForm)
@@ -343,6 +384,14 @@ def get_category_attributes(form, category_name):
             attributes['fletching_type'] = form.fletching_type.data
     
     elif category_name.lower() == 'targets':
+        if hasattr(form, 'face_size') and form.face_size.data:
+            attributes['face_size'] = form.face_size.data
+        if hasattr(form, 'target_type') and form.target_type.data:
+            attributes['target_type'] = form.target_type.data
+        if hasattr(form, 'material') and form.material.data:
+            attributes['material'] = form.material.data
+    
+    elif category_name.lower() == 'target faces':
         if hasattr(form, 'face_size') and form.face_size.data:
             attributes['face_size'] = form.face_size.data
         if hasattr(form, 'target_type') and form.target_type.data:
@@ -396,6 +445,14 @@ def extract_category_attributes(form_data, category_name):
             attributes['fletching_type'] = form_data['fletching_type']
     
     elif category_name.lower() == 'targets':
+        if form_data.get('face_size'):
+            attributes['face_size'] = int(form_data['face_size'])
+        if form_data.get('target_type'):
+            attributes['target_type'] = form_data['target_type']
+        if form_data.get('material'):
+            attributes['material'] = form_data['material']
+    
+    elif category_name.lower() == 'target faces':
         if form_data.get('face_size'):
             attributes['face_size'] = int(form_data['face_size'])
         if form_data.get('target_type'):
