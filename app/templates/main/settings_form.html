@@ -154,6 +154,27 @@
                         </div>
                     </div>
                 </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5><i class="bi bi-key"></i> Registration Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            {{ form.activation_code.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-shield-lock"></i></span>
+                                {{ form.activation_code(class="form-control" + (" is-invalid" if form.activation_code.errors else ""), placeholder="Enter activation code") }}
+                            </div>
+                            {% for error in form.activation_code.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                            <small class="form-text text-muted">
+                                <i class="bi bi-info-circle"></i> {{ form.activation_code.description }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <div class="col-lg-4">

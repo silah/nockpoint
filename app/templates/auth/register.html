@@ -76,6 +76,21 @@
                         <div class="form-text">Choose your preferred membership plan</div>
                     </div>
                     
+                    <div class="mb-3">
+                        {{ form.activation_code.label(class="form-label") }}
+                        {{ form.activation_code(class="form-control") }}
+                        {% if form.activation_code.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.activation_code.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            <i class="bi bi-info-circle me-1"></i>Contact an administrator for the activation code
+                        </div>
+                    </div>
+                    
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             {{ form.password.label(class="form-label") }}

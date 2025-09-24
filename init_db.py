@@ -10,7 +10,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app import create_app, db
-from app.models import User
+from app.models import User, ClubSettings
 
 def init_database():
     """Initialize database with tables and admin user"""
@@ -51,6 +51,15 @@ def init_database():
             print("   Role: admin")
         else:
             print("ℹ️  Admin user 'archer' already exists")
+        
+        # Set up default club settings with activation code
+        settings = ClubSettings.get_settings()
+        if not settings.activation_code:
+            settings.activation_code = 'NOCKPOINT2025'
+            db.session.commit()
+            print("✅ Default activation code set: NOCKPOINT2025")
+        else:
+            print(f"ℹ️  Activation code already set: {settings.activation_code}")
         
         print("✅ Database initialization completed!")
 

@@ -20,11 +20,20 @@ class RegistrationForm(FlaskForm):
         ('annual', 'Annual'),
         ('per_event', 'Per-Event')
     ], default='monthly', validators=[DataRequired()])
+    activation_code = StringField('Activation Code', validators=[DataRequired(), Length(1, 50)])
     password = PasswordField('Password', validators=[DataRequired(), Length(6)])
     password2 = PasswordField('Repeat Password', 
                              validators=[DataRequired(), EqualTo('password')])
     is_admin = BooleanField('Make this user an administrator')
     submit = SubmitField('Register')
+    
+    def validate_activation_code(self, field):
+        from app.models import ClubSettings
+        settings = ClubSettings.get_settings()
+        if not settings.activation_code:
+            raise ValidationError('Registration is currently disabled. Please contact an administrator.')
+        if field.data != settings.activation_code:
+            raise ValidationError('Invalid activation code.')
 
 class InventoryCategoryForm(FlaskForm):
     name = StringField('Category Name', validators=[DataRequired(), Length(1, 100)])
@@ -231,6 +240,10 @@ class ClubSettingsForm(FlaskForm):
     quarterly_membership_price = DecimalField('Quarterly Membership Price', validators=[DataRequired(), NumberRange(min=0)], places=2, default=0.00)
     monthly_membership_price = DecimalField('Monthly Membership Price', validators=[DataRequired(), NumberRange(min=0)], places=2, default=0.00)
     per_event_price = DecimalField('Per-Event Price', validators=[DataRequired(), NumberRange(min=0)], places=2, default=0.00)
+    
+    # Registration settings
+    activation_code = StringField('Registration Activation Code', validators=[Optional(), Length(0, 50)], 
+                                 description='Leave empty to disable new registrations')
     
     website_url = StringField('Website URL', validators=[Optional(), Length(0, 200)])
     facebook_url = StringField('Facebook URL', validators=[Optional(), Length(0, 200)])

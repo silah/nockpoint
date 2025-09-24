@@ -431,6 +431,9 @@ class ClubSettings(db.Model):
     monthly_membership_price = db.Column(db.Numeric(10, 2), default=0.00)
     per_event_price = db.Column(db.Numeric(10, 2), default=0.00)
     
+    # Registration settings
+    activation_code = db.Column(db.String(50), nullable=True)
+    
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_by = db.Column(db.Integer, db.ForeignKey('user.id'))
     
