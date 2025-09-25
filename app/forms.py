@@ -267,20 +267,12 @@ class ClubSettingsForm(FlaskForm):
     submit = SubmitField('Save Settings')
 
 class ProFeaturesForm(FlaskForm):
-    """Form for managing pro feature activation"""
-    def __init__(self, *args, **kwargs):
-        super(ProFeaturesForm, self).__init__(*args, **kwargs)
-        
-        # Dynamically create checkboxes for each pro feature
-        from app.pro_features import PRO_FEATURES, get_pro_features_by_category
-        
-        categories = get_pro_features_by_category()
-        for category_key, category_info in categories.items():
-            for feature in category_info['features']:
-                field_name = f"feature_{feature['key']}"
-                setattr(self, field_name, BooleanField(feature['name']))
+    """Form for managing pro subscription settings"""
+    is_pro_enabled = BooleanField('Enable Pro Features')
+    pro_subscription_id = StringField('Subscription ID', validators=[Optional()])
+    pro_expires_at = DateTimeField('Pro Subscription Expires', validators=[Optional()], format='%Y-%m-%d %H:%M:%S')
     
-    submit = SubmitField('Update Pro Features')
+    submit = SubmitField('Update Pro Settings')
     
     # Membership pricing
     annual_membership_price = DecimalField('Annual Membership Price', validators=[DataRequired(), NumberRange(min=0)], places=2, default=0.00)

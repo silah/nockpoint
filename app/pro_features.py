@@ -91,11 +91,11 @@ def is_pro_feature_available(feature_name):
     """Check if a pro feature exists in our feature list"""
     return feature_name in PRO_FEATURES
 
-def check_pro_feature(feature_name):
-    """Check if a pro feature is enabled for the current club"""
+def check_pro_feature(feature_name=None):
+    """Check if pro features are enabled for the current club - simplified to all-or-nothing"""
     from app.models import ClubSettings
     settings = ClubSettings.get_settings()
-    return settings.has_pro_feature(feature_name)
+    return settings.is_pro_active()
 
 def get_pro_status():
     """Get current pro subscription status"""

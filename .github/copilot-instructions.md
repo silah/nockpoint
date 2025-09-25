@@ -66,14 +66,14 @@ from app.pro_features import pro_feature_required
 @blueprint.route('/advanced-feature')
 @login_required
 @admin_required
-@pro_feature_required('advanced_inventory')
+@pro_feature_required()  # All-or-nothing: any feature name or none
 def advanced_feature():
     return render_template('advanced.html')
 ```
 
 ### Using Pro Features in Templates
 ```html
-{% if has_pro_feature('member_analytics') %}
+{% if has_pro_feature() %}
     <a href="{{ url_for('members.analytics') }}" class="btn btn-primary">
         Advanced Analytics <span class="badge bg-success">Pro</span>
     </a>
@@ -98,17 +98,19 @@ def advanced_feature():
 
 ### Pro Feature Management
 ```python
-# Enable pro features programmatically
+# Enable pro features programmatically (all-or-nothing)
 from app.models import ClubSettings
+from datetime import datetime, timedelta
 settings = ClubSettings.get_settings()
 settings.is_pro_enabled = True
-settings.pro_features_enabled = ['advanced_inventory', 'member_analytics']
+settings.pro_expires_at = datetime.utcnow() + timedelta(days=365)  # Optional expiration
+settings.pro_subscription_id = 'sub_123456789'  # Optional external ID
 db.session.commit()
 
-# Check pro features in code
+# Check pro features in code (simplified)
 from app.pro_features import check_pro_feature
-if check_pro_feature('advanced_inventory'):
-    # Execute pro feature logic
+if check_pro_feature():  # No specific feature name needed
+    # Execute any pro feature logic
 ```
 
 ## Frontend Guidelines
