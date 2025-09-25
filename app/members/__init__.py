@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from app import db
 from app.models import User
-from app.forms import RegistrationForm, MemberEditForm
+from app.forms import RegistrationForm, AdminMemberRegistrationForm, MemberEditForm
 from datetime import datetime
 
 members_bp = Blueprint('members', __name__)
@@ -65,7 +65,7 @@ def index():
 @login_required
 @admin_required
 def new_member():
-    form = RegistrationForm()
+    form = AdminMemberRegistrationForm()
     if form.validate_on_submit():
         # Check if user already exists
         if User.query.filter_by(username=form.username.data).first():

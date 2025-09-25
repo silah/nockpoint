@@ -35,6 +35,24 @@ class RegistrationForm(FlaskForm):
         if field.data != settings.activation_code:
             raise ValidationError('Invalid activation code.')
 
+class AdminMemberRegistrationForm(FlaskForm):
+    """Form for admin to register new members - no activation code required"""
+    username = StringField('Username', validators=[DataRequired(), Length(1, 64)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    first_name = StringField('First Name', validators=[DataRequired(), Length(1, 50)])
+    last_name = StringField('Last Name', validators=[DataRequired(), Length(1, 50)])
+    membership_type = SelectField('Membership Type', choices=[
+        ('monthly', 'Monthly'),
+        ('quarterly', 'Quarterly'),  
+        ('annual', 'Annual'),
+        ('per_event', 'Per-Event')
+    ], default='monthly', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired(), Length(6)])
+    password2 = PasswordField('Repeat Password', 
+                             validators=[DataRequired(), EqualTo('password')])
+    is_admin = BooleanField('Make this user an administrator')
+    submit = SubmitField('Register Member')
+
 class InventoryCategoryForm(FlaskForm):
     name = StringField('Category Name', validators=[DataRequired(), Length(1, 100)])
     description = TextAreaField('Description', validators=[Optional(), Length(0, 500)])

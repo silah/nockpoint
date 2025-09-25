@@ -23,31 +23,56 @@
                 <ul class="navbar-nav me-auto">
                     {% if current_user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.dashboard') }}">Dashboard</a>
+                            <a class="nav-link" href="{{ url_for('main.dashboard') }}">
+                                {% if current_user.is_admin() %}
+                                    <i class="bi bi-speedometer2"></i> Admin Dashboard
+                                {% else %}
+                                    <i class="bi bi-house"></i> My Dashboard
+                                {% endif %}
+                            </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('inventory.index') }}">Inventory</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('inventory.categories') }}">Categories</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('members.index') }}">Members</a>
-                        </li>
+                        
+                        {% if current_user.is_admin() %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('inventory.index') }}">
+                                    <i class="bi bi-box"></i> Inventory
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('inventory.categories') }}">
+                                    <i class="bi bi-tags"></i> Categories
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('members.index') }}">
+                                    <i class="bi bi-people"></i> Members
+                                </a>
+                            </li>
+                        {% endif %}
+                        
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="eventsDropdown" role="button" data-bs-toggle="dropdown">
                                 <i class="bi bi-calendar3"></i> Events
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{{ url_for('events.calendar') }}">Calendar</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('events.my_charges') }}">My Charges</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('events.calendar') }}">
+                                    <i class="bi bi-calendar3"></i> Calendar
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('events.my_charges') }}">
+                                    <i class="bi bi-credit-card"></i> My Charges
+                                </a></li>
                                 {% if current_user.is_admin() %}
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{{ url_for('events.new_event') }}">Create Event</a></li>
-                                    <li><a class="dropdown-item" href="{{ url_for('events.outstanding_payments') }}">Manage Payments</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('events.new_event') }}">
+                                        <i class="bi bi-plus-circle"></i> Create Event
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('events.outstanding_payments') }}">
+                                        <i class="bi bi-exclamation-triangle"></i> Manage Payments
+                                    </a></li>
                                 {% endif %}
                             </ul>
                         </li>
+                        
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('competitions.index') }}">
                                 <i class="bi bi-trophy"></i> Competitions
@@ -60,21 +85,42 @@
                     {% if current_user.is_authenticated %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-person-circle"></i> {{ current_user.first_name }}
+                                <i class="bi bi-person-circle"></i> 
                                 {% if current_user.is_admin() %}
+                                    {{ current_user.first_name }} {{ current_user.last_name }}
                                     <span class="badge bg-warning text-dark ms-1">Admin</span>
+                                {% else %}
+                                    {{ current_user.first_name }} {{ current_user.last_name }}
                                 {% endif %}
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{{ url_for('members.profile') }}">My Profile</a></li>
                                 {% if current_user.is_admin() %}
+                                    <li><a class="dropdown-item" href="{{ url_for('members.profile') }}">
+                                        <i class="bi bi-person"></i> My Profile
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('main.dashboard') }}">
+                                        <i class="bi bi-speedometer2"></i> Admin Dashboard
+                                    </a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="{{ url_for('main.settings') }}">
                                         <i class="bi bi-gear"></i> Club Settings
                                     </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                        <i class="bi bi-box-arrow-right"></i> Logout
+                                    </a></li>
+                                {% else %}
+                                    <li><a class="dropdown-item" href="{{ url_for('members.profile') }}">
+                                        <i class="bi bi-person"></i> My Profile
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('main.dashboard') }}">
+                                        <i class="bi bi-house"></i> My Dashboard
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                        <i class="bi bi-box-arrow-right"></i> Logout
+                                    </a></li>
                                 {% endif %}
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a></li>
                             </ul>
                         </li>
                     {% else %}
