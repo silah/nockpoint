@@ -1,0 +1,58 @@
+<!-- Example: Using pro features in templates -->
+
+<!-- Check if pro is active -->
+{% if is_pro_active() %}
+    <div class="alert alert-success">
+        <i class="bi bi-star-fill me-2"></i>Pro subscription is active
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        <a href="{{ url_for('main.upgrade_to_pro') }}" class="btn btn-primary">
+            <i class="bi bi-star me-2"></i>Upgrade to Pro
+        </a>
+    </div>
+{% endif %}
+
+<!-- Conditionally show pro features -->
+{% if has_pro_feature('advanced_inventory') %}
+    <div class="card">
+        <div class="card-header">
+            <h5>Advanced Inventory Analytics</h5>
+        </div>
+        <div class="card-body">
+            <a href="{{ url_for('inventory.analytics') }}" class="btn btn-primary">
+                View Analytics
+            </a>
+        </div>
+    </div>
+{% else %}
+    <div class="card border-warning">
+        <div class="card-body">
+            <h5>Advanced Inventory Analytics</h5>
+            <p class="text-muted">Requires Pro subscription</p>
+            <span class="badge bg-warning">Pro Feature</span>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Show pro feature info -->
+{% set feature_info = get_pro_feature_info('member_analytics') %}
+<div class="feature-card">
+    <h6>{{ feature_info.name }}</h6>
+    <p>{{ feature_info.description }}</p>
+    <span class="badge bg-secondary">{{ feature_info.category }}</span>
+</div>
+
+<!-- Navigation menu with pro features -->
+<ul class="nav nav-pills">
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('inventory.index') }}">Inventory</a>
+    </li>
+    {% if has_pro_feature('advanced_inventory') %}
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('inventory.analytics') }}">
+            Analytics <span class="badge bg-success ms-1">Pro</span>
+        </a>
+    </li>
+    {% endif %}
+</ul>

@@ -63,6 +63,10 @@ def create_app(config=None):
         from app.models import ClubSettings
         return dict(club_settings=ClubSettings.get_settings())
     
+    # Register pro feature template functions
+    from app.pro_features import register_pro_template_functions
+    register_pro_template_functions(app)
+    
     # Template filter to convert newlines to HTML breaks
     @app.template_filter('nl2br')
     def nl2br_filter(text):

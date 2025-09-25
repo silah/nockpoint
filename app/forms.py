@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, IntegerField, DecimalField, SelectField, DateField, PasswordField, SubmitField, BooleanField
+from wtforms import StringField, TextAreaField, IntegerField, DecimalField, SelectField, DateField, DateTimeField, PasswordField, SubmitField, BooleanField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, NumberRange, Optional, ValidationError
 from wtforms.widgets import TextArea
 from app.models import InventoryCategory
@@ -258,6 +258,29 @@ class ClubSettingsForm(FlaskForm):
     address = TextAreaField('Club Address', validators=[Optional(), Length(0, 500)])
     email = StringField('Contact Email', validators=[Optional(), Email(), Length(0, 120)])
     phone = StringField('Phone Number', validators=[Optional(), Length(0, 20)])
+    
+    # Pro subscription fields
+    is_pro_enabled = BooleanField('Enable Pro Features')
+    pro_subscription_id = StringField('Subscription ID', validators=[Optional(), Length(0, 100)])
+    pro_expires_at = DateTimeField('Pro Expires At', validators=[Optional()], format='%Y-%m-%d %H:%M:%S')
+    
+    submit = SubmitField('Save Settings')
+
+class ProFeaturesForm(FlaskForm):
+    """Form for managing pro feature activation"""
+    def __init__(self, *args, **kwargs):
+        super(ProFeaturesForm, self).__init__(*args, **kwargs)
+        
+        # Dynamically create checkboxes for each pro feature
+        from app.pro_features import PRO_FEATURES, get_pro_features_by_category
+        
+        categories = get_pro_features_by_category()
+        for category_key, category_info in categories.items():
+            for feature in category_info['features']:
+                field_name = f"feature_{feature['key']}"
+                setattr(self, field_name, BooleanField(feature['name']))
+    
+    submit = SubmitField('Update Pro Features')
     
     # Membership pricing
     annual_membership_price = DecimalField('Annual Membership Price', validators=[DataRequired(), NumberRange(min=0)], places=2, default=0.00)

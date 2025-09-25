@@ -516,6 +516,12 @@ class ClubSettings(db.Model):
     # Registration settings
     activation_code = db.Column(db.String(50), nullable=True)
     
+    # Pro subscription settings
+    is_pro_enabled = db.Column(db.Boolean, nullable=False, default=False)
+    pro_subscription_id = db.Column(db.String(100), nullable=True)  # External subscription ID
+    pro_expires_at = db.Column(db.DateTime, nullable=True)
+    pro_features_enabled = db.Column(db.JSON, default=lambda: [])  # List of enabled pro features
+    
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_by = db.Column(db.Integer, db.ForeignKey('user.id'))
     
@@ -534,6 +540,39 @@ class ClubSettings(db.Model):
             db.session.add(settings)
             db.session.commit()
         return settings
+    
+    def is_pro_active(self):
+        """Check if pro subscription is currently active"""
+        if not self.is_pro_enabled:
+            return False
+        
+        # If no expiration date is set, assume it's active
+        if not self.pro_expires_at:
+            return True
+        
+        # Check if subscription hasn't expired
+        from datetime import datetime
+        return datetime.utcnow() < self.pro_expires_at
+    
+    def has_pro_feature(self, feature_name):
+        """Check if a specific pro feature is enabled"""
+        if not self.is_pro_active():
+            return False
+        
+        # If no specific features are configured, all pro features are enabled
+        if not self.pro_features_enabled:
+            return True
+        
+        return feature_name in self.pro_features_enabled
+    
+    def get_pro_status(self):
+        """Get comprehensive pro status information"""
+        return {
+            'is_active': self.is_pro_active(),
+            'expires_at': self.pro_expires_at,
+            'subscription_id': self.pro_subscription_id,
+            'enabled_features': self.pro_features_enabled or []
+        }
 
 
 class BeginnersStudent(db.Model):
