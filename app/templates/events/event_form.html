@@ -39,19 +39,6 @@
                     </div>
                     
                     <div class="mb-3">
-                        {{ form.event_type.label(class="form-label") }}
-                        {{ form.event_type(class="form-select") }}
-                        {% if form.event_type.errors %}
-                            <div class="text-danger small">
-                                {% for error in form.event_type.errors %}
-                                    <div>{{ error }}</div>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                        <div class="form-text">Choose "Beginners Course" to manage non-member students</div>
-                    </div>
-                    
-                    <div class="mb-3">
                         {{ form.location.label(class="form-label") }}
                         {{ form.location(class="form-control") }}
                         {% if form.location.errors %}
@@ -104,18 +91,19 @@
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <div class="form-check">
-                                {{ form.is_free_event(class="form-check-input") }}
-                                {{ form.is_free_event.label(class="form-check-label") }}
+                            {{ form.price.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                {{ form.price(class="form-control") }}
                             </div>
-                            {% if form.is_free_event.errors %}
+                            {% if form.price.errors %}
                                 <div class="text-danger small">
-                                    {% for error in form.is_free_event.errors %}
+                                    {% for error in form.price.errors %}
                                         <div>{{ error }}</div>
                                     {% endfor %}
                                 </div>
                             {% endif %}
-                            <div class="form-text">Check this box if the event is free of charge. Otherwise, cost depends on membership plan.</div>
+                            <div class="form-text">Cost per participant (set to 0 for free events)</div>
                         </div>
                         
                         <div class="col-md-6 mb-3">

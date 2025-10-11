@@ -57,13 +57,6 @@
                         <h6>Membership Information</h6>
                         <table class="table table-sm">
                             <tr>
-                                <td><strong>Membership Type:</strong></td>
-                                <td>
-                                    {{ member.membership_type.replace('_', ' ').title() }}
-                                    <span class="text-muted">(${{"%.2f"|format(member.get_membership_price() or 0)}})</span>
-                                </td>
-                            </tr>
-                            <tr>
                                 <td><strong>Status:</strong></td>
                                 <td>
                                     {% if member.is_active %}
@@ -79,7 +72,7 @@
                             </tr>
                             <tr>
                                 <td><strong>Member Since:</strong></td>
-                                <td>{{ member.created_at.strftime('%B %d, %Y') if member.created_at else 'N/A' }}</td>
+                                <td>{{ (member.created_at.date() - member.created_at.date()).days }} days</td>
                             </tr>
                         </table>
                     </div>
@@ -116,7 +109,6 @@
                     
                     {% if current_user.is_admin() and member.id != current_user.id %}
                         <form method="POST" action="{{ url_for('members.toggle_member_status', id=member.id) }}" style="display: inline;">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             {% if member.is_active %}
                                 <button type="submit" class="btn btn-outline-warning w-100" 
                                         onclick="return confirm('Deactivate this member?')">
@@ -185,7 +177,6 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <form action="{{ url_for('members.delete_member', id=member.id) }}" method="POST" style="display: inline;">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <button type="submit" class="btn btn-danger">Delete</button>
                 </form>
             </div>

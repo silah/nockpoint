@@ -44,8 +44,7 @@ def register():
             username=form.username.data,
             email=form.email.data,
             first_name=form.first_name.data,
-            last_name=form.last_name.data,
-            membership_type=form.membership_type.data
+            last_name=form.last_name.data
         )
         user.set_password(form.password.data)
         

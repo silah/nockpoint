@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from app import db
 from app.models import InventoryItem, InventoryCategory
-from app.forms import InventoryItemForm, InventoryCategoryForm, BowForm, ArrowForm, TargetForm, TargetFaceForm
+from app.forms import InventoryItemForm, InventoryCategoryForm, BowForm, ArrowForm, TargetForm
 from datetime import datetime
 import json
 
@@ -89,7 +89,15 @@ def edit_category(id):
 @login_required
 @admin_required
 def new_item():
-    form = InventoryItemForm()
+    category_id = request.args.get('category', type=int)
+    
+    # Get category to determine which form to use
+    category = None
+    if category_id:
+        category = InventoryCategory.query.get_or_404(category_id)
+    
+    # Choose form based on category
+    form = get_form_for_category(category)
     
     if form.validate_on_submit():
         # Create base item
@@ -106,10 +114,9 @@ def new_item():
             category_id=form.category_id.data
         )
         
-        # Add category-specific attributes from form data
-        category = InventoryCategory.query.get(form.category_id.data)
+        # Add category-specific attributes
         if category:
-            item.attributes = extract_category_attributes(request.form, category.name)
+            item.attributes = get_category_attributes(form, category.name)
         
         db.session.add(item)
         db.session.commit()
@@ -129,9 +136,16 @@ def view_item(id):
 @admin_required
 def edit_item(id):
     item = InventoryItem.query.get_or_404(id)
-    form = InventoryItemForm(obj=item)
+    
+    # Get form for the item's category
+    form = get_form_for_category(item.category)
+    
+    if request.method == 'GET':
+        # Populate form with existing data
+        populate_form_from_item(form, item)
     
     if form.validate_on_submit():
+        # Update base fields
         item.name = form.name.data
         item.description = form.description.data
         item.quantity = form.quantity.data
@@ -144,16 +158,14 @@ def edit_item(id):
         item.category_id = form.category_id.data
         item.updated_at = datetime.utcnow()
         
-        # Update category-specific attributes from form data
-        category = InventoryCategory.query.get(form.category_id.data)
-        if category:
-            item.attributes = extract_category_attributes(request.form, category.name)
+        # Update category-specific attributes
+        item.attributes = get_category_attributes(form, item.category.name)
         
         db.session.commit()
         flash('Item updated successfully!', 'success')
         return redirect(url_for('inventory.view_item', id=id))
     
-    return render_template('inventory/item_form.html', form=form, title='Edit Item', item=item)
+    return render_template('inventory/item_form.html', form=form, title='Edit Item')
 
 @inventory_bp.route('/item/<int:id>/delete', methods=['POST'])
 @login_required
@@ -165,185 +177,6 @@ def delete_item(id):
     flash('Item deleted successfully!', 'success')
     return redirect(url_for('inventory.index'))
 
-@inventory_bp.route('/api/category-fields/<int:category_id>')
-@login_required
-def get_category_fields(category_id):
-    """API endpoint to get form fields for a specific category"""
-    category = InventoryCategory.query.get_or_404(category_id)
-    
-    fields = []
-    
-    if category.name.lower() == 'bows':
-        fields = [
-            {
-                'name': 'draw_weight',
-                'label': 'Draw Weight (lbs)',
-                'type': 'number',
-                'min': 10,
-                'max': 80,
-                'required': False
-            },
-            {
-                'name': 'length', 
-                'label': 'Length (inches)',
-                'type': 'number',
-                'min': 48,
-                'max': 72,
-                'step': '0.1',
-                'required': False
-            },
-            {
-                'name': 'bow_type',
-                'label': 'Bow Type',
-                'type': 'select',
-                'options': [
-                    {'value': '', 'label': 'Select Type'},
-                    {'value': 'recurve', 'label': 'Recurve'},
-                    {'value': 'compound', 'label': 'Compound'},
-                    {'value': 'longbow', 'label': 'Longbow'},
-                    {'value': 'barebow', 'label': 'Barebow'}
-                ],
-                'required': False
-            },
-            {
-                'name': 'handedness',
-                'label': 'Direction',
-                'type': 'select',
-                'options': [
-                    {'value': '', 'label': 'Select Direction'},
-                    {'value': 'right', 'label': 'Right Handed'},
-                    {'value': 'left', 'label': 'Left Handed'}
-                ],
-                'required': False
-            }
-        ]
-    elif category.name.lower() == 'arrows':
-        fields = [
-            {
-                'name': 'spine',
-                'label': 'Spine',
-                'type': 'number',
-                'min': 200,
-                'max': 1000,
-                'required': False
-            },
-            {
-                'name': 'length',
-                'label': 'Length (inches)',
-                'type': 'number',
-                'min': 20,
-                'max': 35,
-                'step': '0.1',
-                'required': False
-            },
-            {
-                'name': 'point_weight',
-                'label': 'Point Weight (grains)',
-                'type': 'number',
-                'min': 60,
-                'max': 300,
-                'required': False
-            },
-            {
-                'name': 'fletching_type',
-                'label': 'Fletching Type',
-                'type': 'select',
-                'options': [
-                    {'value': '', 'label': 'Select Type'},
-                    {'value': 'feather', 'label': 'Feather'},
-                    {'value': 'plastic', 'label': 'Plastic Vane'},
-                    {'value': 'carbon', 'label': 'Carbon Vane'}
-                ],
-                'required': False
-            }
-        ]
-    elif category.name.lower() == 'targets':
-        fields = [
-            {
-                'name': 'face_size',
-                'label': 'Face Size (cm)', 
-                'type': 'number',
-                'min': 20,
-                'max': 150,
-                'required': False
-            },
-            {
-                'name': 'target_type',
-                'label': 'Target Type',
-                'type': 'select',
-                'options': [
-                    {'value': '', 'label': 'Select Type'},
-                    {'value': '10-ring', 'label': '10-Ring Target'},
-                    {'value': '3-spot', 'label': '3-Spot Vertical'},
-                    {'value': 'field', 'label': 'Field Target'},
-                    {'value': '3d', 'label': '3D Target'}
-                ],
-                'required': False
-            },
-            {
-                'name': 'material',
-                'label': 'Material',
-                'type': 'select',
-                'options': [
-                    {'value': '', 'label': 'Select Material'},
-                    {'value': 'straw', 'label': 'Straw'},
-                    {'value': 'foam', 'label': 'Foam'},
-                    {'value': 'other', 'label': 'Other'}
-                ],
-                'required': False
-            }
-        ]
-    elif category.name.lower() == 'target faces':
-        fields = [
-            {
-                'name': 'face_size',
-                'label': 'Face Size (cm)',
-                'type': 'select',
-                'options': [
-                    {'value': '', 'label': 'Select Size'},
-                    {'value': '20', 'label': '20 cm'},
-                    {'value': '40', 'label': '40 cm'},
-                    {'value': '60', 'label': '60 cm'},
-                    {'value': '80', 'label': '80 cm'},
-                    {'value': '122', 'label': '122 cm'}
-                ],
-                'required': False
-            },
-            {
-                'name': 'target_type',
-                'label': 'Target Type',
-                'type': 'select',
-                'options': [
-                    {'value': '', 'label': 'Select Type'},
-                    {'value': '10-ring', 'label': '10-Ring Target'},
-                    {'value': '3-spot', 'label': '3-Spot Vertical'},
-                    {'value': 'field', 'label': 'Field Target'},
-                    {'value': '3d', 'label': '3D Target'}
-                ],
-                'required': False
-            },
-            {
-                'name': 'material',
-                'label': 'Material',
-                'type': 'select',
-                'options': [
-                    {'value': '', 'label': 'Select Material'},
-                    {'value': 'paper', 'label': 'Paper'},
-                    {'value': 'plastic', 'label': 'Plastic'}
-                ],
-                'required': False
-            }
-        ]
-    
-    return jsonify({'fields': fields})
-
-@inventory_bp.route('/api/item-attributes/<int:item_id>')
-@login_required 
-def get_item_attributes(item_id):
-    """API endpoint to get existing attributes for an item (for edit forms)"""
-    item = InventoryItem.query.get_or_404(item_id)
-    return jsonify({'attributes': item.attributes or {}})
-
 def get_form_for_category(category):
     """Return appropriate form class based on category"""
     if not category:
@@ -353,7 +186,6 @@ def get_form_for_category(category):
         'bows': BowForm,
         'arrows': ArrowForm,
         'targets': TargetForm,
-        'target faces': TargetFaceForm,
     }
     
     form_class = category_forms.get(category.name.lower(), InventoryItemForm)
@@ -366,8 +198,8 @@ def get_category_attributes(form, category_name):
     if category_name.lower() == 'bows':
         if hasattr(form, 'draw_weight') and form.draw_weight.data:
             attributes['draw_weight'] = form.draw_weight.data
-        if hasattr(form, 'length') and form.length.data:
-            attributes['length'] = float(form.length.data)
+        if hasattr(form, 'draw_length') and form.draw_length.data:
+            attributes['draw_length'] = float(form.draw_length.data)
         if hasattr(form, 'bow_type') and form.bow_type.data:
             attributes['bow_type'] = form.bow_type.data
         if hasattr(form, 'handedness') and form.handedness.data:
@@ -384,14 +216,6 @@ def get_category_attributes(form, category_name):
             attributes['fletching_type'] = form.fletching_type.data
     
     elif category_name.lower() == 'targets':
-        if hasattr(form, 'face_size') and form.face_size.data:
-            attributes['face_size'] = form.face_size.data
-        if hasattr(form, 'target_type') and form.target_type.data:
-            attributes['target_type'] = form.target_type.data
-        if hasattr(form, 'material') and form.material.data:
-            attributes['material'] = form.material.data
-    
-    elif category_name.lower() == 'target faces':
         if hasattr(form, 'face_size') and form.face_size.data:
             attributes['face_size'] = form.face_size.data
         if hasattr(form, 'target_type') and form.target_type.data:
@@ -419,53 +243,3 @@ def populate_form_from_item(form, item):
         for attr_name, attr_value in item.attributes.items():
             if hasattr(form, attr_name):
                 getattr(form, attr_name).data = attr_value
-
-def extract_category_attributes(form_data, category_name):
-    """Extract category-specific attributes from form data"""
-    attributes = {}
-    
-    if category_name.lower() == 'bows':
-        if form_data.get('draw_weight'):
-            attributes['draw_weight'] = int(form_data['draw_weight'])
-        if form_data.get('length'):
-            attributes['length'] = float(form_data['length'])
-        if form_data.get('bow_type'):
-            attributes['bow_type'] = form_data['bow_type']
-        if form_data.get('handedness'):
-            attributes['handedness'] = form_data['handedness']
-    
-    elif category_name.lower() == 'arrows':
-        if form_data.get('spine'):
-            attributes['spine'] = int(form_data['spine'])
-        if form_data.get('length'):
-            attributes['length'] = float(form_data['length'])
-        if form_data.get('point_weight'):
-            attributes['point_weight'] = int(form_data['point_weight'])
-        if form_data.get('fletching_type'):
-            attributes['fletching_type'] = form_data['fletching_type']
-    
-    elif category_name.lower() == 'targets':
-        if form_data.get('face_size'):
-            try:
-                # Keep as string for consistency with form data and comparison
-                attributes['face_size'] = str(form_data['face_size'])
-            except (ValueError, TypeError):
-                pass
-        if form_data.get('target_type'):
-            attributes['target_type'] = form_data['target_type']
-        if form_data.get('material'):
-            attributes['material'] = form_data['material']
-    
-    elif category_name.lower() == 'target faces':
-        if form_data.get('face_size'):
-            try:
-                # Keep as string for consistency with form data and comparison
-                attributes['face_size'] = str(form_data['face_size'])
-            except (ValueError, TypeError):
-                pass
-        if form_data.get('target_type'):
-            attributes['target_type'] = form_data['target_type']
-        if form_data.get('material'):
-            attributes['material'] = form_data['material']
-    
-    return attributes

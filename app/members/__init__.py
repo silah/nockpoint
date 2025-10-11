@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from app import db
 from app.models import User
-from app.forms import RegistrationForm, AdminMemberRegistrationForm, MemberEditForm
+from app.forms import RegistrationForm, MemberEditForm
 from datetime import datetime
 
 members_bp = Blueprint('members', __name__)
@@ -65,7 +65,7 @@ def index():
 @login_required
 @admin_required
 def new_member():
-    form = AdminMemberRegistrationForm()
+    form = RegistrationForm()
     if form.validate_on_submit():
         # Check if user already exists
         if User.query.filter_by(username=form.username.data).first():
@@ -82,7 +82,6 @@ def new_member():
             email=form.email.data,
             first_name=form.first_name.data,
             last_name=form.last_name.data,
-            membership_type=form.membership_type.data,
             role='admin' if form.is_admin.data else 'member'
         )
         member.set_password(form.password.data)
@@ -146,7 +145,6 @@ def edit_member(id):
         member.email = form.email.data
         member.first_name = form.first_name.data
         member.last_name = form.last_name.data
-        member.membership_type = form.membership_type.data
         
         # Only admins can update role and status
         if current_user.is_admin():

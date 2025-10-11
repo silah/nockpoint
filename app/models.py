@@ -57,6 +57,20 @@ class User(UserMixin, db.Model):
             return settings.per_event_price or 0.00
         return 0.00
     
+    def get_recent_competition_wins(self, months=6):
+        """Get competition wins from the last N months"""
+        from datetime import timedelta
+        cutoff_date = datetime.utcnow() - timedelta(days=months * 30)
+        
+        # Import here to avoid circular imports
+        from app.models import Competition
+        
+        return Competition.query.filter(
+            Competition.winner_id == self.id,
+            Competition.completed_at >= cutoff_date,
+            Competition.status == 'completed'
+        ).order_by(Competition.completed_at.desc()).all()
+    
     def __repr__(self):
         return f'<User {self.username}>'
 
@@ -227,9 +241,15 @@ class Competition(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     
+    # Winner tracking - Pro feature
+    winner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Overall competition winner
+    winner_score = db.Column(db.Integer, nullable=True)  # Winner's score
+    completed_at = db.Column(db.DateTime, nullable=True)  # When competition was completed
+    
     # Relationships
     event = db.relationship('ShootingEvent', backref='competition')
-    creator = db.relationship('User', backref='created_competitions')
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_competitions')
+    winner = db.relationship('User', foreign_keys=[winner_id], backref='competition_wins')
     groups = db.relationship('CompetitionGroup', backref='competition', lazy=True, cascade='all, delete-orphan')
     registrations = db.relationship('CompetitionRegistration', backref='competition', lazy=True, cascade='all, delete-orphan')
     
@@ -284,6 +304,32 @@ class Competition(db.Model):
             'completion_percentage': (completed_participants / total_participants * 100) if total_participants > 0 else 0,
             'missing_arrows_total': missing_arrows_total
         }
+    
+    def determine_and_set_winner(self):
+        """Determine the overall winner of the competition and set winner fields"""
+        if not self.registrations or self.status != 'completed':
+            return None
+        
+        # Get all registrations sorted by score (highest first)
+        all_registrations = sorted(self.registrations, key=lambda x: x.total_score, reverse=True)
+        
+        # Find the highest scoring registration
+        if all_registrations and all_registrations[0].total_score > 0:
+            winner_registration = all_registrations[0]
+            self.winner_id = winner_registration.member_id
+            self.winner_score = winner_registration.total_score
+            self.completed_at = datetime.utcnow()
+            
+            return winner_registration
+        
+        return None
+    
+    def get_overall_winner(self):
+        """Get the overall winner registration if competition is completed"""
+        if not self.winner_id:
+            return None
+        
+        return next((reg for reg in self.registrations if reg.member_id == self.winner_id), None)
     
     def check_target_face_inventory(self):
         """Check if there are enough target faces in inventory for this competition"""

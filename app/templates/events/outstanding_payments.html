@@ -18,22 +18,28 @@
             <div class="card-body">
                 <!-- Summary Stats -->
                 <div class="row mb-4">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="text-center p-3 bg-light rounded">
                             <div class="h4 text-warning">${{ "%.2f"|format(total_outstanding) }}</div>
                             <div class="small text-muted">Total Outstanding</div>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="text-center p-3 bg-light rounded">
                             <div class="h4 text-danger">{{ outstanding_charges|length }}</div>
                             <div class="small text-muted">Unpaid Charges</div>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="text-center p-3 bg-light rounded">
                             <div class="h4 text-info">{{ unique_members }}</div>
                             <div class="small text-muted">Members with Debt</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center p-3 bg-light rounded">
+                            <div class="h4 text-success">${{ "%.2f"|format(total_paid) }}</div>
+                            <div class="small text-muted">Total Collected</div>
                         </div>
                     </div>
                 </div>
@@ -80,15 +86,15 @@
                             </thead>
                             <tbody>
                                 {% for charge in all_charges %}
-                                    <tr class="charge-row {% if charge.is_paid %}paid-charge{% else %}outstanding-charge{% endif %}" 
-                                        data-member-name="{{ charge.member.first_name|lower }} {{ charge.member.last_name|lower }}"
+                                    <tr class="charge-row {% if charge.paid %}paid-charge{% else %}outstanding-charge{% endif %}" 
+                                        data-member-name="{{ charge.user.first_name|lower }} {{ charge.user.last_name|lower }}"
                                         data-event-name="{{ charge.event.name|lower }}">
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <i class="bi bi-person-circle text-muted me-2"></i>
                                                 <div>
-                                                    <div class="fw-semibold">{{ charge.member.first_name }} {{ charge.member.last_name }}</div>
-                                                    <small class="text-muted">{{ charge.member.email }}</small>
+                                                    <div class="fw-semibold">{{ charge.user.first_name }} {{ charge.user.last_name }}</div>
+                                                    <small class="text-muted">{{ charge.user.email }}</small>
                                                 </div>
                                             </div>
                                         </td>
@@ -108,28 +114,29 @@
                                             <span class="fw-semibold">${{ "%.2f"|format(charge.amount) }}</span>
                                         </td>
                                         <td>
-                                            {% if charge.is_paid %}
+                                            {% if charge.paid %}
                                                 <span class="badge bg-success">
                                                     <i class="bi bi-check-circle"></i> Paid
                                                 </span>
-                                                {% if charge.paid_date %}
-                                                    <br><small class="text-muted">{{ charge.paid_date.strftime('%m/%d/%y') }}</small>
+                                                {% if charge.paid_at %}
+                                                    <br><small class="text-muted">{{ charge.paid_at.strftime('%m/%d/%y') }}</small>
                                                 {% endif %}
                                             {% else %}
                                                 <span class="badge bg-warning">
                                                     <i class="bi bi-clock"></i> Outstanding
                                                 </span>
-                                                <br><small class="text-muted">Since {{ charge.charge_date.strftime('%b %d, %Y') if charge.charge_date else 'N/A' }}</small>
+                                                {% set days_outstanding = (moment().date() - charge.created_at.date()).days %}
+                                                <br><small class="text-muted">{{ days_outstanding }} days ago</small>
                                             {% endif %}
                                         </td>
                                         <td>
                                             <small class="text-muted">
-                                                {{ charge.charge_date.strftime('%m/%d/%y %I:%M %p') if charge.charge_date else 'N/A' }}
+                                                {{ charge.created_at.strftime('%m/%d/%y %I:%M %p') }}
                                             </small>
                                         </td>
                                         <td>
                                             <div class="btn-group btn-group-sm">
-                                                {% if not charge.is_paid %}
+                                                {% if not charge.paid %}
                                                     <button type="button" class="btn btn-success btn-sm" 
                                                             onclick="markAsPaid({{ charge.id }})">
                                                         <i class="bi bi-cash"></i> Mark Paid

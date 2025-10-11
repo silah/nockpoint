@@ -15,12 +15,10 @@ def init_db_command():
     default_categories = [
         {'name': 'Bows', 'description': 'Recurve, compound, and traditional bows'},
         {'name': 'Arrows', 'description': 'Carbon, aluminum, and wooden arrows'},
-        {'name': 'Targets', 'description': 'Target backstops, stands, and boss materials (straw, foam)'},
-        {'name': 'Target Faces', 'description': 'Paper and plastic target faces in standard sizes (20, 40, 60, 80, 122 cm)'},
+        {'name': 'Targets', 'description': 'Target faces and backstops'},
         {'name': 'Safety Equipment', 'description': 'Arm guards, finger tabs, chest guards'},
         {'name': 'Accessories', 'description': 'Quivers, bow stands, and other accessories'},
         {'name': 'Maintenance', 'description': 'Bow strings, wax, tools'},
-        {'name': 'Arrow Consumables', 'description': 'Tips, vanes, feathers, nocks, shafts'},
     ]
     
     for cat_data in default_categories:

@@ -63,22 +63,6 @@
                         {% endif %}
                     </div>
                     
-                    <div class="mb-3">
-                        {{ form.membership_type.label(class="form-label") }}
-                        {{ form.membership_type(class="form-control") }}
-                        {% if form.membership_type.errors %}
-                            <div class="text-danger small">
-                                {% for error in form.membership_type.errors %}
-                                    <div>{{ error }}</div>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                        <div class="form-text">
-                            Select the membership plan for this member. 
-                            <a href="{{ url_for('main.settings') }}" target="_blank">View current pricing</a>
-                        </div>
-                    </div>
-                    
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             {{ form.password.label(class="form-label") }}

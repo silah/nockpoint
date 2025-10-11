@@ -110,7 +110,6 @@
                             <th>Username</th>
                             <th>Email</th>
                             <th>Role</th>
-                            <th>Membership</th>
                             <th>Status</th>
                             <th>Joined</th>
                             <th>Actions</th>
@@ -133,12 +132,6 @@
                                     {% else %}
                                         <span class="badge bg-primary">Member</span>
                                     {% endif %}
-                                </td>
-                                <td>
-                                    <span class="badge bg-info text-dark">
-                                        {{ member.membership_type.replace('_', ' ').title() }}
-                                    </span>
-                                    <br><small class="text-muted">${{"%.2f"|format(member.get_membership_price() or 0)}}</small>
                                 </td>
                                 <td>
                                     {% if member.is_active %}
@@ -240,7 +233,6 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <form id="deleteForm" method="POST" style="display: inline;">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <button type="submit" class="btn btn-danger">Delete</button>
                 </form>
             </div>
