@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, flash, redirect, url_for, request
 from flask_login import login_required, current_user
-from app.models import InventoryItem, InventoryCategory, ShootingEvent
+from app.models import InventoryItem, InventoryCategory, ShootingEvent, ClubSettings
 from datetime import datetime, timedelta
+from app.forms import ClubSettingsForm
 
 main_bp = Blueprint('main', __name__)
 
@@ -38,3 +39,40 @@ def dashboard():
                          active_members=active_members,
                          recent_items=recent_items,
                          upcoming_events_count=upcoming_events_count)
+
+
+def admin_required(f):
+    from functools import wraps
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not current_user.is_authenticated or not getattr(current_user, 'is_admin', False) and not current_user.is_admin():
+            flash('Admin access required.', 'error')
+            return redirect(url_for('main.dashboard'))
+        return f(*args, **kwargs)
+    return wrapper
+
+
+@main_bp.route('/settings')
+@login_required
+@admin_required
+def settings():
+    settings = ClubSettings.get_settings()
+    return render_template('main/settings.html', settings=settings)
+
+
+@main_bp.route('/settings/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_settings():
+    settings = ClubSettings.get_settings()
+    form = ClubSettingsForm(obj=settings)
+    if form.validate_on_submit():
+        form.populate_obj(settings)
+        settings.updated_by = current_user.id
+        settings.updated_at = datetime.utcnow()
+        from app import db
+        db.session.commit()
+        flash('Club settings updated successfully!', 'success')
+        return redirect(url_for('main.settings'))
+
+    return render_template('main/settings_form.html', form=form, settings=settings)

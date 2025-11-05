@@ -71,7 +71,7 @@
                             </thead>
                             <tbody>
                                 {% for charge in my_charges %}
-                                    <tr class="charge-row {% if charge.paid %}paid-charge{% else %}outstanding-charge{% endif %}">
+                                    <tr class="charge-row {% if charge.is_paid %}paid-charge{% else %}outstanding-charge{% endif %}">
                                         <td>
                                             <div>
                                                 <div class="fw-semibold">{{ charge.event.name }}</div>
@@ -83,23 +83,23 @@
                                             <small class="text-muted">{{ charge.event.start_time.strftime('%I:%M %p') }}</small>
                                         </td>
                                         <td>
-                                            <span class="fw-semibold text-{% if charge.paid %}success{% else %}warning{% endif %}">
+                                            <span class="fw-semibold text-{% if charge.is_paid %}success{% else %}warning{% endif %}">
                                                 ${{ "%.2f"|format(charge.amount) }}
                                             </span>
                                         </td>
                                         <td>
-                                            {% if charge.paid %}
+                                            {% if charge.is_paid %}
                                                 <span class="badge bg-success">
                                                     <i class="bi bi-check-circle"></i> Paid
                                                 </span>
-                                                {% if charge.paid_at %}
-                                                    <br><small class="text-muted">{{ charge.paid_at.strftime('%m/%d/%y') }}</small>
+                                                {% if charge.paid_date %}
+                                                    <br><small class="text-muted">{{ charge.paid_date.strftime('%m/%d/%y') }}</small>
                                                 {% endif %}
                                             {% else %}
                                                 <span class="badge bg-warning">
                                                     <i class="bi bi-clock"></i> Outstanding
                                                 </span>
-                                                {% set days_outstanding = (moment().date() - charge.created_at.date()).days %}
+                                                {% set days_outstanding = (current_date - charge.charge_date.date()).days %}
                                                 <br><small class="text-muted">{{ days_outstanding }} days old</small>
                                             {% endif %}
                                         </td>

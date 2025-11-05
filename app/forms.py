@@ -4,6 +4,33 @@ from wtforms.validators import DataRequired, Length, Email, EqualTo, NumberRange
 from wtforms.widgets import TextArea
 from app.models import InventoryCategory
 
+class ClubSettingsForm(FlaskForm):
+    # Basic info
+    club_name = StringField('Club Name', validators=[DataRequired(), Length(1, 200)])
+    default_location = StringField('Default Location', validators=[Optional(), Length(0, 200)])
+    description = TextAreaField('Description', validators=[Optional(), Length(0, 2000)])
+    website_url = StringField('Website URL', validators=[Optional(), Length(0, 200)])
+    facebook_url = StringField('Facebook URL', validators=[Optional(), Length(0, 200)])
+    instagram_url = StringField('Instagram URL', validators=[Optional(), Length(0, 200)])
+    twitter_url = StringField('Twitter URL', validators=[Optional(), Length(0, 200)])
+    email = StringField('Contact Email', validators=[Optional(), Email(), Length(0, 120)])
+    phone = StringField('Phone', validators=[Optional(), Length(0, 20)])
+    address = TextAreaField('Address', validators=[Optional(), Length(0, 1000)])
+
+    # Pricing
+    annual_membership_price = DecimalField('Annual Membership Price', validators=[Optional(), NumberRange(min=0)], places=2)
+    quarterly_membership_price = DecimalField('Quarterly Membership Price', validators=[Optional(), NumberRange(min=0)], places=2)
+    monthly_membership_price = DecimalField('Monthly Membership Price', validators=[Optional(), NumberRange(min=0)], places=2)
+    per_event_price = DecimalField('Per Event Price', validators=[Optional(), NumberRange(min=0)], places=2)
+
+    # Registration settings
+    activation_code = StringField('Activation Code', validators=[Optional(), Length(0, 50)])
+
+    # Pro subscription (toggle only here)
+    is_pro_enabled = BooleanField('Enable Pro Features')
+
+    submit = SubmitField('Save Settings')
+
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(1, 64)])
     password = PasswordField('Password', validators=[DataRequired()])

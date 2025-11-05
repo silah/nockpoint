@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Club Settings - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-10 col-lg-8 mx-auto">
+    <h3 class="mb-3"><i class="bi bi-pencil-square"></i> Edit Club Settings</h3>
+    <form method="POST">
+      {{ form.hidden_tag() }}
+
+      <div class="card mb-3">
+        <div class="card-header">Basic Info</div>
+        <div class="card-body">
+          <div class="mb-3">{{ form.club_name.label }} {{ form.club_name(class="form-control") }}</div>
+          <div class="mb-3">{{ form.default_location.label }} {{ form.default_location(class="form-control") }}</div>
+          <div class="mb-3">{{ form.description.label }} {{ form.description(class="form-control", rows=3) }}</div>
+          <div class="row g-3">
+            <div class="col-md-6">{{ form.website_url.label }} {{ form.website_url(class="form-control") }}</div>
+            <div class="col-md-6">{{ form.email.label }} {{ form.email(class="form-control") }}</div>
+            <div class="col-md-6">{{ form.phone.label }} {{ form.phone(class="form-control") }}</div>
+            <div class="col-md-6">{{ form.address.label }} {{ form.address(class="form-control", rows=2) }}</div>
+          </div>
+          <div class="row g-3 mt-1">
+            <div class="col-md-4">{{ form.facebook_url.label }} {{ form.facebook_url(class="form-control") }}</div>
+            <div class="col-md-4">{{ form.instagram_url.label }} {{ form.instagram_url(class="form-control") }}</div>
+            <div class="col-md-4">{{ form.twitter_url.label }} {{ form.twitter_url(class="form-control") }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header">Pricing</div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-3">{{ form.annual_membership_price.label }} {{ form.annual_membership_price(class="form-control") }}</div>
+            <div class="col-md-3">{{ form.quarterly_membership_price.label }} {{ form.quarterly_membership_price(class="form-control") }}</div>
+            <div class="col-md-3">{{ form.monthly_membership_price.label }} {{ form.monthly_membership_price(class="form-control") }}</div>
+            <div class="col-md-3">{{ form.per_event_price.label }} {{ form.per_event_price(class="form-control") }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-header">Registration</div>
+        <div class="card-body">
+          <div class="mb-3">{{ form.activation_code.label }} {{ form.activation_code(class="form-control") }}</div>
+          <div class="form-check">
+            {{ form.is_pro_enabled(class="form-check-input") }}
+            {{ form.is_pro_enabled.label(class="form-check-label") }}
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-end">
+        <a href="{{ url_for('main.settings') }}" class="btn btn-secondary me-2">Cancel</a>
+        {{ form.submit(class="btn btn-primary") }}
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
