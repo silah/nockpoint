@@ -89,6 +89,21 @@
                         </div>
                     </div>
                     
+                    {% if settings and settings.activation_code %}
+                    <div class="mb-3">
+                        {{ form.activation_code.label(class="form-label") }}
+                        {{ form.activation_code(class="form-control", placeholder="Enter your club activation code") }}
+                        <div class="form-text">An activation code is required to register for this club.</div>
+                        {% if form.activation_code.errors %}
+                            <div class="text-danger small">
+                                {% for error in form.activation_code.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
                     <div class="d-grid">
                         {{ form.submit(class="btn btn-primary") }}
                     </div>

@@ -44,6 +44,8 @@ class RegistrationForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired(), Length(6)])
     password2 = PasswordField('Repeat Password', 
                              validators=[DataRequired(), EqualTo('password')])
+    # Membership activation code (required only if configured in Club Settings)
+    activation_code = StringField('Activation Code', validators=[Optional(), Length(0, 50)])
     is_admin = BooleanField('Make this user an administrator')
     submit = SubmitField('Register')
 

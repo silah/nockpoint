@@ -108,7 +108,9 @@
                     {% for event in past_events[:5] %}
                         <div class="mb-2 pb-2 {% if not loop.last %}border-bottom{% endif %}">
                             <div class="small">
-                                <strong>{{ event.name }}</strong><br>
+                                <a href="{{ url_for('events.view_event', id=event.id) }}" class="text-decoration-none">
+                                    <strong>{{ event.name }}</strong>
+                                </a><br>
                                 <span class="text-muted">{{ event.date.strftime('%b %d') }} - {{ event.attendance_count }} attended</span>
                             </div>
                         </div>

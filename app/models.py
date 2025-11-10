@@ -123,6 +123,7 @@ class ShootingEvent(db.Model):
     date = db.Column(db.Date, nullable=False)
     start_time = db.Column(db.Time, nullable=False)
     duration_hours = db.Column(db.Integer, nullable=False, default=2)  # Duration in hours
+    price = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
     event_type = db.Column(db.String(50), nullable=False, default='regular')  # 'regular' or 'beginners_course'
     is_free_event = db.Column(db.Boolean, nullable=False, default=False)  # True if event is free of charge
     max_participants = db.Column(db.Integer)  # Optional capacity limit

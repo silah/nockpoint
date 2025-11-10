@@ -78,10 +78,29 @@ def view_event(id):
     """View shooting event details"""
     event = ShootingEvent.query.get_or_404(id)
     
-    # Get attendance list
-    attendances = EventAttendance.query.filter_by(event_id=id).join(User).order_by(User.first_name, User.last_name).all()
-    
-    return render_template('events/view_event.html', event=event, attendances=attendances)
+    # Get attendance list and summary values
+    attendees = (
+        EventAttendance.query
+        .filter_by(event_id=id)
+        .join(User, EventAttendance.member_id == User.id)
+        .order_by(User.first_name, User.last_name)
+        .all()
+    )
+    attendance_count = len(attendees)
+    attended_count = sum(1 for a in attendees if a.attended)
+
+    # Sum of paid charges for this event
+    paid_charges = MemberCharge.query.filter_by(event_id=id, is_paid=True).all()
+    total_revenue = sum(float(c.amount) for c in paid_charges)
+
+    return render_template(
+        'events/view_event.html',
+        event=event,
+        attendees=attendees,
+        attendance_count=attendance_count,
+        attended_count=attended_count,
+        total_revenue=total_revenue,
+    )
 
 @events_bp.route('/event/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -184,7 +203,13 @@ def manage_attendance(id):
             form.notes.data = ''
     
     # Get current attendances
-    attendances = EventAttendance.query.filter_by(event_id=id).join(User).order_by(User.first_name, User.last_name).all()
+    attendances = (
+        EventAttendance.query
+        .filter_by(event_id=id)
+        .join(User, EventAttendance.member_id == User.id)
+        .order_by(User.first_name, User.last_name)
+        .all()
+    )
     
     return render_template('events/manage_attendance.html', event=event, form=form, attendances=attendances)
 
@@ -194,9 +219,15 @@ def manage_attendance(id):
 def outstanding_payments():
     """Show outstanding payments admin page"""
     # Get all unpaid charges
-    unpaid_charges = MemberCharge.query.filter_by(is_paid=False).join(User).order_by(
+    unpaid_charges = (
+        MemberCharge.query
+        .filter_by(is_paid=False)
+        .join(User, MemberCharge.member_id == User.id)
+        .order_by(
         MemberCharge.charge_date.desc()
-    ).all()
+        )
+        .all()
+    )
     
     # Calculate total outstanding
     total_outstanding = sum(charge.amount for charge in unpaid_charges)
