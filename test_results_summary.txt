@@ -1,0 +1,326 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.9, pytest-9.0.1, pluggy-1.6.0 -- /home/silas/nockpoint/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /home/silas/nockpoint
+plugins: flask-1.3.0, cov-7.0.0
+collecting ... collected 123 items
+
+tests/test_auth_multitenancy.py::TestLogin::test_login_single_club_auto_select FAILED [  0%]
+tests/test_auth_multitenancy.py::TestLogin::test_login_multiple_clubs_requires_selection FAILED [  1%]
+tests/test_auth_multitenancy.py::TestLogin::test_login_invalid_credentials PASSED [  2%]
+tests/test_auth_multitenancy.py::TestLogin::test_login_no_clubs PASSED   [  3%]
+tests/test_auth_multitenancy.py::TestClubSelection::test_select_club_page_access PASSED [  4%]
+tests/test_auth_multitenancy.py::TestClubSelection::test_select_club_submission PASSED [  4%]
+tests/test_auth_multitenancy.py::TestClubSelection::test_select_club_invalid_club PASSED [  5%]
+tests/test_auth_multitenancy.py::TestClubSwitching::test_switch_club_valid PASSED [  6%]
+tests/test_auth_multitenancy.py::TestClubSwitching::test_switch_club_invalid PASSED [  7%]
+tests/test_auth_multitenancy.py::TestClubSwitching::test_switch_club_unauthenticated PASSED [  8%]
+tests/test_auth_multitenancy.py::TestLogout::test_logout PASSED          [  8%]
+tests/test_auth_multitenancy.py::TestLogout::test_logout_clears_club_context PASSED [  9%]
+tests/test_auth_multitenancy.py::TestRegistration::test_register_new_user PASSED [ 10%]
+tests/test_auth_multitenancy.py::TestRegistration::test_register_duplicate_email PASSED [ 11%]
+tests/test_auth_multitenancy.py::TestRegistration::test_register_password_mismatch FAILED [ 12%]
+tests/test_auth_multitenancy.py::TestClubContext::test_club_context_available PASSED [ 13%]
+tests/test_auth_multitenancy.py::TestClubContext::test_club_context_cleared_on_logout PASSED [ 13%]
+tests/test_auth_multitenancy.py::TestClubContext::test_no_club_context_when_not_authenticated PASSED [ 14%]
+tests/test_club_isolation.py::TestInventoryIsolation::test_categories_isolated_by_club PASSED [ 15%]
+tests/test_club_isolation.py::TestInventoryIsolation::test_items_isolated_by_club PASSED [ 16%]
+tests/test_club_isolation.py::TestInventoryIsolation::test_club_query_helper_filters_items FAILED [ 17%]
+tests/test_club_isolation.py::TestEventsIsolation::test_events_isolated_by_club PASSED [ 17%]
+tests/test_club_isolation.py::TestEventsIsolation::test_open_invite_events_visible_across_clubs FAILED [ 18%]
+tests/test_club_isolation.py::TestEventsIsolation::test_private_events_not_visible_across_clubs FAILED [ 19%]
+tests/test_club_isolation.py::TestEventsIsolation::test_club_query_helper_filters_events FAILED [ 20%]
+tests/test_club_isolation.py::TestCompetitionsIsolation::test_competitions_isolated_by_club PASSED [ 21%]
+tests/test_club_isolation.py::TestCompetitionsIsolation::test_club_query_helper_filters_competitions FAILED [ 21%]
+tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_students_isolated_by_club FAILED [ 22%]
+tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_club_query_helper_filters_students FAILED [ 23%]
+tests/test_club_isolation.py::TestCrossClubAccess::test_admin_cannot_access_other_club_inventory PASSED [ 24%]
+tests/test_club_isolation.py::TestCrossClubAccess::test_member_cannot_access_other_club_events FAILED [ 25%]
+tests/test_club_isolation.py::TestCrossClubAccess::test_multi_club_user_sees_correct_data_per_club FAILED [ 26%]
+tests/test_club_isolation.py::TestDataIntegrity::test_cannot_create_item_without_club_id PASSED [ 26%]
+tests/test_club_isolation.py::TestDataIntegrity::test_cannot_create_event_without_club_id PASSED [ 27%]
+tests/test_club_isolation.py::TestDataIntegrity::test_category_items_same_club PASSED [ 28%]
+tests/test_models_club.py::TestClubModel::test_create_club PASSED        [ 29%]
+tests/test_models_club.py::TestClubModel::test_club_slug_unique PASSED   [ 30%]
+tests/test_models_club.py::TestClubModel::test_club_repr PASSED          [ 30%]
+tests/test_models_club.py::TestClubModel::test_club_members_relationship PASSED [ 31%]
+tests/test_models_club.py::TestClubModel::test_club_default_values PASSED [ 32%]
+tests/test_models_club.py::TestClubModel::test_club_pro_status PASSED    [ 33%]
+tests/test_models_club.py::TestClubModel::test_club_pro_expired PASSED   [ 34%]
+tests/test_models_club.py::TestClubModel::test_club_not_pro PASSED       [ 34%]
+tests/test_models_club.py::TestClubMembershipModel::test_create_membership PASSED [ 35%]
+tests/test_models_club.py::TestClubMembershipModel::test_membership_roles PASSED [ 36%]
+tests/test_models_club.py::TestClubMembershipModel::test_membership_status PASSED [ 37%]
+tests/test_models_club.py::TestClubMembershipModel::test_user_relationship PASSED [ 38%]
+tests/test_models_club.py::TestClubMembershipModel::test_club_relationship PASSED [ 39%]
+tests/test_models_club.py::TestClubMembershipModel::test_unique_user_club_constraint PASSED [ 39%]
+tests/test_models_club.py::TestClubMembershipModel::test_membership_repr PASSED [ 40%]
+tests/test_models_club.py::TestMultiClubScenarios::test_user_multiple_clubs PASSED [ 41%]
+tests/test_models_club.py::TestMultiClubScenarios::test_club_isolation PASSED [ 42%]
+tests/test_models_club.py::TestMultiClubScenarios::test_user_different_roles_different_clubs PASSED [ 43%]
+tests/test_models_events.py::TestShootingEvent::test_create_event_with_club FAILED [ 43%]
+tests/test_models_events.py::TestShootingEvent::test_event_belongs_to_club PASSED [ 44%]
+tests/test_models_events.py::TestShootingEvent::test_event_types FAILED  [ 45%]
+tests/test_models_events.py::TestShootingEvent::test_private_event FAILED [ 46%]
+tests/test_models_events.py::TestShootingEvent::test_open_invite_event FAILED [ 47%]
+tests/test_models_events.py::TestShootingEvent::test_filter_events_by_club PASSED [ 47%]
+tests/test_models_events.py::TestShootingEvent::test_filter_open_invite_events FAILED [ 48%]
+tests/test_models_events.py::TestShootingEvent::test_event_with_max_participants PASSED [ 49%]
+tests/test_models_events.py::TestShootingEvent::test_event_without_max_participants FAILED [ 50%]
+tests/test_models_events.py::TestCompetition::test_create_competition_with_club FAILED [ 51%]
+tests/test_models_events.py::TestCompetition::test_competition_belongs_to_club FAILED [ 52%]
+tests/test_models_events.py::TestCompetition::test_competition_types FAILED [ 52%]
+tests/test_models_events.py::TestCompetition::test_filter_competitions_by_club FAILED [ 53%]
+tests/test_models_events.py::TestCompetition::test_competition_date_range FAILED [ 54%]
+tests/test_models_events.py::TestEventAttendance::test_register_user_for_event FAILED [ 55%]
+tests/test_models_events.py::TestEventAttendance::test_user_same_club_as_event FAILED [ 56%]
+tests/test_models_events.py::TestEventAttendance::test_user_different_club_open_event FAILED [ 56%]
+tests/test_models_events.py::TestEventAttendance::test_attendance_statuses FAILED [ 57%]
+tests/test_models_events.py::TestCompetitionRegistration::test_add_registration_to_competition FAILED [ 58%]
+tests/test_models_events.py::TestCompetitionRegistration::test_registration_same_club_as_competition PASSED [ 59%]
+tests/test_models_events.py::TestCompetitionRegistration::test_registration_divisions FAILED [ 60%]
+tests/test_models_events.py::TestEventQueries::test_upcoming_events_for_club FAILED [ 60%]
+tests/test_models_events.py::TestEventQueries::test_events_by_type FAILED [ 61%]
+tests/test_models_events.py::TestEventQueries::test_community_events FAILED [ 62%]
+tests/test_models_events.py::TestCompetitionQueries::test_upcoming_competitions_for_club FAILED [ 63%]
+tests/test_models_events.py::TestCompetitionQueries::test_active_competitions FAILED [ 64%]
+tests/test_models_inventory.py::TestInventoryCategory::test_create_category_with_club PASSED [ 65%]
+tests/test_models_inventory.py::TestInventoryCategory::test_category_belongs_to_club PASSED [ 65%]
+tests/test_models_inventory.py::TestInventoryCategory::test_category_items_relationship PASSED [ 66%]
+tests/test_models_inventory.py::TestInventoryCategory::test_filter_categories_by_club PASSED [ 67%]
+tests/test_models_inventory.py::TestInventoryItem::test_create_item_with_club FAILED [ 68%]
+tests/test_models_inventory.py::TestInventoryItem::test_item_belongs_to_club FAILED [ 69%]
+tests/test_models_inventory.py::TestInventoryItem::test_item_belongs_to_category PASSED [ 69%]
+tests/test_models_inventory.py::TestInventoryItem::test_item_category_same_club PASSED [ 70%]
+tests/test_models_inventory.py::TestInventoryItem::test_filter_items_by_club PASSED [ 71%]
+tests/test_models_inventory.py::TestInventoryItem::test_item_units FAILED [ 72%]
+tests/test_models_inventory.py::TestInventoryItem::test_item_conditions FAILED [ 73%]
+tests/test_models_inventory.py::TestInventoryItem::test_item_without_category FAILED [ 73%]
+tests/test_models_inventory.py::TestInventoryCRUD::test_create_category_and_items PASSED [ 74%]
+tests/test_models_inventory.py::TestInventoryCRUD::test_update_item_quantity PASSED [ 75%]
+tests/test_models_inventory.py::TestInventoryCRUD::test_delete_item PASSED [ 76%]
+tests/test_models_inventory.py::TestInventoryCRUD::test_delete_category_with_items FAILED [ 77%]
+tests/test_models_inventory.py::TestInventorySearch::test_search_items_by_name PASSED [ 78%]
+tests/test_models_inventory.py::TestInventorySearch::test_filter_items_by_condition FAILED [ 78%]
+tests/test_models_inventory.py::TestInventorySearch::test_filter_items_by_category PASSED [ 79%]
+tests/test_models_inventory.py::TestInventorySearch::test_filter_items_by_location FAILED [ 80%]
+tests/test_models_inventory.py::TestInventoryValidation::test_item_requires_positive_quantity FAILED [ 81%]
+tests/test_models_inventory.py::TestInventoryValidation::test_category_attributes_as_json FAILED [ 82%]
+tests/test_models_inventory.py::TestInventoryValidation::test_item_custom_attributes FAILED [ 82%]
+tests/test_models_user.py::TestUserClubMethods::test_user_get_clubs_single PASSED [ 83%]
+tests/test_models_user.py::TestUserClubMethods::test_user_get_clubs_multiple PASSED [ 84%]
+tests/test_models_user.py::TestUserClubMethods::test_user_get_clubs_none PASSED [ 85%]
+tests/test_models_user.py::TestUserClubMethods::test_user_is_member_of_club_true PASSED [ 86%]
+tests/test_models_user.py::TestUserClubMethods::test_user_is_member_of_club_false PASSED [ 86%]
+tests/test_models_user.py::TestUserClubMethods::test_user_is_member_of_club_inactive FAILED [ 87%]
+tests/test_models_user.py::TestUserClubMethods::test_user_is_admin_of_club_true PASSED [ 88%]
+tests/test_models_user.py::TestUserClubMethods::test_user_is_admin_of_club_false_not_member PASSED [ 89%]
+tests/test_models_user.py::TestUserClubMethods::test_user_is_admin_of_club_false_regular_member PASSED [ 90%]
+tests/test_models_user.py::TestUserClubMethods::test_global_admin_is_admin_everywhere PASSED [ 91%]
+tests/test_models_user.py::TestUserClubMethods::test_user_different_roles_in_clubs PASSED [ 91%]
+tests/test_models_user.py::TestUserCreation::test_create_user PASSED     [ 92%]
+tests/test_models_user.py::TestUserCreation::test_user_password_hashing PASSED [ 93%]
+tests/test_models_user.py::TestUserCreation::test_user_email_unique PASSED [ 94%]
+tests/test_models_user.py::TestUserCreation::test_user_username_unique PASSED [ 95%]
+tests/test_models_user.py::TestUserCreation::test_user_repr PASSED       [ 95%]
+tests/test_models_user.py::TestUserClubRelationships::test_user_club_memberships_relationship PASSED [ 96%]
+tests/test_models_user.py::TestUserClubRelationships::test_club_members_relationship FAILED [ 97%]
+tests/test_models_user.py::TestUserClubRelationships::test_add_user_to_club FAILED [ 98%]
+tests/test_models_user.py::TestUserClubRelationships::test_remove_user_from_club PASSED [ 99%]
+tests/test_models_user.py::TestUserClubRelationships::test_change_user_role PASSED [100%]
+
+=============================== warnings summary ===============================
+tests/test_auth_multitenancy.py: 70 warnings
+tests/test_club_isolation.py: 133 warnings
+tests/test_models_club.py: 75 warnings
+tests/test_models_events.py: 134 warnings
+tests/test_models_inventory.py: 154 warnings
+tests/test_models_user.py: 91 warnings
+  /home/silas/nockpoint/.venv/lib/python3.13/site-packages/sqlalchemy/sql/schema.py:3624: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return util.wrap_callable(lambda ctx: fn(), fn)  # type: ignore
+
+tests/test_auth_multitenancy.py::TestClubSelection::test_select_club_page_access
+tests/test_auth_multitenancy.py::TestClubSelection::test_select_club_submission
+tests/test_auth_multitenancy.py::TestClubSelection::test_select_club_invalid_club
+tests/test_auth_multitenancy.py::TestClubSwitching::test_switch_club_valid
+tests/test_auth_multitenancy.py::TestClubSwitching::test_switch_club_invalid
+tests/test_auth_multitenancy.py::TestLogout::test_logout
+tests/test_auth_multitenancy.py::TestLogout::test_logout_clears_club_context
+tests/test_auth_multitenancy.py::TestClubContext::test_club_context_available
+tests/test_auth_multitenancy.py::TestClubContext::test_club_context_cleared_on_logout
+  /home/silas/nockpoint/app/models.py:8: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    return User.query.get(int(user_id))
+
+tests/test_auth_multitenancy.py::TestClubSelection::test_select_club_invalid_club
+tests/test_auth_multitenancy.py::TestClubSwitching::test_switch_club_valid
+tests/test_auth_multitenancy.py::TestLogout::test_logout
+tests/test_auth_multitenancy.py::TestLogout::test_logout_clears_club_context
+tests/test_auth_multitenancy.py::TestClubContext::test_club_context_available
+tests/test_auth_multitenancy.py::TestClubContext::test_club_context_cleared_on_logout
+  /home/silas/nockpoint/app/__init__.py:73: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    club = Club.query.get(club_id)
+
+tests/test_models_club.py::TestClubModel::test_club_pro_status
+  /home/silas/nockpoint/tests/test_models_club.py:74: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    pro_expires_at=datetime.utcnow() + timedelta(days=30)
+
+tests/test_models_club.py::TestClubModel::test_club_pro_status
+tests/test_models_club.py::TestClubModel::test_club_pro_expired
+  /home/silas/nockpoint/app/models.py:68: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return datetime.utcnow() < self.pro_expires_at
+
+tests/test_models_club.py::TestClubModel::test_club_pro_expired
+  /home/silas/nockpoint/tests/test_models_club.py:88: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    pro_expires_at=datetime.utcnow() - timedelta(days=1)
+
+tests/test_models_events.py::TestShootingEvent::test_create_event_with_club
+  /home/silas/nockpoint/tests/test_models_events.py:18: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_time=datetime.utcnow() + timedelta(days=1),
+
+tests/test_models_events.py::TestShootingEvent::test_create_event_with_club
+  /home/silas/nockpoint/tests/test_models_events.py:19: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    end_time=datetime.utcnow() + timedelta(days=1, hours=2),
+
+tests/test_models_events.py::TestShootingEvent::test_event_types
+  /home/silas/nockpoint/tests/test_models_events.py:46: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_time=datetime.utcnow() + timedelta(days=i+1),
+
+tests/test_models_events.py::TestShootingEvent::test_event_types
+  /home/silas/nockpoint/tests/test_models_events.py:47: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    end_time=datetime.utcnow() + timedelta(days=i+1, hours=2),
+
+tests/test_models_events.py::TestShootingEvent::test_event_without_max_participants
+  /home/silas/nockpoint/tests/test_models_events.py:95: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_time=datetime.utcnow() + timedelta(days=1),
+
+tests/test_models_events.py::TestShootingEvent::test_event_without_max_participants
+  /home/silas/nockpoint/tests/test_models_events.py:96: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    end_time=datetime.utcnow() + timedelta(days=1, hours=2),
+
+tests/test_models_events.py::TestCompetition::test_create_competition_with_club
+  /home/silas/nockpoint/tests/test_models_events.py:116: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_date=datetime.utcnow() + timedelta(days=30),
+
+tests/test_models_events.py::TestCompetition::test_create_competition_with_club
+  /home/silas/nockpoint/tests/test_models_events.py:117: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    end_date=datetime.utcnow() + timedelta(days=32),
+
+tests/test_models_events.py::TestCompetition::test_competition_types
+  /home/silas/nockpoint/tests/test_models_events.py:142: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_date=datetime.utcnow() + timedelta(days=30+i*10),
+
+tests/test_models_events.py::TestCompetition::test_competition_types
+  /home/silas/nockpoint/tests/test_models_events.py:143: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    end_date=datetime.utcnow() + timedelta(days=32+i*10),
+
+tests/test_models_events.py::TestCompetition::test_filter_competitions_by_club
+  /home/silas/nockpoint/tests/test_models_events.py:167: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_date=datetime.utcnow() + timedelta(days=30),
+
+tests/test_models_events.py::TestCompetition::test_filter_competitions_by_club
+  /home/silas/nockpoint/tests/test_models_events.py:168: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    end_date=datetime.utcnow() + timedelta(days=32),
+
+tests/test_models_events.py::TestEventAttendance::test_register_user_for_event
+  /home/silas/nockpoint/tests/test_models_events.py:198: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    registered_at=datetime.utcnow()
+
+tests/test_models_events.py::TestEventAttendance::test_attendance_statuses
+  /home/silas/nockpoint/tests/test_models_events.py:238: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    registered_at=datetime.utcnow()
+
+tests/test_models_events.py::TestEventQueries::test_upcoming_events_for_club
+  /home/silas/nockpoint/tests/test_models_events.py:307: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_time=datetime.utcnow() - timedelta(days=2),
+
+tests/test_models_events.py::TestEventQueries::test_upcoming_events_for_club
+  /home/silas/nockpoint/tests/test_models_events.py:308: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    end_time=datetime.utcnow() - timedelta(days=2, hours=-2),
+
+tests/test_models_events.py::TestEventQueries::test_events_by_type
+  /home/silas/nockpoint/tests/test_models_events.py:337: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_time=datetime.utcnow() + timedelta(days=1),
+
+tests/test_models_events.py::TestEventQueries::test_events_by_type
+  /home/silas/nockpoint/tests/test_models_events.py:338: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    end_time=datetime.utcnow() + timedelta(days=1, hours=2),
+
+tests/test_models_events.py::TestCompetitionQueries::test_upcoming_competitions_for_club
+  /home/silas/nockpoint/tests/test_models_events.py:383: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_date=datetime.utcnow() - timedelta(days=30),
+
+tests/test_models_events.py::TestCompetitionQueries::test_upcoming_competitions_for_club
+  /home/silas/nockpoint/tests/test_models_events.py:384: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    end_date=datetime.utcnow() - timedelta(days=28),
+
+tests/test_models_events.py::TestCompetitionQueries::test_active_competitions
+  /home/silas/nockpoint/tests/test_models_events.py:413: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_date=datetime.utcnow() - timedelta(days=1),
+
+tests/test_models_events.py::TestCompetitionQueries::test_active_competitions
+  /home/silas/nockpoint/tests/test_models_events.py:414: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    end_date=datetime.utcnow() + timedelta(days=30),
+
+tests/test_models_inventory.py::TestInventoryCRUD::test_delete_item
+  /home/silas/nockpoint/tests/test_models_inventory.py:215: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    deleted_item = InventoryItem.query.get(item_id)
+
+tests/test_models_user.py::TestUserClubMethods::test_user_is_member_of_club_inactive
+  /home/silas/nockpoint/tests/test_models_user.py:68: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    joined_date=datetime.utcnow()
+
+tests/test_models_user.py::TestUserClubRelationships::test_add_user_to_club
+  /home/silas/nockpoint/tests/test_models_user.py:214: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    joined_date=datetime.utcnow()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_auth_multitenancy.py::TestLogin::test_login_single_club_auto_select
+FAILED tests/test_auth_multitenancy.py::TestLogin::test_login_multiple_clubs_requires_selection
+FAILED tests/test_auth_multitenancy.py::TestRegistration::test_register_password_mismatch
+FAILED tests/test_club_isolation.py::TestInventoryIsolation::test_club_query_helper_filters_items
+FAILED tests/test_club_isolation.py::TestEventsIsolation::test_open_invite_events_visible_across_clubs
+FAILED tests/test_club_isolation.py::TestEventsIsolation::test_private_events_not_visible_across_clubs
+FAILED tests/test_club_isolation.py::TestEventsIsolation::test_club_query_helper_filters_events
+FAILED tests/test_club_isolation.py::TestCompetitionsIsolation::test_club_query_helper_filters_competitions
+FAILED tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_students_isolated_by_club
+FAILED tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_club_query_helper_filters_students
+FAILED tests/test_club_isolation.py::TestCrossClubAccess::test_member_cannot_access_other_club_events
+FAILED tests/test_club_isolation.py::TestCrossClubAccess::test_multi_club_user_sees_correct_data_per_club
+FAILED tests/test_models_events.py::TestShootingEvent::test_create_event_with_club
+FAILED tests/test_models_events.py::TestShootingEvent::test_event_types - Typ...
+FAILED tests/test_models_events.py::TestShootingEvent::test_private_event - A...
+FAILED tests/test_models_events.py::TestShootingEvent::test_open_invite_event
+FAILED tests/test_models_events.py::TestShootingEvent::test_filter_open_invite_events
+FAILED tests/test_models_events.py::TestShootingEvent::test_event_without_max_participants
+FAILED tests/test_models_events.py::TestCompetition::test_create_competition_with_club
+FAILED tests/test_models_events.py::TestCompetition::test_competition_belongs_to_club
+FAILED tests/test_models_events.py::TestCompetition::test_competition_types
+FAILED tests/test_models_events.py::TestCompetition::test_filter_competitions_by_club
+FAILED tests/test_models_events.py::TestCompetition::test_competition_date_range
+FAILED tests/test_models_events.py::TestEventAttendance::test_register_user_for_event
+FAILED tests/test_models_events.py::TestEventAttendance::test_user_same_club_as_event
+FAILED tests/test_models_events.py::TestEventAttendance::test_user_different_club_open_event
+FAILED tests/test_models_events.py::TestEventAttendance::test_attendance_statuses
+FAILED tests/test_models_events.py::TestCompetitionRegistration::test_add_registration_to_competition
+FAILED tests/test_models_events.py::TestCompetitionRegistration::test_registration_divisions
+FAILED tests/test_models_events.py::TestEventQueries::test_upcoming_events_for_club
+FAILED tests/test_models_events.py::TestEventQueries::test_events_by_type - T...
+FAILED tests/test_models_events.py::TestEventQueries::test_community_events
+FAILED tests/test_models_events.py::TestCompetitionQueries::test_upcoming_competitions_for_club
+FAILED tests/test_models_events.py::TestCompetitionQueries::test_active_competitions
+FAILED tests/test_models_inventory.py::TestInventoryItem::test_create_item_with_club
+FAILED tests/test_models_inventory.py::TestInventoryItem::test_item_belongs_to_club
+FAILED tests/test_models_inventory.py::TestInventoryItem::test_item_units - s...
+FAILED tests/test_models_inventory.py::TestInventoryItem::test_item_conditions
+FAILED tests/test_models_inventory.py::TestInventoryItem::test_item_without_category
+FAILED tests/test_models_inventory.py::TestInventoryCRUD::test_delete_category_with_items
+FAILED tests/test_models_inventory.py::TestInventorySearch::test_filter_items_by_condition
+FAILED tests/test_models_inventory.py::TestInventorySearch::test_filter_items_by_location
+FAILED tests/test_models_inventory.py::TestInventoryValidation::test_item_requires_positive_quantity
+FAILED tests/test_models_inventory.py::TestInventoryValidation::test_category_attributes_as_json
+FAILED tests/test_models_inventory.py::TestInventoryValidation::test_item_custom_attributes
+FAILED tests/test_models_user.py::TestUserClubMethods::test_user_is_member_of_club_inactive
+FAILED tests/test_models_user.py::TestUserClubRelationships::test_club_members_relationship
+FAILED tests/test_models_user.py::TestUserClubRelationships::test_add_user_to_club
+================= 48 failed, 75 passed, 701 warnings in 39.98s =================

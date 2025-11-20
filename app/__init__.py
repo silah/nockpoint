@@ -1,6 +1,6 @@
-from flask import Flask
+from flask import Flask, g, session
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
+from flask_login import LoginManager, current_user
 from flask_migrate import Migrate
 from flask_wtf import CSRFProtect
 from flask_wtf.csrf import generate_csrf
@@ -56,9 +56,47 @@ def create_app(config=None):
     app.register_blueprint(members_bp, url_prefix='/members')
     app.register_blueprint(events_bp, url_prefix='/events')
     
+    # Club context middleware
+    @app.before_request
+    def load_club_context():
+        """Load current club into request context"""
+        from app.models import Club, ClubMembership
+        
+        g.current_club = None
+        g.current_membership = None
+        
+        if current_user.is_authenticated:
+            club_id = session.get('current_club_id')
+            
+            if club_id:
+                # Load club and verify user has access
+                club = Club.query.get(club_id)
+                if club and club.is_active:
+                    membership = ClubMembership.query.filter_by(
+                        user_id=current_user.id,
+                        club_id=club_id,
+                        is_active=True
+                    ).first()
+                    
+                    if membership:
+                        g.current_club = club
+                        g.current_membership = membership
+                    else:
+                        # User doesn't have access to this club, clear session
+                        session.pop('current_club_id', None)
+    
     # Make csrf_token() available in all templates
     @app.context_processor
     def inject_csrf_token():
         return dict(csrf_token=generate_csrf)
+    
+    # Make club context available in all templates
+    @app.context_processor
+    def inject_club_context():
+        """Make club information available in all templates"""
+        return dict(
+            current_club=getattr(g, 'current_club', None),
+            current_membership=getattr(g, 'current_membership', None)
+        )
 
     return app

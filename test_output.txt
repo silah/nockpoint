@@ -1,0 +1,487 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.9, pytest-9.0.1, pluggy-1.6.0 -- /home/silas/nockpoint/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /home/silas/nockpoint
+plugins: flask-1.3.0, cov-7.0.0
+collecting ... collected 123 items
+
+tests/test_auth_multitenancy.py::TestLogin::test_login_single_club_auto_select FAILED [  0%]
+tests/test_auth_multitenancy.py::TestLogin::test_login_multiple_clubs_requires_selection FAILED [  1%]
+tests/test_auth_multitenancy.py::TestLogin::test_login_invalid_credentials PASSED [  2%]
+tests/test_auth_multitenancy.py::TestLogin::test_login_no_clubs PASSED   [  3%]
+tests/test_auth_multitenancy.py::TestClubSelection::test_select_club_page_access PASSED [  4%]
+tests/test_auth_multitenancy.py::TestClubSelection::test_select_club_submission PASSED [  4%]
+tests/test_auth_multitenancy.py::TestClubSelection::test_select_club_invalid_club PASSED [  5%]
+tests/test_auth_multitenancy.py::TestClubSwitching::test_switch_club_valid PASSED [  6%]
+tests/test_auth_multitenancy.py::TestClubSwitching::test_switch_club_invalid PASSED [  7%]
+tests/test_auth_multitenancy.py::TestClubSwitching::test_switch_club_unauthenticated PASSED [  8%]
+tests/test_auth_multitenancy.py::TestLogout::test_logout PASSED          [  8%]
+tests/test_auth_multitenancy.py::TestLogout::test_logout_clears_club_context PASSED [  9%]
+tests/test_auth_multitenancy.py::TestRegistration::test_register_new_user PASSED [ 10%]
+tests/test_auth_multitenancy.py::TestRegistration::test_register_duplicate_email PASSED [ 11%]
+tests/test_auth_multitenancy.py::TestRegistration::test_register_password_mismatch FAILED [ 12%]
+tests/test_auth_multitenancy.py::TestClubContext::test_club_context_available PASSED [ 13%]
+tests/test_auth_multitenancy.py::TestClubContext::test_club_context_cleared_on_logout PASSED [ 13%]
+tests/test_auth_multitenancy.py::TestClubContext::test_no_club_context_when_not_authenticated PASSED [ 14%]
+tests/test_club_isolation.py::TestInventoryIsolation::test_categories_isolated_by_club PASSED [ 15%]
+tests/test_club_isolation.py::TestInventoryIsolation::test_items_isolated_by_club PASSED [ 16%]
+tests/test_club_isolation.py::TestInventoryIsolation::test_club_query_helper_filters_items PASSED [ 17%]
+tests/test_club_isolation.py::TestEventsIsolation::test_events_isolated_by_club PASSED [ 17%]
+tests/test_club_isolation.py::TestEventsIsolation::test_open_invite_events_visible_across_clubs PASSED [ 18%]
+tests/test_club_isolation.py::TestEventsIsolation::test_private_events_not_visible_across_clubs PASSED [ 19%]
+tests/test_club_isolation.py::TestEventsIsolation::test_club_query_helper_filters_events PASSED [ 20%]
+tests/test_club_isolation.py::TestCompetitionsIsolation::test_competitions_isolated_by_club PASSED [ 21%]
+tests/test_club_isolation.py::TestCompetitionsIsolation::test_club_query_helper_filters_competitions PASSED [ 21%]
+tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_students_isolated_by_club FAILED [ 22%]
+tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_club_query_helper_filters_students FAILED [ 23%]
+tests/test_club_isolation.py::TestCrossClubAccess::test_admin_cannot_access_other_club_inventory PASSED [ 24%]
+tests/test_club_isolation.py::TestCrossClubAccess::test_member_cannot_access_other_club_events PASSED [ 25%]
+tests/test_club_isolation.py::TestCrossClubAccess::test_multi_club_user_sees_correct_data_per_club PASSED [ 26%]
+tests/test_club_isolation.py::TestDataIntegrity::test_cannot_create_item_without_club_id PASSED [ 26%]
+tests/test_club_isolation.py::TestDataIntegrity::test_cannot_create_event_without_club_id PASSED [ 27%]
+tests/test_club_isolation.py::TestDataIntegrity::test_category_items_same_club PASSED [ 28%]
+tests/test_models_club.py::TestClubModel::test_create_club PASSED        [ 29%]
+tests/test_models_club.py::TestClubModel::test_club_slug_unique PASSED   [ 30%]
+tests/test_models_club.py::TestClubModel::test_club_repr PASSED          [ 30%]
+tests/test_models_club.py::TestClubModel::test_club_members_relationship PASSED [ 31%]
+tests/test_models_club.py::TestClubModel::test_club_default_values PASSED [ 32%]
+tests/test_models_club.py::TestClubModel::test_club_pro_status PASSED    [ 33%]
+tests/test_models_club.py::TestClubModel::test_club_pro_expired PASSED   [ 34%]
+tests/test_models_club.py::TestClubModel::test_club_not_pro PASSED       [ 34%]
+tests/test_models_club.py::TestClubMembershipModel::test_create_membership PASSED [ 35%]
+tests/test_models_club.py::TestClubMembershipModel::test_membership_roles PASSED [ 36%]
+tests/test_models_club.py::TestClubMembershipModel::test_membership_status PASSED [ 37%]
+tests/test_models_club.py::TestClubMembershipModel::test_user_relationship PASSED [ 38%]
+tests/test_models_club.py::TestClubMembershipModel::test_club_relationship PASSED [ 39%]
+tests/test_models_club.py::TestClubMembershipModel::test_unique_user_club_constraint PASSED [ 39%]
+tests/test_models_club.py::TestClubMembershipModel::test_membership_repr PASSED [ 40%]
+tests/test_models_club.py::TestMultiClubScenarios::test_user_multiple_clubs PASSED [ 41%]
+tests/test_models_club.py::TestMultiClubScenarios::test_club_isolation PASSED [ 42%]
+tests/test_models_club.py::TestMultiClubScenarios::test_user_different_roles_different_clubs PASSED [ 43%]
+tests/test_models_events.py::TestShootingEvent::test_create_event_with_club PASSED [ 43%]
+tests/test_models_events.py::TestShootingEvent::test_event_belongs_to_club PASSED [ 44%]
+tests/test_models_events.py::TestShootingEvent::test_event_types PASSED  [ 45%]
+tests/test_models_events.py::TestShootingEvent::test_private_event PASSED [ 46%]
+tests/test_models_events.py::TestShootingEvent::test_open_invite_event PASSED [ 47%]
+tests/test_models_events.py::TestShootingEvent::test_filter_events_by_club PASSED [ 47%]
+tests/test_models_events.py::TestShootingEvent::test_filter_open_invite_events PASSED [ 48%]
+tests/test_models_events.py::TestShootingEvent::test_event_with_max_participants PASSED [ 49%]
+tests/test_models_events.py::TestShootingEvent::test_event_without_max_participants PASSED [ 50%]
+tests/test_models_events.py::TestCompetition::test_create_competition_with_club PASSED [ 51%]
+tests/test_models_events.py::TestCompetition::test_competition_belongs_to_club PASSED [ 52%]
+tests/test_models_events.py::TestCompetition::test_competition_types PASSED [ 52%]
+tests/test_models_events.py::TestCompetition::test_filter_competitions_by_club PASSED [ 53%]
+tests/test_models_events.py::TestCompetition::test_competition_date_range PASSED [ 54%]
+tests/test_models_events.py::TestEventAttendance::test_register_user_for_event PASSED [ 55%]
+tests/test_models_events.py::TestEventAttendance::test_user_same_club_as_event PASSED [ 56%]
+tests/test_models_events.py::TestEventAttendance::test_user_different_club_open_event PASSED [ 56%]
+tests/test_models_events.py::TestEventAttendance::test_attendance_statuses PASSED [ 57%]
+tests/test_models_events.py::TestCompetitionRegistration::test_add_registration_to_competition PASSED [ 58%]
+tests/test_models_events.py::TestCompetitionRegistration::test_registration_same_club_as_competition PASSED [ 59%]
+tests/test_models_events.py::TestCompetitionRegistration::test_registration_divisions PASSED [ 60%]
+tests/test_models_events.py::TestEventQueries::test_upcoming_events_for_club PASSED [ 60%]
+tests/test_models_events.py::TestEventQueries::test_events_by_type PASSED [ 61%]
+tests/test_models_events.py::TestEventQueries::test_community_events PASSED [ 62%]
+tests/test_models_events.py::TestCompetitionQueries::test_upcoming_competitions_for_club PASSED [ 63%]
+tests/test_models_events.py::TestCompetitionQueries::test_active_competitions PASSED [ 64%]
+tests/test_models_inventory.py::TestInventoryCategory::test_create_category_with_club PASSED [ 65%]
+tests/test_models_inventory.py::TestInventoryCategory::test_category_belongs_to_club PASSED [ 65%]
+tests/test_models_inventory.py::TestInventoryCategory::test_category_items_relationship PASSED [ 66%]
+tests/test_models_inventory.py::TestInventoryCategory::test_filter_categories_by_club PASSED [ 67%]
+tests/test_models_inventory.py::TestInventoryItem::test_create_item_with_club PASSED [ 68%]
+tests/test_models_inventory.py::TestInventoryItem::test_item_belongs_to_club PASSED [ 69%]
+tests/test_models_inventory.py::TestInventoryItem::test_item_belongs_to_category PASSED [ 69%]
+tests/test_models_inventory.py::TestInventoryItem::test_item_category_same_club PASSED [ 70%]
+tests/test_models_inventory.py::TestInventoryItem::test_filter_items_by_club PASSED [ 71%]
+tests/test_models_inventory.py::TestInventoryItem::test_item_units PASSED [ 72%]
+tests/test_models_inventory.py::TestInventoryItem::test_item_conditions PASSED [ 73%]
+tests/test_models_inventory.py::TestInventoryItem::test_item_without_category PASSED [ 73%]
+tests/test_models_inventory.py::TestInventoryCRUD::test_create_category_and_items PASSED [ 74%]
+tests/test_models_inventory.py::TestInventoryCRUD::test_update_item_quantity PASSED [ 75%]
+tests/test_models_inventory.py::TestInventoryCRUD::test_delete_item PASSED [ 76%]
+tests/test_models_inventory.py::TestInventoryCRUD::test_delete_category_with_items FAILED [ 77%]
+tests/test_models_inventory.py::TestInventorySearch::test_search_items_by_name PASSED [ 78%]
+tests/test_models_inventory.py::TestInventorySearch::test_filter_items_by_condition PASSED [ 78%]
+tests/test_models_inventory.py::TestInventorySearch::test_filter_items_by_category PASSED [ 79%]
+tests/test_models_inventory.py::TestInventorySearch::test_filter_items_by_location PASSED [ 80%]
+tests/test_models_inventory.py::TestInventoryValidation::test_item_requires_positive_quantity PASSED [ 81%]
+tests/test_models_inventory.py::TestInventoryValidation::test_category_attributes_as_json PASSED [ 82%]
+tests/test_models_inventory.py::TestInventoryValidation::test_item_custom_attributes PASSED [ 82%]
+tests/test_models_user.py::TestUserClubMethods::test_user_get_clubs_single PASSED [ 83%]
+tests/test_models_user.py::TestUserClubMethods::test_user_get_clubs_multiple PASSED [ 84%]
+tests/test_models_user.py::TestUserClubMethods::test_user_get_clubs_none PASSED [ 85%]
+tests/test_models_user.py::TestUserClubMethods::test_user_is_member_of_club_true PASSED [ 86%]
+tests/test_models_user.py::TestUserClubMethods::test_user_is_member_of_club_false PASSED [ 86%]
+tests/test_models_user.py::TestUserClubMethods::test_user_is_member_of_club_inactive PASSED [ 87%]
+tests/test_models_user.py::TestUserClubMethods::test_user_is_admin_of_club_true PASSED [ 88%]
+tests/test_models_user.py::TestUserClubMethods::test_user_is_admin_of_club_false_not_member PASSED [ 89%]
+tests/test_models_user.py::TestUserClubMethods::test_user_is_admin_of_club_false_regular_member PASSED [ 90%]
+tests/test_models_user.py::TestUserClubMethods::test_global_admin_is_admin_everywhere PASSED [ 91%]
+tests/test_models_user.py::TestUserClubMethods::test_user_different_roles_in_clubs PASSED [ 91%]
+tests/test_models_user.py::TestUserCreation::test_create_user PASSED     [ 92%]
+tests/test_models_user.py::TestUserCreation::test_user_password_hashing PASSED [ 93%]
+tests/test_models_user.py::TestUserCreation::test_user_email_unique PASSED [ 94%]
+tests/test_models_user.py::TestUserCreation::test_user_username_unique PASSED [ 95%]
+tests/test_models_user.py::TestUserCreation::test_user_repr PASSED       [ 95%]
+tests/test_models_user.py::TestUserClubRelationships::test_user_club_memberships_relationship PASSED [ 96%]
+tests/test_models_user.py::TestUserClubRelationships::test_club_members_relationship PASSED [ 97%]
+tests/test_models_user.py::TestUserClubRelationships::test_add_user_to_club PASSED [ 98%]
+tests/test_models_user.py::TestUserClubRelationships::test_remove_user_from_club PASSED [ 99%]
+tests/test_models_user.py::TestUserClubRelationships::test_change_user_role PASSED [100%]
+
+=================================== FAILURES ===================================
+_________________ TestLogin.test_login_single_club_auto_select _________________
+tests/test_auth_multitenancy.py:26: in test_login_single_club_auto_select
+    assert '_user_id' in sess
+E   AssertionError: assert '_user_id' in <SecureCookieSession {}>
+____________ TestLogin.test_login_multiple_clubs_requires_selection ____________
+tests/test_auth_multitenancy.py:40: in test_login_multiple_clubs_requires_selection
+    assert response.status_code == 302
+E   assert 200 == 302
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+_______________ TestRegistration.test_register_password_mismatch _______________
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1967: in _exec_single_context
+    self.dialect.do_execute(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py:951: in do_execute
+    cursor.execute(statement, parameters)
+E   sqlite3.OperationalError: no such table: club_settings
+
+The above exception was the direct cause of the following exception:
+tests/test_auth_multitenancy.py:237: in test_register_password_mismatch
+    response = client.post('/auth/register', data={
+.venv/lib/python3.13/site-packages/werkzeug/test.py:1248: in post
+    return self.open(*args, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/flask/testing.py:232: in open
+    response = super().open(
+.venv/lib/python3.13/site-packages/werkzeug/test.py:1197: in open
+    response = self.run_wsgi_app(request.environ, buffered=buffered)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/werkzeug/test.py:1069: in run_wsgi_app
+    rv = run_wsgi_app(self.application, environ, buffered=buffered)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/werkzeug/test.py:1345: in run_wsgi_app
+    app_rv = app(environ, start_response)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/flask/app.py:2213: in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/flask/app.py:2193: in wsgi_app
+    response = self.handle_exception(e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/flask/app.py:2190: in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/flask/app.py:1486: in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/flask/app.py:1484: in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/flask/app.py:1469: in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/auth/__init__.py:89: in register
+    settings = ClubSettings.get_settings()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app/models.py:752: in get_settings
+    settings = ClubSettings.query.first()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/query.py:2759: in first
+    return self.limit(1)._iter().first()  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/query.py:2857: in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py:2351: in execute
+    return self._execute_internal(
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py:2249: in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/context.py:306: in orm_execute_statement
+    result = conn.execute(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1419: in execute
+    return meth(
+.venv/lib/python3.13/site-packages/sqlalchemy/sql/elements.py:526: in _execute_on_connection
+    return connection._execute_clauseelement(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1641: in _execute_clauseelement
+    ret = self._execute_context(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1846: in _execute_context
+    return self._exec_single_context(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1986: in _exec_single_context
+    self._handle_dbapi_exception(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:2355: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1967: in _exec_single_context
+    self.dialect.do_execute(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py:951: in do_execute
+    cursor.execute(statement, parameters)
+E   sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: club_settings
+E   [SQL: SELECT club_settings.id AS club_settings_id, club_settings.club_name AS club_settings_club_name, club_settings.default_location AS club_settings_default_location, club_settings.description AS club_settings_description, club_settings.website_url AS club_settings_website_url, club_settings.facebook_url AS club_settings_facebook_url, club_settings.instagram_url AS club_settings_instagram_url, club_settings.twitter_url AS club_settings_twitter_url, club_settings.email AS club_settings_email, club_settings.phone AS club_settings_phone, club_settings.address AS club_settings_address, club_settings.annual_membership_price AS club_settings_annual_membership_price, club_settings.quarterly_membership_price AS club_settings_quarterly_membership_price, club_settings.monthly_membership_price AS club_settings_monthly_membership_price, club_settings.per_event_price AS club_settings_per_event_price, club_settings.activation_code AS club_settings_activation_code, club_settings.is_pro_enabled AS club_settings_is_pro_enabled, club_settings.pro_subscription_id AS club_settings_pro_subscription_id, club_settings.pro_expires_at AS club_settings_pro_expires_at, club_settings.updated_at AS club_settings_updated_at, club_settings.updated_by AS club_settings_updated_by 
+E   FROM club_settings
+E    LIMIT ? OFFSET ?]
+E   [parameters: (1, 0)]
+E   (Background on this error at: https://sqlalche.me/e/20/e3q8)
+________ TestBeginnersStudentsIsolation.test_students_isolated_by_club _________
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:2118: in _exec_insertmany_context
+    dialect.do_execute(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py:951: in do_execute
+    cursor.execute(statement, parameters)
+E   sqlite3.IntegrityError: NOT NULL constraint failed: shooting_event.location
+
+The above exception was the direct cause of the following exception:
+tests/test_club_isolation.py:169: in test_students_isolated_by_club
+    _db.session.flush()
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/scoping.py:924: in flush
+    return self._proxied.flush(objects=objects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py:4331: in flush
+    self._flush(objects)
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py:4466: in _flush
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py:224: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py:4427: in _flush
+    flush_context.execute()
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py:1143: in _emit_insert_statements
+    result = connection.execute(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1419: in execute
+    return meth(
+.venv/lib/python3.13/site-packages/sqlalchemy/sql/elements.py:526: in _execute_on_connection
+    return connection._execute_clauseelement(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1641: in _execute_clauseelement
+    ret = self._execute_context(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1844: in _execute_context
+    return self._exec_insertmany_context(dialect, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:2126: in _exec_insertmany_context
+    self._handle_dbapi_exception(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:2355: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:2118: in _exec_insertmany_context
+    dialect.do_execute(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py:951: in do_execute
+    cursor.execute(statement, parameters)
+E   sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) NOT NULL constraint failed: shooting_event.location
+E   [SQL: INSERT INTO shooting_event (club_id, name, description, location, date, start_time, duration_hours, price, event_type, is_free_event, max_participants, created_at, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id]
+E   [parameters: (1, 'Alpha Beginners Course', None, None, '2025-11-16', '22:53:51.802520', 2, 0.0, 'regular', 0, None, '2025-11-16 22:53:51.803980', 1)]
+E   (Background on this error at: https://sqlalche.me/e/20/gkpj)
+____ TestBeginnersStudentsIsolation.test_club_query_helper_filters_students ____
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:2118: in _exec_insertmany_context
+    dialect.do_execute(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py:951: in do_execute
+    cursor.execute(statement, parameters)
+E   sqlite3.IntegrityError: NOT NULL constraint failed: shooting_event.location
+
+The above exception was the direct cause of the following exception:
+tests/test_club_isolation.py:224: in test_club_query_helper_filters_students
+    _db.session.flush()
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/scoping.py:924: in flush
+    return self._proxied.flush(objects=objects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py:4331: in flush
+    self._flush(objects)
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py:4466: in _flush
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py:224: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py:4427: in _flush
+    flush_context.execute()
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py:93: in save_obj
+    _emit_insert_statements(
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py:1143: in _emit_insert_statements
+    result = connection.execute(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1419: in execute
+    return meth(
+.venv/lib/python3.13/site-packages/sqlalchemy/sql/elements.py:526: in _execute_on_connection
+    return connection._execute_clauseelement(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1641: in _execute_clauseelement
+    ret = self._execute_context(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1844: in _execute_context
+    return self._exec_insertmany_context(dialect, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:2126: in _exec_insertmany_context
+    self._handle_dbapi_exception(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:2355: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:2118: in _exec_insertmany_context
+    dialect.do_execute(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py:951: in do_execute
+    cursor.execute(statement, parameters)
+E   sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) NOT NULL constraint failed: shooting_event.location
+E   [SQL: INSERT INTO shooting_event (club_id, name, description, location, date, start_time, duration_hours, price, event_type, is_free_event, max_participants, created_at, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id]
+E   [parameters: (1, 'Alpha Beginners Course', None, None, '2025-11-16', '22:53:53.834900', 2, 0.0, 'regular', 0, None, '2025-11-16 22:53:53.836180', 1)]
+E   (Background on this error at: https://sqlalche.me/e/20/gkpj)
+______________ TestInventoryCRUD.test_delete_category_with_items _______________
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1936: in _exec_single_context
+    self.dialect.do_executemany(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py:948: in do_executemany
+    cursor.executemany(statement, parameters)
+E   sqlite3.IntegrityError: NOT NULL constraint failed: inventory_item.category_id
+
+The above exception was the direct cause of the following exception:
+tests/test_models_inventory.py:245: in test_delete_category_with_items
+    _db.session.commit()
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/scoping.py:597: in commit
+    return self._proxied.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py:2030: in commit
+    trans.commit(_to_root=True)
+<string>:2: in commit
+    ???
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/state_changes.py:137: in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py:1311: in commit
+    self._prepare_impl()
+<string>:2: in _prepare_impl
+    ???
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/state_changes.py:137: in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py:1286: in _prepare_impl
+    self.session.flush()
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py:4331: in flush
+    self._flush(objects)
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py:4466: in _flush
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py:224: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py:4427: in _flush
+    flush_context.execute()
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py:466: in execute
+    rec.execute(self)
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py:642: in execute
+    util.preloaded.orm_persistence.save_obj(
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py:85: in save_obj
+    _emit_update_statements(
+.venv/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py:912: in _emit_update_statements
+    c = connection.execute(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1419: in execute
+    return meth(
+.venv/lib/python3.13/site-packages/sqlalchemy/sql/elements.py:526: in _execute_on_connection
+    return connection._execute_clauseelement(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1641: in _execute_clauseelement
+    ret = self._execute_context(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1846: in _execute_context
+    return self._exec_single_context(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1986: in _exec_single_context
+    self._handle_dbapi_exception(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:2355: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py:1936: in _exec_single_context
+    self.dialect.do_executemany(
+.venv/lib/python3.13/site-packages/sqlalchemy/engine/default.py:948: in do_executemany
+    cursor.executemany(statement, parameters)
+E   sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) NOT NULL constraint failed: inventory_item.category_id
+E   [SQL: UPDATE inventory_item SET updated_at=?, category_id=? WHERE inventory_item.id = ?]
+E   [parameters: [('2025-11-16 22:54:21.849201', None, 1), ('2025-11-16 22:54:21.849218', None, 2)]]
+E   (Background on this error at: https://sqlalche.me/e/20/gkpj)
+=============================== warnings summary ===============================
+tests/test_auth_multitenancy.py: 70 warnings
+tests/test_club_isolation.py: 150 warnings
+tests/test_models_club.py: 75 warnings
+tests/test_models_events.py: 182 warnings
+tests/test_models_inventory.py: 164 warnings
+tests/test_models_user.py: 93 warnings
+  /home/silas/nockpoint/.venv/lib/python3.13/site-packages/sqlalchemy/sql/schema.py:3624: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return util.wrap_callable(lambda ctx: fn(), fn)  # type: ignore
+
+tests/test_auth_multitenancy.py::TestClubSelection::test_select_club_page_access
+tests/test_auth_multitenancy.py::TestClubSelection::test_select_club_submission
+tests/test_auth_multitenancy.py::TestClubSelection::test_select_club_invalid_club
+tests/test_auth_multitenancy.py::TestClubSwitching::test_switch_club_valid
+tests/test_auth_multitenancy.py::TestClubSwitching::test_switch_club_invalid
+tests/test_auth_multitenancy.py::TestLogout::test_logout
+tests/test_auth_multitenancy.py::TestLogout::test_logout_clears_club_context
+tests/test_auth_multitenancy.py::TestClubContext::test_club_context_available
+tests/test_auth_multitenancy.py::TestClubContext::test_club_context_cleared_on_logout
+  /home/silas/nockpoint/app/models.py:8: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    return User.query.get(int(user_id))
+
+tests/test_auth_multitenancy.py::TestClubSelection::test_select_club_invalid_club
+tests/test_auth_multitenancy.py::TestClubSwitching::test_switch_club_valid
+tests/test_auth_multitenancy.py::TestLogout::test_logout
+tests/test_auth_multitenancy.py::TestLogout::test_logout_clears_club_context
+tests/test_auth_multitenancy.py::TestClubContext::test_club_context_available
+tests/test_auth_multitenancy.py::TestClubContext::test_club_context_cleared_on_logout
+  /home/silas/nockpoint/app/__init__.py:73: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    club = Club.query.get(club_id)
+
+tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_students_isolated_by_club
+  /home/silas/nockpoint/tests/test_club_isolation.py:155: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    date=datetime.utcnow().date(),
+
+tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_students_isolated_by_club
+  /home/silas/nockpoint/tests/test_club_isolation.py:156: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_time=datetime.utcnow().time(),
+
+tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_students_isolated_by_club
+  /home/silas/nockpoint/tests/test_club_isolation.py:163: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    date=datetime.utcnow().date(),
+
+tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_students_isolated_by_club
+  /home/silas/nockpoint/tests/test_club_isolation.py:164: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_time=datetime.utcnow().time(),
+
+tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_club_query_helper_filters_students
+  /home/silas/nockpoint/tests/test_club_isolation.py:210: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    date=datetime.utcnow().date(),
+
+tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_club_query_helper_filters_students
+  /home/silas/nockpoint/tests/test_club_isolation.py:211: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_time=datetime.utcnow().time(),
+
+tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_club_query_helper_filters_students
+  /home/silas/nockpoint/tests/test_club_isolation.py:218: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    date=datetime.utcnow().date(),
+
+tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_club_query_helper_filters_students
+  /home/silas/nockpoint/tests/test_club_isolation.py:219: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_time=datetime.utcnow().time(),
+
+tests/test_models_club.py::TestClubModel::test_club_pro_status
+  /home/silas/nockpoint/tests/test_models_club.py:74: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    pro_expires_at=datetime.utcnow() + timedelta(days=30)
+
+tests/test_models_club.py::TestClubModel::test_club_pro_status
+tests/test_models_club.py::TestClubModel::test_club_pro_expired
+  /home/silas/nockpoint/app/models.py:68: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return datetime.utcnow() < self.pro_expires_at
+
+tests/test_models_club.py::TestClubModel::test_club_pro_expired
+  /home/silas/nockpoint/tests/test_models_club.py:88: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    pro_expires_at=datetime.utcnow() - timedelta(days=1)
+
+tests/test_models_events.py::TestEventAttendance::test_attendance_statuses
+  /home/silas/nockpoint/tests/test_models_events.py:300: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    attendance.attended_at = datetime.utcnow()
+
+tests/test_models_inventory.py::TestInventoryItem::test_item_belongs_to_club
+  /home/silas/nockpoint/tests/test_models_inventory.py:91: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    assert InventoryCategory.query.get(item.category_id).club_id == club_alpha.id
+
+tests/test_models_inventory.py::TestInventoryCRUD::test_delete_item
+  /home/silas/nockpoint/tests/test_models_inventory.py:233: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    deleted_item = InventoryItem.query.get(item_id)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_auth_multitenancy.py::TestLogin::test_login_single_club_auto_select
+FAILED tests/test_auth_multitenancy.py::TestLogin::test_login_multiple_clubs_requires_selection
+FAILED tests/test_auth_multitenancy.py::TestRegistration::test_register_password_mismatch
+FAILED tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_students_isolated_by_club
+FAILED tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_club_query_helper_filters_students
+FAILED tests/test_models_inventory.py::TestInventoryCRUD::test_delete_category_with_items
+============ 6 failed, 117 passed, 764 warnings in 63.87s (0:01:03) ============

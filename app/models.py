@@ -7,17 +7,148 @@ from datetime import datetime
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# ============================================================================
+# MULTI-TENANCY MODELS
+# ============================================================================
+
+class Club(db.Model):
+    """Represents an archery club in the multi-tenant system"""
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False, unique=True)
+    slug = db.Column(db.String(100), nullable=False, unique=True, index=True)
+    description = db.Column(db.Text)
+    
+    # Contact information
+    email = db.Column(db.String(120))
+    phone = db.Column(db.String(20))
+    address = db.Column(db.Text)
+    website_url = db.Column(db.String(200))
+    
+    # Social media
+    facebook_url = db.Column(db.String(200))
+    instagram_url = db.Column(db.String(200))
+    twitter_url = db.Column(db.String(200))
+    
+    # Settings (migrated from ClubSettings)
+    default_location = db.Column(db.String(200))
+    activation_code = db.Column(db.String(50))
+    
+    # Pricing
+    annual_membership_price = db.Column(db.Numeric(10, 2), default=0.00)
+    quarterly_membership_price = db.Column(db.Numeric(10, 2), default=0.00)
+    monthly_membership_price = db.Column(db.Numeric(10, 2), default=0.00)
+    per_event_price = db.Column(db.Numeric(10, 2), default=0.00)
+    
+    # Pro subscription (per club)
+    is_pro_enabled = db.Column(db.Boolean, default=False)
+    pro_subscription_id = db.Column(db.String(100))
+    pro_expires_at = db.Column(db.DateTime)
+    
+    # Status
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    memberships = db.relationship('ClubMembership', backref='club', lazy=True, cascade='all, delete-orphan')
+    inventory_categories = db.relationship('InventoryCategory', backref='club', lazy=True)
+    events = db.relationship('ShootingEvent', backref='club', lazy=True)
+    
+    def __repr__(self):
+        return f'<Club {self.name}>'
+    
+    def is_pro_active(self):
+        """Check if pro subscription is currently active"""
+        if not self.is_pro_enabled:
+            return False
+        
+        if not self.pro_expires_at:
+            return True
+        
+        return datetime.utcnow() < self.pro_expires_at
+    
+    def has_pro_feature(self, feature_name):
+        """Check if a specific pro feature is enabled"""
+        return self.is_pro_active()
+    
+    def get_pro_status(self):
+        """Get comprehensive pro status information"""
+        return {
+            'is_active': self.is_pro_active(),
+            'expires_at': self.pro_expires_at,
+            'subscription_id': self.pro_subscription_id
+        }
+
+class ClubMembership(db.Model):
+    """Junction table linking users to clubs with role per club"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    club_id = db.Column(db.Integer, db.ForeignKey('club.id'), nullable=False)
+    role = db.Column(db.String(20), nullable=False, default='member')  # 'admin' or 'member'
+    membership_type = db.Column(db.String(20), default='monthly')  # 'annual', 'quarterly', 'monthly', 'per_event'
+    is_active = db.Column(db.Boolean, default=True)
+    joined_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref='club_memberships')
+    
+    # Unique constraint: one membership per user per club
+    __table_args__ = (db.UniqueConstraint('user_id', 'club_id', name='unique_user_club'),)
+    
+    def __repr__(self):
+        return f'<ClubMembership user_id={self.user_id} club_id={self.club_id} role={self.role}>'
+    
+    def get_membership_price(self):
+        """Get the price for this membership type in this club"""
+        club = Club.query.get(self.club_id)
+        if not club:
+            return 0.00
+        
+        if self.membership_type == 'annual':
+            return club.annual_membership_price or 0.00
+        elif self.membership_type == 'quarterly':
+            return club.quarterly_membership_price or 0.00
+        elif self.membership_type == 'monthly':
+            return club.monthly_membership_price or 0.00
+        elif self.membership_type == 'per_event':
+            return club.per_event_price or 0.00
+        return 0.00
+    
+    def get_event_price(self):
+        """Get the price this membership pays for events"""
+        club = Club.query.get(self.club_id)
+        if not club:
+            return 0.00
+        
+        # Members with annual, quarterly, or monthly memberships have already paid
+        if self.membership_type in ['annual', 'quarterly', 'monthly']:
+            return 0.00
+        # Only per-event members pay per event
+        elif self.membership_type == 'per_event':
+            return club.per_event_price or 0.00
+        return 0.00
+
+# ============================================================================
+# USER MODEL
+# ============================================================================
+
 class User(UserMixin, db.Model):
+    """User model - can belong to multiple clubs via ClubMembership"""
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(20), nullable=False, default='member')  # 'admin' or 'member'
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
-    membership_type = db.Column(db.String(20), nullable=False, default='monthly')  # 'annual', 'quarterly', 'monthly', 'per_event'
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)
+    
+    # DEPRECATED: These fields kept for backward compatibility during migration
+    # Will be removed after full migration to ClubMembership
+    role = db.Column(db.String(20), nullable=True, default='member')
+    membership_type = db.Column(db.String(20), nullable=True, default='monthly')
+    
+    # Relationships via ClubMembership are defined in that model's backref
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -25,7 +156,34 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
     
+    def get_clubs(self):
+        """Get all clubs user is a member of"""
+        return [m.club for m in self.club_memberships if m.is_active and m.club.is_active]
+    
+    def get_membership_in_club(self, club_id):
+        """Get user's membership in a specific club"""
+        return ClubMembership.query.filter_by(
+            user_id=self.id,
+            club_id=club_id,
+            is_active=True
+        ).first()
+    
+    def get_role_in_club(self, club_id):
+        """Get user's role in a specific club"""
+        membership = self.get_membership_in_club(club_id)
+        return membership.role if membership else None
+    
+    def is_admin_of_club(self, club_id):
+        """Check if user is admin of specific club"""
+        return self.get_role_in_club(club_id) == 'admin'
+    
+    def is_member_of_club(self, club_id):
+        """Check if user is a member of specific club"""
+        return self.get_membership_in_club(club_id) is not None
+    
+    # Backward compatibility methods (use club-specific versions instead)
     def is_admin(self):
+        """DEPRECATED: Use is_admin_of_club(club_id) instead"""
         return self.role == 'admin'
     
     def get_membership_price(self):
@@ -76,18 +234,23 @@ class User(UserMixin, db.Model):
 
 class InventoryCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), unique=True, nullable=False)
+    club_id = db.Column(db.Integer, db.ForeignKey('club.id'), nullable=False, index=True)
+    name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # Unique constraint: category name must be unique within a club
+    __table_args__ = (db.UniqueConstraint('club_id', 'name', name='unique_category_per_club'),)
+    
     # Relationship with inventory items
-    items = db.relationship('InventoryItem', backref='category', lazy=True)
+    items = db.relationship('InventoryItem', backref='category', lazy=True, cascade='all, delete-orphan')
     
     def __repr__(self):
         return f'<InventoryCategory {self.name}>'
 
 class InventoryItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    club_id = db.Column(db.Integer, db.ForeignKey('club.id'), nullable=False, index=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
     quantity = db.Column(db.Integer, nullable=False, default=0)
@@ -117,6 +280,7 @@ class InventoryItem(db.Model):
 
 class ShootingEvent(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    club_id = db.Column(db.Integer, db.ForeignKey('club.id'), nullable=False, index=True)
     name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     location = db.Column(db.String(200), nullable=False)
@@ -129,6 +293,10 @@ class ShootingEvent(db.Model):
     max_participants = db.Column(db.Integer)  # Optional capacity limit
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    # FUTURE: Fields for cross-club events
+    # is_open_invite = db.Column(db.Boolean, default=False)
+    # max_external_participants = db.Column(db.Integer)
     
     # Relationships
     attendances = db.relationship('EventAttendance', backref='event', lazy=True, cascade='all, delete-orphan')
@@ -233,6 +401,7 @@ class MemberCharge(db.Model):
 
 class Competition(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    club_id = db.Column(db.Integer, db.ForeignKey('club.id'), nullable=False, index=True)
     event_id = db.Column(db.Integer, db.ForeignKey('shooting_event.id'), nullable=False)
     number_of_rounds = db.Column(db.Integer, nullable=False, default=6)
     target_size_cm = db.Column(db.Integer, nullable=False, default=122)  # Target face size in cm
@@ -616,6 +785,7 @@ class ClubSettings(db.Model):
 class BeginnersStudent(db.Model):
     """Model for non-member participants in beginners courses"""
     id = db.Column(db.Integer, primary_key=True)
+    club_id = db.Column(db.Integer, db.ForeignKey('club.id'), nullable=False, index=True)
     event_id = db.Column(db.Integer, db.ForeignKey('shooting_event.id'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     age = db.Column(db.Integer, nullable=False)

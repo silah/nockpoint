@@ -1,0 +1,102 @@
+........................................................................ [ 58%]
+...................................................                      [100%]
+=============================== warnings summary ===============================
+tests/test_auth_multitenancy.py: 71 warnings
+tests/test_club_isolation.py: 158 warnings
+tests/test_models_club.py: 75 warnings
+tests/test_models_events.py: 182 warnings
+tests/test_models_inventory.py: 162 warnings
+tests/test_models_user.py: 93 warnings
+  /home/silas/nockpoint/.venv/lib/python3.13/site-packages/sqlalchemy/sql/schema.py:3624: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return util.wrap_callable(lambda ctx: fn(), fn)  # type: ignore
+
+tests/test_auth_multitenancy.py::TestLogin::test_login_single_club_auto_select
+tests/test_auth_multitenancy.py::TestClubSelection::test_select_club_invalid_club
+tests/test_auth_multitenancy.py::TestClubSwitching::test_switch_club_valid
+tests/test_auth_multitenancy.py::TestLogout::test_logout
+tests/test_auth_multitenancy.py::TestLogout::test_logout_clears_club_context
+tests/test_auth_multitenancy.py::TestClubContext::test_club_context_available
+tests/test_auth_multitenancy.py::TestClubContext::test_club_context_cleared_on_logout
+  /home/silas/nockpoint/app/__init__.py:73: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    club = Club.query.get(club_id)
+
+tests/test_auth_multitenancy.py::TestClubSelection::test_select_club_page_access
+tests/test_auth_multitenancy.py::TestClubSelection::test_select_club_submission
+tests/test_auth_multitenancy.py::TestClubSelection::test_select_club_invalid_club
+tests/test_auth_multitenancy.py::TestClubSwitching::test_switch_club_valid
+tests/test_auth_multitenancy.py::TestClubSwitching::test_switch_club_invalid
+tests/test_auth_multitenancy.py::TestLogout::test_logout
+tests/test_auth_multitenancy.py::TestLogout::test_logout_clears_club_context
+tests/test_auth_multitenancy.py::TestClubContext::test_club_context_available
+tests/test_auth_multitenancy.py::TestClubContext::test_club_context_cleared_on_logout
+  /home/silas/nockpoint/app/models.py:8: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    return User.query.get(int(user_id))
+
+tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_students_isolated_by_club
+  /home/silas/nockpoint/tests/test_club_isolation.py:156: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    date=datetime.utcnow().date(),
+
+tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_students_isolated_by_club
+  /home/silas/nockpoint/tests/test_club_isolation.py:157: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_time=datetime.utcnow().time(),
+
+tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_students_isolated_by_club
+  /home/silas/nockpoint/tests/test_club_isolation.py:165: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    date=datetime.utcnow().date(),
+
+tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_students_isolated_by_club
+  /home/silas/nockpoint/tests/test_club_isolation.py:166: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_time=datetime.utcnow().time(),
+
+tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_club_query_helper_filters_students
+  /home/silas/nockpoint/tests/test_club_isolation.py:213: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    date=datetime.utcnow().date(),
+
+tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_club_query_helper_filters_students
+  /home/silas/nockpoint/tests/test_club_isolation.py:214: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_time=datetime.utcnow().time(),
+
+tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_club_query_helper_filters_students
+  /home/silas/nockpoint/tests/test_club_isolation.py:222: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    date=datetime.utcnow().date(),
+
+tests/test_club_isolation.py::TestBeginnersStudentsIsolation::test_club_query_helper_filters_students
+  /home/silas/nockpoint/tests/test_club_isolation.py:223: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    start_time=datetime.utcnow().time(),
+
+tests/test_models_club.py::TestClubModel::test_club_pro_status
+  /home/silas/nockpoint/tests/test_models_club.py:74: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    pro_expires_at=datetime.utcnow() + timedelta(days=30)
+
+tests/test_models_club.py::TestClubModel::test_club_pro_status
+tests/test_models_club.py::TestClubModel::test_club_pro_expired
+  /home/silas/nockpoint/app/models.py:68: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return datetime.utcnow() < self.pro_expires_at
+
+tests/test_models_club.py::TestClubModel::test_club_pro_expired
+  /home/silas/nockpoint/tests/test_models_club.py:88: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    pro_expires_at=datetime.utcnow() - timedelta(days=1)
+
+tests/test_models_events.py::TestEventAttendance::test_attendance_statuses
+  /home/silas/nockpoint/tests/test_models_events.py:300: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    attendance.attended_at = datetime.utcnow()
+
+tests/test_models_inventory.py::TestInventoryItem::test_item_belongs_to_club
+  /home/silas/nockpoint/tests/test_models_inventory.py:91: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    assert InventoryCategory.query.get(item.category_id).club_id == club_alpha.id
+
+tests/test_models_inventory.py::TestInventoryCRUD::test_delete_item
+  /home/silas/nockpoint/tests/test_models_inventory.py:233: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    deleted_item = InventoryItem.query.get(item_id)
+
+tests/test_models_inventory.py::TestInventoryCRUD::test_delete_category_with_items
+  /home/silas/nockpoint/tests/test_models_inventory.py:248: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    deleted_category = InventoryCategory.query.get(category_id)
+
+tests/test_models_inventory.py::TestInventoryCRUD::test_delete_category_with_items
+tests/test_models_inventory.py::TestInventoryCRUD::test_delete_category_with_items
+  /home/silas/nockpoint/tests/test_models_inventory.py:253: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    deleted_item = InventoryItem.query.get(item_id)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+123 passed, 775 warnings in 67.09s (0:01:07)

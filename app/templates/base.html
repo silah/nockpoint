@@ -41,7 +41,7 @@
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="{{ url_for('events.calendar') }}">Calendar</a></li>
                                 <li><a class="dropdown-item" href="{{ url_for('events.my_charges') }}">My Charges</a></li>
-                                {% if current_user.is_admin() %}
+                                {% if current_club and current_user.is_admin_of_club(current_club.id) %}
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="{{ url_for('events.new_event') }}">Create Event</a></li>
                                     <li><a class="dropdown-item" href="{{ url_for('events.outstanding_payments') }}">Manage Payments</a></li>
@@ -53,18 +53,49 @@
                 
                 <ul class="navbar-nav">
                     {% if current_user.is_authenticated %}
+                        {# Club Switcher #}
+                        {% if current_club %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="clubDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-building"></i> {{ current_club.name }}
+                            </a>
+                            <ul class="dropdown-menu">
+                                {% set user_clubs = current_user.get_clubs() %}
+                                {% if user_clubs|length > 1 %}
+                                    <li class="dropdown-header">Switch Club</li>
+                                    {% for club in user_clubs %}
+                                    <li>
+                                        <a class="dropdown-item {% if club.id == current_club.id %}active{% endif %}" 
+                                           href="{{ url_for('auth.switch_club', club_id=club.id) }}">
+                                            <i class="bi bi-building me-2"></i>{{ club.name }}
+                                            {% if club.id == current_club.id %}
+                                                <i class="bi bi-check-circle text-success ms-1"></i>
+                                            {% endif %}
+                                        </a>
+                                    </li>
+                                    {% endfor %}
+                                    <li><hr class="dropdown-divider"></li>
+                                {% endif %}
+                                <li><a class="dropdown-item" href="{{ url_for('auth.select_club') }}">
+                                    <i class="bi bi-arrow-repeat me-2"></i>Change Club
+                                </a></li>
+                            </ul>
+                        </li>
+                        {% endif %}
+                        
+                        {# User Menu #}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                                 <i class="bi bi-person-circle"></i> {{ current_user.first_name }}
-                                {% if current_user.is_admin() %}
+                                {% if current_club and current_user.is_admin_of_club(current_club.id) %}
                                     <span class="badge bg-warning text-dark ms-1">Admin</span>
                                 {% endif %}
                             </a>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="{{ url_for('members.profile') }}">My Profile</a></li>
-                                {% if current_user.is_admin() %}
+                                {% if current_club and current_user.is_admin_of_club(current_club.id) %}
                                     <li><a class="dropdown-item" href="{{ url_for('main.settings') }}">
-                                        <i class="bi bi-gear"></i> Club Management
+                                        <i class="bi bi-gear"></i> Club Settings
                                     </a></li>
                                 {% endif %}
                                 
