@@ -1,4 +1,5 @@
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed, FileRequired
 from wtforms import StringField, TextAreaField, IntegerField, DecimalField, SelectField, DateField, PasswordField, SubmitField, BooleanField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, NumberRange, Optional
 from wtforms.widgets import TextArea
@@ -49,6 +50,27 @@ class RegistrationForm(FlaskForm):
     is_admin = BooleanField('Make this user an administrator')
     submit = SubmitField('Register')
 
+
+class ClubRegistrationForm(FlaskForm):
+    """Form for registering a new club with its first admin user"""
+    # Club information
+    club_name = StringField('Club Name', validators=[DataRequired(), Length(1, 200)])
+    club_slug = StringField('Club URL Slug', validators=[Optional(), Length(1, 100)],
+                           render_kw={'placeholder': 'leave blank to auto-generate'})
+    club_description = TextAreaField('Club Description', validators=[Optional(), Length(0, 2000)])
+    club_email = StringField('Club Contact Email', validators=[Optional(), Email()])
+    
+    # Admin user information
+    username = StringField('Admin Username', validators=[DataRequired(), Length(1, 64)])
+    email = StringField('Admin Email', validators=[DataRequired(), Email()])
+    first_name = StringField('First Name', validators=[DataRequired(), Length(1, 50)])
+    last_name = StringField('Last Name', validators=[DataRequired(), Length(1, 50)])
+    password = PasswordField('Password', validators=[DataRequired(), Length(6)])
+    password2 = PasswordField('Repeat Password', 
+                             validators=[DataRequired(), EqualTo('password', message='Passwords must match')])
+    
+    submit = SubmitField('Register Club')
+
 class InventoryCategoryForm(FlaskForm):
     name = StringField('Category Name', validators=[DataRequired(), Length(1, 100)])
     description = TextAreaField('Description', validators=[Optional(), Length(0, 500)])
@@ -82,8 +104,13 @@ class InventoryItemForm(FlaskForm):
     
     def __init__(self, *args, **kwargs):
         super(InventoryItemForm, self).__init__(*args, **kwargs)
-        # Populate category choices dynamically
-        self.category_id.choices = [(c.id, c.name) for c in InventoryCategory.query.all()]
+        # Populate category choices dynamically - filter by current club if available
+        from flask import g
+        if hasattr(g, 'current_club') and g.current_club:
+            self.category_id.choices = [(c.id, c.name) for c in InventoryCategory.query.filter_by(club_id=g.current_club.id).all()]
+        else:
+            # Fallback for contexts without club (e.g., tests)
+            self.category_id.choices = [(c.id, c.name) for c in InventoryCategory.query.all()]
 
 # Specialized forms for different inventory categories
 class BowForm(InventoryItemForm):
@@ -155,11 +182,38 @@ class AttendanceForm(FlaskForm):
     
     def __init__(self, *args, **kwargs):
         super(AttendanceForm, self).__init__(*args, **kwargs)
-        from app.models import User
-        # Only show active members
-        self.member_id.choices = [(u.id, f"{u.first_name} {u.last_name} ({u.username})") 
-                                 for u in User.query.filter_by(is_active=True).order_by(User.first_name, User.last_name).all()]
+        from app.models import User, ClubMembership
+        from flask import g
+        
+        # Only show active members from current club
+        if hasattr(g, 'current_club') and g.current_club:
+            memberships = ClubMembership.query.filter_by(
+                club_id=g.current_club.id,
+                is_active=True
+            ).join(User).order_by(User.first_name, User.last_name).all()
+            self.member_id.choices = [(m.user.id, f"{m.user.first_name} {m.user.last_name} ({m.user.username})") 
+                                     for m in memberships]
+        else:
+            # Fallback for contexts without club
+            self.member_id.choices = [(u.id, f"{u.first_name} {u.last_name} ({u.username})") 
+                                     for u in User.query.filter_by(is_active=True).order_by(User.first_name, User.last_name).all()]
 
 class PaymentUpdateForm(FlaskForm):
     payment_notes = TextAreaField('Payment Notes', validators=[Optional(), Length(0, 500)])
     submit = SubmitField('Mark as Paid')
+
+
+class CSVImportForm(FlaskForm):
+    """Form for importing members from CSV file"""
+    csv_file = FileField('CSV File', validators=[
+        FileRequired(),
+        FileAllowed(['csv'], 'CSV files only!')
+    ])
+    membership_type = SelectField('Default Membership Type', choices=[
+        ('monthly', 'Monthly'),
+        ('quarterly', 'Quarterly'),
+        ('annual', 'Annual'),
+        ('per_event', 'Per Event')
+    ], default='monthly')
+    make_admin = BooleanField('Make all imported users administrators', default=False)
+    submit = SubmitField('Import Members')

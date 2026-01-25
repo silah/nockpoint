@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Import Members - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="bi bi-file-earmark-arrow-up me-2"></i>Import Members from CSV</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-info-circle me-2"></i>How to import members:</h6>
+                        <ol class="mb-0">
+                            <li>Download the <a href="{{ url_for('members.download_template') }}" class="alert-link">CSV template</a></li>
+                            <li>Fill in member information (email, first_name, last_name)</li>
+                            <li>Upload the completed CSV file below</li>
+                            <li>Review the generated passwords (shown once only!)</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <strong><i class="bi bi-exclamation-triangle me-2"></i>Important:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Email addresses will be used as usernames</li>
+                            <li>Random passwords will be generated for new users</li>
+                            <li>Passwords will be shown only once after import - make sure to save them!</li>
+                            <li>Existing users will be added to your club (no new password generated)</li>
+                        </ul>
+                    </div>
+                    
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.csv_file.label(class="form-label") }}
+                            {{ form.csv_file(class="form-control" + (" is-invalid" if form.csv_file.errors else "")) }}
+                            <div class="form-text">
+                                <i class="bi bi-file-earmark-spreadsheet me-1"></i>
+                                Select a CSV file containing member information
+                            </div>
+                            {% if form.csv_file.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.csv_file.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.membership_type.label(class="form-label") }}
+                            {{ form.membership_type(class="form-select") }}
+                            <div class="form-text">
+                                Membership type for all imported members
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            {{ form.make_admin(class="form-check-input") }}
+                            {{ form.make_admin.label(class="form-check-label") }}
+                            <div class="form-text">
+                                If checked, all imported members will have administrator privileges
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <a href="{{ url_for('members.index') }}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Cancel
+                            </a>
+                            <div>
+                                <a href="{{ url_for('members.download_template') }}" class="btn btn-outline-primary me-2">
+                                    <i class="bi bi-download me-2"></i>Download Template
+                                </a>
+                                {{ form.submit(class="btn btn-success") }}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6><i class="bi bi-table me-2"></i>CSV Format Requirements</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Required columns:</strong></p>
+                    <table class="table table-sm table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Column</th>
+                                <th>Description</th>
+                                <th>Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>email</code></td>
+                                <td>Member's email address (will be used as username)</td>
+                                <td>john.doe@example.com</td>
+                            </tr>
+                            <tr>
+                                <td><code>first_name</code></td>
+                                <td>Member's first name</td>
+                                <td>John</td>
+                            </tr>
+                            <tr>
+                                <td><code>last_name</code></td>
+                                <td>Member's last name</td>
+                                <td>Doe</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

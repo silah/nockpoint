@@ -101,13 +101,13 @@
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
-                    {% if current_user.is_admin() or current_user.id == member.id %}
+                    {% if is_club_admin() or current_user.id == member.id %}
                         <a href="{{ url_for('members.edit_member', id=member.id) }}" class="btn btn-warning">
                             <i class="bi bi-pencil me-2"></i>Edit Profile
                         </a>
                     {% endif %}
                     
-                    {% if current_user.is_admin() and member.id != current_user.id %}
+                    {% if is_club_admin() and member.id != current_user.id %}
                         <form method="POST" action="{{ url_for('members.toggle_member_status', id=member.id) }}" style="display: inline;">
                             {% if member.is_active %}
                                 <button type="submit" class="btn btn-outline-warning w-100" 
@@ -162,7 +162,7 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-{% if current_user.is_admin() and member.id != current_user.id %}
+{% if is_club_admin() and member.id != current_user.id %}
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -187,7 +187,7 @@
 {% endblock %}
 
 {% block scripts %}
-{% if current_user.is_admin() and member.id != current_user.id %}
+{% if is_club_admin() and member.id != current_user.id %}
 <script>
 function confirmDelete() {
     new bootstrap.Modal(document.getElementById('deleteModal')).show();

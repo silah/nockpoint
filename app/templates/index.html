@@ -71,7 +71,7 @@
             <a href="{{ url_for('members.index') }}" class="btn btn-outline-info">
                 <i class="bi bi-people me-2"></i>View Members
             </a>
-            {% if current_user.is_admin() %}
+            {% if is_club_admin() %}
                 <a href="{{ url_for('inventory.new_item') }}" class="btn btn-outline-success">
                     <i class="bi bi-plus-circle me-2"></i>Add New Item
                 </a>

@@ -1,153 +1,215 @@
 # Nockpoint - Archery Club Management System
 
-A comprehensive Flask-based web application designed to help archery clubs manage their operations efficiently. The MVP focuses on inventory management with plans to expand to competition management, member management, and scheduling.
+A comprehensive multi-tenant Flask-based web application for managing archery club operations. Multiple independent clubs can operate on a shared platform with complete data isolation.
 
-## Features
+## 🎯 Features
 
-### Current (MVP - Inventory Management)
-- **User Authentication & Authorization**
-  - User registration and login
-  - Role-based access control (Admin/Member)
-  - Secure password hashing
+### Multi-Tenancy
+- **Multiple Independent Clubs** - Each club has isolated data and settings
+- **Club Registration** - Public registration flow for new clubs
+- **User Management** - Users can belong to multiple clubs with different roles
+- **Club Selection** - Automatic context switching for multi-club users
 
-- **Inventory Management**
-  - Multiple inventory categories (Bows, Arrows, Targets, etc.)
-  - Category-specific attributes (draw weight, spine, face size, etc.)
-  - Quantity tracking and location management
-  - Item condition monitoring
-  - Search and filtering capabilities
-  - Responsive UI with Bootstrap 5
+### Member Management
+- **Bulk CSV Import** - Import members with automatic password generation
+- **Profile Management** - Member information and club-specific roles
+- **Role-Based Access** - Admin and member permissions per club
+- **Multi-Club Membership** - Users can join and switch between clubs
 
-- **Dashboard**
-  - Inventory statistics
-  - Recent items overview
-  - Quick actions for efficient management
+### Inventory Management
+- **Category System** - Flexible categories (Bows, Arrows, Targets, etc.)
+- **Custom Attributes** - Category-specific fields (draw weight, spine, etc.)
+- **Quantity Tracking** - Stock levels and location management
+- **Search & Filter** - Find equipment quickly
 
-### Planned Features
-- Competition management (schedules, results, categories)
-- Member management and participation tracking
-- Shooting schedule coordination
-- Reporting and analytics
+### Events & Attendance
+- **Event Calendar** - Schedule and manage shooting events
+- **Attendance Tracking** - Monitor member participation
+- **Payment Management** - Track member charges and payments
+- **Event Types** - Regular events, competitions, training sessions
 
-## Technology Stack
+### Competitions
+- **Tournament Management** - Create and manage competitions
+- **Scoring System** - Arrow-level score tracking
+- **Teams & Groups** - Organize participants
+- **Results Tracking** - Competition outcomes and standings
 
-- **Backend**: Flask with Blueprints architecture
-- **Database**: SQLAlchemy with SQLite (dev) / PostgreSQL (prod)
-- **Authentication**: Flask-Login
-- **Forms**: WTForms and Flask-WTF
+## 🚀 Quick Start
+
+### For Developers
+See **[QUICKSTART.md](./QUICKSTART.md)** for rapid setup.
+
+### Installation
+
+```bash
+# Clone and enter directory
+git clone <repository-url>
+cd nockpoint
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Initialize database
+flask db upgrade
+
+# Create first admin user (optional)
+python create_admin.py
+
+# Run development server
+python app.py
+```
+
+Access at: http://localhost:5000
+
+### First Time Setup
+
+1. **Register a Club**: Navigate to `/auth/register-club`
+2. **Login**: Use credentials from club registration
+3. **Configure**: Set club settings at `/settings`
+4. **Add Members**: Import via CSV or add individually
+
+## 📚 Documentation
+
+Full documentation is available in the [documentation/](./documentation/) folder:
+
+- **[Multi-Tenancy Guide](./documentation/multi-tenancy.md)** - Architecture and developer patterns
+- **[CSV Import](./documentation/csv-import.md)** - Bulk member import feature
+- **[Models](./documentation/models.md)** - Database structure
+- **[Authentication](./documentation/authentication.md)** - User auth and authorization
+- **[Testing](./documentation/testing.md)** - Test suite guide
+
+See [documentation/README.md](./documentation/README.md) for complete index.
+
+## 🛠 Technology Stack
+
+- **Backend**: Flask 2+ with Blueprints architecture
+- **Database**: SQLAlchemy ORM (SQLite dev / PostgreSQL prod)
+- **Authentication**: Flask-Login with club-scoped roles
+- **Forms**: WTForms with CSRF protection
 - **Frontend**: Bootstrap 5, Jinja2 templates
-- **Migrations**: Flask-Migrate
+- **Migrations**: Flask-Migrate (Alembic)
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 nockpoint/
 ├── app/
-│   ├── __init__.py              # Application factory
-│   ├── models.py                # Database models
-│   ├── forms.py                 # WTForms definitions
-│   ├── auth/                    # Authentication blueprint
-│   ├── main/                    # Main application blueprint
-│   ├── inventory/               # Inventory management blueprint
-│   ├── templates/               # Jinja2 templates
-│   │   ├── base.html
-│   │   ├── index.html
-│   │   ├── dashboard.html
-│   │   ├── auth/
-│   │   └── inventory/
-│   └── static/
-│       └── css/
-├── app.py                       # Application entry point
-├── requirements.txt             # Python dependencies
-├── .env                         # Environment variables
-└── README.md
+│   ├── __init__.py           # App factory with multi-tenancy setup
+│   ├── models.py             # SQLAlchemy models (Club, User, Inventory, etc.)
+│   ├── forms.py              # WTForms for all features
+│   ├── decorators.py         # Authorization decorators
+│   ├── club_utils.py         # Club helper functions
+│   ├── auth/                 # Authentication blueprint
+│   ├── main/                 # Dashboard and settings
+│   ├── members/              # Member management
+│   ├── inventory/            # Equipment tracking
+│   ├── events/               # Event calendar
+│   ├── competitions/         # Tournament management
+│   ├── templates/            # Jinja2 templates
+│   └── static/               # CSS, JS, images
+├── migrations/               # Database migrations (Alembic)
+├── tests/                    # Test suite
+├── documentation/            # Comprehensive docs
+├── QUICKSTART.md            # Developer quick start
+├── config.py                # Configuration
+├── app.py                   # Development server
+└── requirements.txt         # Python dependencies
 ```
 
-## Installation & Setup
-
-### Prerequisites
-- Python 3.8+
-- pip (Python package manager)
-- Git
-
-### Installation Steps
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd nockpoint
-   ```
-
-2. **Create virtual environment**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Configure environment variables**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
-
-5. **Initialize the database**
-   ```bash
-   flask init-db
-   ```
-
-6. **Run the application**
-   ```bash
-   python app.py
-   ```
-
-The application will be available at `http://localhost:5000`
-
-## Default Login Credentials
-
-- **Username**: `admin`
-- **Password**: `admin123`
-- **Role**: Administrator
-
-## Configuration
+## 🔧 Configuration
 
 ### Environment Variables
 
-- `FLASK_APP`: Application entry point (default: `app.py`)
-- `FLASK_ENV`: Environment (development/production)
-- `SECRET_KEY`: Flask secret key for sessions
-- `DATABASE_URL`: Database connection string
+```bash
+FLASK_APP=app.py
+FLASK_ENV=development
+SECRET_KEY=your-secret-key-here
+DATABASE_URL=sqlite:///instance/nockpoint.db
+```
 
-### Database Configuration
+### Database Options
 
 **Development (SQLite)**:
 ```
-DATABASE_URL=sqlite:///nockpoint.db
+DATABASE_URL=sqlite:///instance/nockpoint.db
 ```
 
 **Production (PostgreSQL)**:
 ```
-DATABASE_URL=postgresql://username:password@localhost/nockpoint
+DATABASE_URL=postgresql://user:password@localhost/nockpoint
 ```
 
-## Database Schema
+## 🧪 Testing
 
-### Users
-- User authentication and role management
-- Supports Admin and Member roles
-- Password hashing with werkzeug
+```bash
+# Run all tests
+python -m pytest
 
-### Inventory Categories
-- Flexible category system
-- Supports custom descriptions
-- One-to-many relationship with items
+# Run with coverage
+python -m pytest --cov=app
 
-### Inventory Items
-- Complete item tracking
+# Run specific test file
+python -m pytest tests/test_models.py
+```
+
+See [documentation/testing.md](./documentation/testing.md) for details.
+
+## 🏗 Development Guidelines
+
+### Multi-Tenancy Rules
+
+When developing new features, **always**:
+
+1. **Filter by club**: `MyModel.query.filter_by(club_id=g.current_club.id).all()`
+2. **Set club_id**: All club-specific records need `club_id` on creation
+3. **Use decorators**: `@require_club_context` or `@require_club_admin`
+4. **Verify ownership**: Filter by both `id` and `club_id` when viewing/editing
+5. **Club helpers**: Use `is_club_admin()` in templates
+
+See [Multi-Tenancy Guide](./documentation/multi-tenancy.md) for complete patterns.
+
+### Code Style
+
+- Follow PEP 8 for Python code
+- Use descriptive names for variables and functions
+- Add docstrings to functions and classes
+- Keep functions small and focused
+- Write tests for new features
+
+## 🚢 Deployment
+
+See [documentation/deployment.md](./documentation/deployment.md) for production deployment instructions.
+
+### Quick Production Checklist
+
+- [ ] Set strong `SECRET_KEY`
+- [ ] Use PostgreSQL (not SQLite)
+- [ ] Set `FLASK_ENV=production`
+- [ ] Configure WSGI server (gunicorn)
+- [ ] Set up reverse proxy (nginx)
+- [ ] Enable HTTPS
+- [ ] Configure backups
+- [ ] Set up monitoring
+
+## 🤝 Contributing
+
+1. Review [Multi-Tenancy Guide](./documentation/multi-tenancy.md)
+2. Follow code style guidelines
+3. Write tests for new features
+4. Update documentation
+5. Use proper authorization decorators
+6. Ensure data is club-scoped
+
+## 📝 License
+
+[Add your license here]
+
+## 📧 Support
+
+For questions or issues:
+- Review [documentation/](./documentation/)
+- Check [QUICKSTART.md](./QUICKSTART.md)
+- See test files for examples
 - Category-specific attributes stored in JSON
 - Quantity, location, and condition tracking
 - Purchase information and notes

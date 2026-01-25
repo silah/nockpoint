@@ -93,10 +93,19 @@ def create_app(config=None):
     # Make club context available in all templates
     @app.context_processor
     def inject_club_context():
-        """Make club information available in all templates"""
+        """Make club information and helper functions available in all templates"""
+        def is_club_admin():
+            """Check if current user is admin of current club"""
+            if not current_user.is_authenticated:
+                return False
+            if not hasattr(g, 'current_club') or not g.current_club:
+                return False
+            return current_user.is_admin_of_club(g.current_club.id)
+        
         return dict(
             current_club=getattr(g, 'current_club', None),
-            current_membership=getattr(g, 'current_membership', None)
+            current_membership=getattr(g, 'current_membership', None),
+            is_club_admin=is_club_admin
         )
 
     return app

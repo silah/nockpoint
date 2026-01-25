@@ -90,7 +90,7 @@
                     </div>
                     
                     <!-- Admin checkbox (only visible when creating new members) -->
-                    {% if current_user.is_admin() %}
+                    {% if is_club_admin() %}
                         <div class="mb-3">
                             <div class="form-check">
                                 {{ form.is_admin(class="form-check-input") }}

@@ -1,35 +1,29 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, g
 from flask_login import login_required, current_user
 from app import db
 from app.models import ShootingEvent, EventAttendance, MemberCharge, User
 from app.forms import ShootingEventForm, AttendanceForm, PaymentUpdateForm
+from app.decorators import require_club_context, require_club_admin
 from datetime import datetime, date, time
 from sqlalchemy import desc, asc
 from decimal import Decimal
 
 events_bp = Blueprint('events', __name__)
 
-def admin_required(f):
-    """Decorator to require admin role"""
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.is_admin():
-            flash('Admin access required.', 'error')
-            return redirect(url_for('main.dashboard'))
-        return f(*args, **kwargs)
-    decorated_function.__name__ = f.__name__
-    return decorated_function
-
 @events_bp.route('/')
 @login_required
+@require_club_context
 def calendar():
     """Show shooting calendar"""
-    # Get upcoming events
+    # Get upcoming events for current club
     upcoming_events = ShootingEvent.query.filter(
+        ShootingEvent.club_id == g.current_club.id,
         ShootingEvent.date >= date.today()
     ).order_by(ShootingEvent.date, ShootingEvent.start_time).all()
     
-    # Get past events (last 30 days)
+    # Get past events (last 30 days) for current club
     past_events = ShootingEvent.query.filter(
+        ShootingEvent.club_id == g.current_club.id,
         ShootingEvent.date < date.today()
     ).order_by(desc(ShootingEvent.date), desc(ShootingEvent.start_time)).limit(10).all()
     
@@ -39,7 +33,7 @@ def calendar():
 
 @events_bp.route('/new', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@require_club_admin
 def new_event():
     """Create new shooting event"""
     form = ShootingEventForm()
@@ -50,6 +44,7 @@ def new_event():
             start_time_obj = datetime.strptime(form.start_time.data, '%H:%M').time()
             
             event = ShootingEvent(
+                club_id=g.current_club.id,
                 name=form.name.data,
                 description=form.description.data,
                 location=form.location.data,
@@ -74,9 +69,11 @@ def new_event():
 
 @events_bp.route('/event/<int:id>')
 @login_required
+@require_club_context
 def view_event(id):
     """View shooting event details"""
-    event = ShootingEvent.query.get_or_404(id)
+    # Ensure event belongs to current club
+    event = ShootingEvent.query.filter_by(id=id, club_id=g.current_club.id).first_or_404()
     
     # Get attendance list and summary values
     attendees = (
@@ -104,10 +101,11 @@ def view_event(id):
 
 @events_bp.route('/event/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@require_club_admin
 def edit_event(id):
     """Edit shooting event"""
-    event = ShootingEvent.query.get_or_404(id)
+    # Ensure event belongs to current club
+    event = ShootingEvent.query.filter_by(id=id, club_id=g.current_club.id).first_or_404()
     form = ShootingEventForm(obj=event)
     
     if request.method == 'GET':
@@ -138,10 +136,11 @@ def edit_event(id):
 
 @events_bp.route('/event/<int:id>/delete', methods=['POST'])
 @login_required
-@admin_required
+@require_club_admin
 def delete_event(id):
     """Delete shooting event"""
-    event = ShootingEvent.query.get_or_404(id)
+    # Ensure event belongs to current club
+    event = ShootingEvent.query.filter_by(id=id, club_id=g.current_club.id).first_or_404()
     
     # Check if event has attendances
     if event.attendances:
@@ -157,10 +156,11 @@ def delete_event(id):
 
 @events_bp.route('/event/<int:id>/attendance', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@require_club_admin
 def manage_attendance(id):
     """Manage event attendance"""
-    event = ShootingEvent.query.get_or_404(id)
+    # Ensure event belongs to current club
+    event = ShootingEvent.query.filter_by(id=id, club_id=g.current_club.id).first_or_404()
     form = AttendanceForm()
     
     if form.validate_on_submit():
@@ -215,7 +215,7 @@ def manage_attendance(id):
 
 @events_bp.route('/payments')
 @login_required
-@admin_required
+@require_club_admin
 def outstanding_payments():
     """Show outstanding payments admin page"""
     # Get all unpaid charges
@@ -238,7 +238,7 @@ def outstanding_payments():
 
 @events_bp.route('/payment/<int:id>/mark-paid', methods=['POST'])
 @login_required
-@admin_required
+@require_club_admin
 def mark_payment_paid(id):
     """Mark a payment as paid"""
     charge = MemberCharge.query.get_or_404(id)
@@ -287,7 +287,7 @@ def my_charges():
 
 @events_bp.route('/event/<int:event_id>/add-attendee', methods=['POST'])
 @login_required
-@admin_required
+@require_club_admin
 def add_attendee(event_id):
     """Add an attendee to an event"""
     event = ShootingEvent.query.get_or_404(event_id)
@@ -346,7 +346,7 @@ def add_attendee(event_id):
 
 @events_bp.route('/event/<int:id>/update-attendance', methods=['POST'])
 @login_required
-@admin_required
+@require_club_admin
 def update_attendance(id):
     """Update attendance status via AJAX"""
     
@@ -392,7 +392,7 @@ def update_attendance(id):
 
 @events_bp.route('/mark-paid', methods=['POST'])
 @login_required
-@admin_required
+@require_club_admin
 def mark_paid():
     """Mark a charge as paid via AJAX"""
     
@@ -414,7 +414,7 @@ def mark_paid():
 
 @events_bp.route('/attendance/<int:id>/remove', methods=['POST'])
 @login_required  
-@admin_required
+@require_club_admin
 def remove_attendee(id):
     """Remove an attendee from an event via AJAX"""
     
@@ -449,7 +449,7 @@ def remove_attendee(id):
 
 @events_bp.route('/update-payment-status', methods=['POST'])
 @login_required
-@admin_required
+@require_club_admin
 def update_payment_status():
     """Update payment status via AJAX"""
     
@@ -477,7 +477,7 @@ def update_payment_status():
 
 @events_bp.route('/update-charge-amount', methods=['POST'])
 @login_required
-@admin_required
+@require_club_admin
 def update_charge_amount():
     """Update charge amount via AJAX"""
     
@@ -498,7 +498,7 @@ def update_charge_amount():
 
 @events_bp.route('/delete-charge', methods=['POST'])
 @login_required
-@admin_required  
+@require_club_admin  
 def delete_charge():
     """Delete a charge via AJAX"""
     

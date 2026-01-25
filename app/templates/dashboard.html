@@ -100,7 +100,7 @@
                     </div>
                 {% else %}
                     <p class="text-muted mb-0">No items in inventory yet.</p>
-                    {% if current_user.is_admin() %}
+                    {% if is_club_admin() %}
                         <a href="{{ url_for('inventory.new_item') }}" class="btn btn-primary mt-2">Add First Item</a>
                     {% endif %}
                 {% endif %}
@@ -127,7 +127,7 @@
                     <a href="{{ url_for('events.my_charges') }}" class="btn btn-outline-warning">
                         <i class="bi bi-receipt me-2"></i>My Charges
                     </a>
-                    {% if current_user.is_admin() %}
+                    {% if is_club_admin() %}
                         <a href="{{ url_for('inventory.new_item') }}" class="btn btn-outline-success">
                             <i class="bi bi-plus-circle me-2"></i>Add New Item
                         </a>

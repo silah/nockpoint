@@ -1,6 +1,7 @@
-from flask import Blueprint, render_template, flash, redirect, url_for, request
+from flask import Blueprint, render_template, flash, redirect, url_for, request, g
 from flask_login import login_required, current_user
-from app.models import InventoryItem, InventoryCategory, ShootingEvent, ClubSettings
+from app.models import InventoryItem, InventoryCategory, ShootingEvent, ClubSettings, ClubMembership
+from app.decorators import require_club_context, require_club_admin
 from datetime import datetime, timedelta
 from app.forms import ClubSettingsForm
 
@@ -12,22 +13,24 @@ def index():
 
 @main_bp.route('/dashboard')
 @login_required
+@require_club_context
 def dashboard():
-    # Get inventory statistics
-    total_items = InventoryItem.query.count()
-    total_categories = InventoryCategory.query.count()
+    # Get inventory statistics for current club
+    total_items = InventoryItem.query.filter_by(club_id=g.current_club.id).count()
+    total_categories = InventoryCategory.query.filter_by(club_id=g.current_club.id).count()
     
-    # Get member statistics
+    # Get member statistics for current club
     from app.models import User
-    total_members = User.query.count()
-    active_members = User.query.filter_by(is_active=True).count()
+    total_members = ClubMembership.query.filter_by(club_id=g.current_club.id).count()
+    active_members = ClubMembership.query.filter_by(club_id=g.current_club.id, is_active=True).count()
     
-    # Get recent items
-    recent_items = InventoryItem.query.order_by(InventoryItem.created_at.desc()).limit(5).all()
+    # Get recent items from current club
+    recent_items = InventoryItem.query.filter_by(club_id=g.current_club.id).order_by(InventoryItem.created_at.desc()).limit(5).all()
     
-    # Get upcoming events count (next 30 days)
+    # Get upcoming events count (next 30 days) for current club
     thirty_days_from_now = datetime.now().date() + timedelta(days=30)
     upcoming_events_count = ShootingEvent.query.filter(
+        ShootingEvent.club_id == g.current_club.id,
         ShootingEvent.date >= datetime.now().date(),
         ShootingEvent.date <= thirty_days_from_now
     ).count()
@@ -41,20 +44,9 @@ def dashboard():
                          upcoming_events_count=upcoming_events_count)
 
 
-def admin_required(f):
-    from functools import wraps
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        if not current_user.is_authenticated or not getattr(current_user, 'is_admin', False) and not current_user.is_admin():
-            flash('Admin access required.', 'error')
-            return redirect(url_for('main.dashboard'))
-        return f(*args, **kwargs)
-    return wrapper
-
-
 @main_bp.route('/settings')
 @login_required
-@admin_required
+@require_club_admin
 def settings():
     settings = ClubSettings.get_settings()
     return render_template('main/settings.html', settings=settings)
@@ -62,7 +54,7 @@ def settings():
 
 @main_bp.route('/settings/edit', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@require_club_admin
 def edit_settings():
     settings = ClubSettings.get_settings()
     form = ClubSettingsForm(obj=settings)

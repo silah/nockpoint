@@ -98,7 +98,7 @@
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
-                    {% if current_user.is_admin() %}
+                    {% if is_club_admin() %}
                         <a href="{{ url_for('inventory.edit_item', id=item.id) }}" class="btn btn-warning">
                             <i class="bi bi-pencil me-2"></i>Edit Item
                         </a>
@@ -136,7 +136,7 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-{% if current_user.is_admin() %}
+{% if is_club_admin() %}
 <div class="modal fade" id="deleteModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -161,7 +161,7 @@
 {% endblock %}
 
 {% block scripts %}
-{% if current_user.is_admin() %}
+{% if is_club_admin() %}
 <script>
 function confirmDelete() {
     new bootstrap.Modal(document.getElementById('deleteModal')).show();

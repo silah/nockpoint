@@ -53,33 +53,12 @@
                 
                 <ul class="navbar-nav">
                     {% if current_user.is_authenticated %}
-                        {# Club Switcher #}
+                        {# Current Club Display (no switching) #}
                         {% if current_club %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="clubDropdown" role="button" data-bs-toggle="dropdown">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" title="Current club (logout to change)">
                                 <i class="bi bi-building"></i> {{ current_club.name }}
                             </a>
-                            <ul class="dropdown-menu">
-                                {% set user_clubs = current_user.get_clubs() %}
-                                {% if user_clubs|length > 1 %}
-                                    <li class="dropdown-header">Switch Club</li>
-                                    {% for club in user_clubs %}
-                                    <li>
-                                        <a class="dropdown-item {% if club.id == current_club.id %}active{% endif %}" 
-                                           href="{{ url_for('auth.switch_club', club_id=club.id) }}">
-                                            <i class="bi bi-building me-2"></i>{{ club.name }}
-                                            {% if club.id == current_club.id %}
-                                                <i class="bi bi-check-circle text-success ms-1"></i>
-                                            {% endif %}
-                                        </a>
-                                    </li>
-                                    {% endfor %}
-                                    <li><hr class="dropdown-divider"></li>
-                                {% endif %}
-                                <li><a class="dropdown-item" href="{{ url_for('auth.select_club') }}">
-                                    <i class="bi bi-arrow-repeat me-2"></i>Change Club
-                                </a></li>
-                            </ul>
                         </li>
                         {% endif %}
                         

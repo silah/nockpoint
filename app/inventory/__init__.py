@@ -1,31 +1,24 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, g
 from flask_login import login_required, current_user
 from app import db
 from app.models import InventoryItem, InventoryCategory
 from app.forms import InventoryItemForm, InventoryCategoryForm, BowForm, ArrowForm, TargetForm
+from app.decorators import require_club_context, require_club_admin
 from datetime import datetime
 import json
 
 inventory_bp = Blueprint('inventory', __name__)
 
-def admin_required(f):
-    """Decorator to require admin role"""
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.is_admin():
-            flash('Admin access required.', 'error')
-            return redirect(url_for('main.dashboard'))
-        return f(*args, **kwargs)
-    decorated_function.__name__ = f.__name__
-    return decorated_function
-
 @inventory_bp.route('/')
 @login_required
+@require_club_context
 def index():
     page = request.args.get('page', 1, type=int)
     category_id = request.args.get('category', type=int)
     search = request.args.get('search', '')
     
-    query = InventoryItem.query
+    # Filter by current club
+    query = InventoryItem.query.filter_by(club_id=g.current_club.id)
     
     if category_id:
         query = query.filter_by(category_id=category_id)
@@ -38,7 +31,8 @@ def index():
         page=page, per_page=20, error_out=False
     )
     
-    categories = InventoryCategory.query.all()
+    # Only show categories from current club
+    categories = InventoryCategory.query.filter_by(club_id=g.current_club.id).all()
     
     return render_template('inventory/index.html', 
                          items=items, 
@@ -48,17 +42,20 @@ def index():
 
 @inventory_bp.route('/categories')
 @login_required
+@require_club_context
 def categories():
-    categories = InventoryCategory.query.order_by(InventoryCategory.name).all()
+    # Only show categories from current club
+    categories = InventoryCategory.query.filter_by(club_id=g.current_club.id).order_by(InventoryCategory.name).all()
     return render_template('inventory/categories.html', categories=categories)
 
 @inventory_bp.route('/categories/new', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@require_club_admin
 def new_category():
     form = InventoryCategoryForm()
     if form.validate_on_submit():
         category = InventoryCategory(
+            club_id=g.current_club.id,
             name=form.name.data,
             description=form.description.data
         )
@@ -71,9 +68,10 @@ def new_category():
 
 @inventory_bp.route('/categories/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@require_club_admin
 def edit_category(id):
-    category = InventoryCategory.query.get_or_404(id)
+    # Ensure category belongs to current club
+    category = InventoryCategory.query.filter_by(id=id, club_id=g.current_club.id).first_or_404()
     form = InventoryCategoryForm(obj=category)
     
     if form.validate_on_submit():
@@ -87,14 +85,14 @@ def edit_category(id):
 
 @inventory_bp.route('/new', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@require_club_admin
 def new_item():
     category_id = request.args.get('category', type=int)
     
-    # Get category to determine which form to use
+    # Get category to determine which form to use (ensure it belongs to current club)
     category = None
     if category_id:
-        category = InventoryCategory.query.get_or_404(category_id)
+        category = InventoryCategory.query.filter_by(id=category_id, club_id=g.current_club.id).first_or_404()
     
     # Choose form based on category
     form = get_form_for_category(category)
@@ -102,6 +100,7 @@ def new_item():
     if form.validate_on_submit():
         # Create base item
         item = InventoryItem(
+            club_id=g.current_club.id,
             name=form.name.data,
             description=form.description.data,
             quantity=form.quantity.data,
@@ -127,15 +126,18 @@ def new_item():
 
 @inventory_bp.route('/item/<int:id>')
 @login_required
+@require_club_context
 def view_item(id):
-    item = InventoryItem.query.get_or_404(id)
+    # Ensure item belongs to current club
+    item = InventoryItem.query.filter_by(id=id, club_id=g.current_club.id).first_or_404()
     return render_template('inventory/view_item.html', item=item)
 
 @inventory_bp.route('/item/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@require_club_admin
 def edit_item(id):
-    item = InventoryItem.query.get_or_404(id)
+    # Ensure item belongs to current club
+    item = InventoryItem.query.filter_by(id=id, club_id=g.current_club.id).first_or_404()
     
     # Get form for the item's category
     form = get_form_for_category(item.category)
@@ -169,9 +171,10 @@ def edit_item(id):
 
 @inventory_bp.route('/item/<int:id>/delete', methods=['POST'])
 @login_required
-@admin_required
+@require_club_admin
 def delete_item(id):
-    item = InventoryItem.query.get_or_404(id)
+    # Ensure item belongs to current club
+    item = InventoryItem.query.filter_by(id=id, club_id=g.current_club.id).first_or_404()
     db.session.delete(item)
     db.session.commit()
     flash('Item deleted successfully!', 'success')
